@@ -46,10 +46,36 @@
 		<h5 class="card-subtitle mb-2 text-muted">You can click into the following link, and look for binder icon to run the solution in the binder on the cloud!</h5>
 		
 		<h5 class="card-subtitle mb-2 text-muted">You can also run the repository locally on your own machine, which requires the skill and effort to setup the environement (see below) </h5>
+		<ol>
+	
+			<li><h6 class="card-subtitle mb-2 text-muted">Install Anaconda </h6> </li>
+			<li><h6 class="card-subtitle mb-2 text-muted">git clone the repository to your local computer </h6></li>
+			<li><h6 class="card-subtitle mb-2 text-muted">Enter into the directory you just cloned </h6>
+			<li><h6 class="card-subtitle mb-2 text-muted">look for environment.yml file under the directory. read the content inside. This file specify the packages with compatible versions needed for experimenting. Will be used in the next step!!!  </h6></li>li
+			
+			<li><h6 class="card-subtitle mb-2 text-muted">create a virtual environment for your project using conda from the environment.yml file, where the first line sets the new environment's name.</h6></li>
+			<li><h6 class="card-subtitle mb-2 text-muted">conda env create -f environment.yml</h6></li>
+			<li><h6 class="card-subtitle mb-2 text-muted">conda env list </h6></li>
+			<li><h6 class="card-subtitle mb-2 text-muted"> Verify that the new environment was installed correctly. The above should show you a list of virtual environment created so far including the one just created. What is the name of the new environment just created? read again the environment.yml file, where the first line sets the new environment's name.
+			Make sure the environment name is replaced with the correct one in the next command for different environment!!!</h6></li>
+			<li><h6 class="card-subtitle mb-2 text-muted">Activate the new environment: conda activate binder_env </h6></li>
+		        <li><h6 class="card-subtitle mb-2 text-muted">Now you can run Python training.py  ... whatever .py file could be there that is supposed to be used. Have fun!</h6></li>
+                        
+			<li><h6 class="card-subtitle mb-2 text-muted"> after you have used the virual environment for exploring your project, exit the environment. conda deactivate </h6></li>
+			<li><h6 class="card-subtitle mb-2 text-muted"> <a href="https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#creating-an-environment-from-an-environment-yml-file" target="_blank">
+				For details see Creating an environment. </a></h6>h6</li>
+\			
+		        		</ol>
 		
-		<h6 class="card-subtitle mb-2 text-muted">Install Anaconda </h6>
-		<h6 class="card-subtitle mb-2 text-muted">git clone the repository to your local computer </h6>
-		<h6 class="card-subtitle mb-2 text-muted">create a virtual environment for your project using conda</h6>
+
+ 
+
+
+
+Verify that the new environment was installed correctly:
+
+conda env list
+		
 		<h6 class="card-subtitle mb-2 text-muted">pip install -r requirement.txt </h6>
 		<h6 class="card-subtitle mb-2 text-muted">possibly fix the requirement.txt file for those packages that conflict or are outdated, conservatively, increamentally. </h6>
 		<h6 class="card-subtitle mb-2 text-muted">This process might not be as pleasant as running in colab. </h6>
@@ -113,7 +139,7 @@ Have fun!
 		
   <div class="card-body">
     <h4 class="card-title">LSTM Flare Prediction</h4>
-    <h6 class="card-subtitle mb-2 text-muted">Presenter: Cristian </h6>
+    <h6 class="card-subtitle mb-2 text-muted">Presenter: Cristian, Jacob [no more for this project:) At most two of you happen to work on the same topic! ] </h6>
     <p class="card-text">
       
     </p>
