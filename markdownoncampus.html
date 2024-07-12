@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Map</title>
+    <!-- <link rel="stylesheet" href="index.css"> -->
+
+<style>
+  
+  /** index.css */
+:root {
+    --root-font-size: 12px;
+    --bg: #fafafa;
+    --text-color: #333333;
+}
+
+/** Reset */
+html, body, nav, ul, h1, h2, h3, h4, a, canvas {
+    margin: 0px;
+    padding: 0px;
+    color: var(--text-color);
+}
+html, body {
+    font-family: Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    font-size: var(--root-font-size);
+    background: var(--bg);
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+}
+*, body, button, input, select, textarea, canvas {
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    outline: 0;
+}
+  </style>
+
+  
+    <script type="text/javascript" src="load.js"></script>
+</head>
+  
+<body>
+    <canvas></canvas>
+
+<script >
+
+/** load.js */
+var canvas, context;
+var text = [''];
+
+function setup() {
+    canvas = document.querySelector('canvas');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    context = canvas.getContext('2d');
+    context.font = '18px Roboto';
+}
+
+function draw() {
+    /* draw code */
+}
+
+window.onresize = function () {
+    if (canvas) {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+}
+
+window.onkeypress = function (e) {
+}
+
+window.onkeydown = function (e) {
+}
+
+window.onload = function () {
+    setup();
+}
+
+  window.onkeypress = function (e) {
+    if (e.key === 'Enter') {
+        text.push('');
+    } else {
+        text[text.length - 1] += e.key;
+    }
+    draw();
+}
+
+window.onkeydown = function (e) {
+    if (e.key === 'Backspace' && text.length && text[0].length) {
+        let txt = text[text.length - 1];
+        txt = txt.slice(0, txt.length - 1);
+        text[text.length - 1] = txt;
+        if (!txt.length && text.length > 1) {
+            text = text.slice(0, text.length - 1);
+        }
+    }
+    draw();
+}
+
+  function draw() {
+    context.clearRect(0, 0, window.innerWidth, window.innerHeight);
+
+    let offset = 0;
+    let totalHeight = 0;
+    let height = (18 * 1.5); // font * line height
+
+    let items = text.map(txt => {
+        let width = context.measureText(txt).width;
+        let item = {
+            txt,
+            width,
+            offset
+        };
+        offset = offset + height;
+        totalHeight += height;
+        return item;
+    });
+
+    let cY = (window.innerHeight / 2) - (totalHeight / 2);
+    items.forEach(item => {
+        let x = window.innerWidth / 2 - item.width / 2;
+        let y = item.offset + cY;
+        context.fillText(item.txt, x, y);
+    });
+}
+
+  function parse(txt) {
+    let lineHeight = 1.5;
+    let headingSize = 32;
+    let baseSize = 16;
+    if (txt.trim().startsWith('#')) {
+        let level = txt.match(/\s*\#/g).length;
+        let size = headingSize - (level * 4);
+        return {
+            font: `bold ${size}px roboto`,
+            height: size * lineHeight,
+            txt
+        };
+    } else {
+        return {
+            font: `${baseSize}px roboto`,
+            height: baseSize * lineHeight,
+            txt
+        };
+    }
+}
+
+  function draw() {
+    context.clearRect(0, 0, window.innerWidth, window.innerHeight);
+
+    let offset = 0;
+    let totalHeight = 0;
+
+    let items = text.map(txt => {
+        let item = parse(txt);
+        item.offset = offset;
+        offset = offset + item.height;
+        totalHeight += item.height;
+        return item;
+    });
+
+    let centerY = (window.innerHeight / 2) - (totalHeight / 2);
+    items.forEach(item => {
+        context.font = item.font;
+        let width = context.measureText(item.txt).width;
+        let x = window.innerWidth / 2 - width / 2;
+        let y = item.offset + centerY;
+        context.fillText(item.txt, x, y);
+    });
+}
+
+  
+</script>
+
+</body>
+</html>
+references
+https://dev.to/nyxtom/how-to-write-a-basic-markdown-editor-with-canvas-and-vanilla-javascript-5h95
