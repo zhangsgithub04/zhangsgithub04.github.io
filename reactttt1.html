@@ -138,9 +138,10 @@ function calculateWinner(squares) {
     
     //ReactDOM.render(React.createElement(Example), document.getElementById("root"));
     
-     ReactDOM.createRoot(<Game />, document.getElementById("root"));
+     //ReactDOM.createRoot(<Game />, document.getElementById("root"));
 
-
+    const root = ReactDOM.createRoot(document.getElementById("root"))
+    root.render(<Game />);
     
   </script>
 </body>
