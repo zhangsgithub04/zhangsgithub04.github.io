@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fabric.js 6.0 Example</title>
+</head>
+<body>
+    <canvas id="canvasEl" width="800" height="600"></canvas>
+    <script type="module">
+        import fabric from 'https://cdn.jsdelivr.net/npm/fabric@6.1.0/+esm';
+
+        const canvas = new fabric.Canvas('canvasEl');
+
+        class Cross extends fabric.Object {
+            constructor(options = {}) {
+                super(options);
+                this.transparentCorners = false;
+                this.objectCaching = false;
+                this.animDirection = 'up';
+                this.width = 100;
+                this.height = 100;
+            }
+
+            _render(ctx) {
+                ctx.beginPath();
+                ctx.moveTo(0, -this.height / 2);
+                ctx.lineTo(0, this.height / 2);
+                ctx.moveTo(-this.width / 2, 0);
+                ctx.lineTo(this.width / 2, 0);
+                ctx.stroke();
+            }
+        }
+
+        fabric.Cross = Cross;
+
+        const cross = new fabric.Cross({
+            left: 100,
+            top: 100,
+            stroke: 'red',
+            strokeWidth: 5
+        });
+
+        canvas.add(cross);
+    </script>
+</body>
+</html>
