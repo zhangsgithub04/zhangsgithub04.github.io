@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Image Generation</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
+</head>
+<body>
+  <script>
+    API_KEY='k1QzWHA9TXiUDmGgwLEmpjANIggNOLKjPGTgb0w8RFezFwlB';
+    async function generateImage(imageBase64, text, commandData) {
+      return new Promise(async (resolve, reject) => {
+        const buffer = Uint8Array.from(atob(imageBase64), c => c.charCodeAt(0));
+        const formData = new FormData();
+        formData.append('init_img', new Blob([buffer]));
+
+        const engineId = 'stable-diffusion-v1-6';
+        const apiHost = 'https://api.stability.ai';
+        const apiKey = API_KEY;
+
+        try {
+          const response = await fetch(
+            `${apiHost}/v1/generation/${engineId}/text-to-image`,
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'Authorization': `Bearer ${apiKey}`
+              },
+              body: JSON.stringify({
+                text_prompts: [
+                  {
+                    text: text
+                  }
+                ],
+                cfg_scale: 7,
+                clip_guidance_preset: 'FAST_BLUE',
+                width: commandData.width ? Number(commandData.width) : 512,
+                height: commandData.height ? Number(commandData.height) : 512,
+                samples: commandData.num ? Number(commandData.num) : 1,
+                steps: 50
+              })
+            }
+          );
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            reject(`Non-200 response: ${errorText}`);
+            throw new Error(`Non-200 response: ${errorText}`);
+          }
+
+          const responseJSON = await response.json();
+          resolve(responseJSON.artifacts);
+        } catch (error) {
+          reject(`Error: ${error.message}`);
+        }
+      });
+    }
+
+    // Usage example
+    const imageBase64 = 'YOUR_BASE64_IMAGE_DATA';
+    const text = 'Your prompt text';
+    const commandData = {
+      width: 512,
+      height: 512,
+      num: 1
+    };
+
+    generateImage(imageBase64, text, commandData)
+      .then(artifacts => {
+        console.log('Generated artifacts:', artifacts);
+      })
+      .catch(error => {
+        console.error('Error:', error);
+      });
+  </script>
+</body>
+</html>
