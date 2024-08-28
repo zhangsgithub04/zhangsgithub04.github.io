@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simple Room with Furniture</title>
+    <script src="https://cdn.babylonjs.com/babylon.js"></script>
+    <script src="https://cdn.babylonjs.com/babylon.gui.min.js"></script>
+</head>
+<body>
+    <canvas id="renderCanvas" style="width: 100%; height: 100%;"></canvas>
+    <script>
+        const canvas = document.getElementById("renderCanvas");
+        const engine = new BABYLON.Engine(canvas, true);
+
+        const createScene = () => {
+            const scene = new BABYLON.Scene(engine);
+
+            // Camera
+            const camera = new BABYLON.UniversalCamera("camera", new BABYLON.Vector3(0, 2, -10), scene);
+            camera.attachControl(canvas, true);
+
+            // Light
+            const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
+            
+            // Floor
+            const floor = BABYLON.MeshBuilder.CreateGround("floor", {width: 10, height: 10}, scene);
+            const floorMaterial = new BABYLON.StandardMaterial("floorMaterial", scene);
+            floorMaterial.diffuseColor = new BABYLON.Color3(0.5, 0.5, 0.5);
+            floor.material = floorMaterial;
+
+            // Walls
+            const wall1 = BABYLON.MeshBuilder.CreatePlane("wall1", {width: 10, height: 3}, scene);
+            wall1.position = new BABYLON.Vector3(0, 1.5, 5);
+            wall1.rotation.y = Math.PI;
+
+            const wall2 = BABYLON.MeshBuilder.CreatePlane("wall2", {width: 10, height: 3}, scene);
+            wall2.position = new BABYLON.Vector3(0, 1.5, -5);
+
+            const wall3 = BABYLON.MeshBuilder.CreatePlane("wall3", {width: 10, height: 3}, scene);
+            wall3.position = new BABYLON.Vector3(5, 1.5, 0);
+            wall3.rotation.y = -Math.PI / 2;
+
+            const wall4 = BABYLON.MeshBuilder.CreatePlane("wall4", {width: 10, height: 3}, scene);
+            wall4.position = new BABYLON.Vector3(-5, 1.5, 0);
+            wall4.rotation.y = Math.PI / 2;
+
+            // Ceiling
+            const ceiling = BABYLON.MeshBuilder.CreatePlane("ceiling", {width: 10, height: 10}, scene);
+            ceiling.rotation.x = Math.PI / 2;
+            ceiling.position.y = 3;
+
+            return scene;
+        };
+
+        const scene = createScene();
+
+        const addFurniture = (scene) => {
+            // Sofa
+            const sofa = BABYLON.MeshBuilder.CreateBox("sofa", {width: 3, height: 1, depth: 1.5}, scene);
+            sofa.position = new BABYLON.Vector3(0, 0.5, -3);
+            const sofaMaterial = new BABYLON.StandardMaterial("sofaMaterial", scene);
+            sofaMaterial.diffuseColor = new BABYLON.Color3(1, 0, 0);
+            sofa.material = sofaMaterial;
+
+            // Table
+            const tableTop = BABYLON.MeshBuilder.CreateBox("tableTop", {width: 2, height: 0.1, depth: 2}, scene);
+            tableTop.position = new BABYLON.Vector3(0, 1, 0);
+            const tableMaterial = new BABYLON.StandardMaterial("tableMaterial", scene);
+            tableMaterial.diffuseColor = new BABYLON.Color3(0.6, 0.3, 0);
+            tableTop.material = tableMaterial;
+
+            const tableLeg1 = BABYLON.MeshBuilder.CreateBox("tableLeg1", {width: 0.1, height: 0.9, depth: 0.1}, scene);
+            tableLeg1.position = new BABYLON.Vector3(-0.95, 0.45, -0.95);
+
+            const tableLeg2 = BABYLON.MeshBuilder.CreateBox("tableLeg2", {width: 0.1, height: 0.9, depth: 0.1}, scene);
+            tableLeg2.position = new BABYLON.Vector3(0.95, 0.45, -0.95);
+
+            const tableLeg3 = BABYLON.MeshBuilder.CreateBox("tableLeg3", {width: 0.1, height: 0.9, depth: 0.1}, scene);
+            tableLeg3.position = new BABYLON.Vector3(-0.95, 0.45, 0.95);
+
+            const tableLeg4 = BABYLON.MeshBuilder.CreateBox("tableLeg4", {width: 0.1, height: 0.9, depth: 0.1}, scene);
+            tableLeg4.position = new BABYLON.Vector3(0.95, 0.45, 0.95);
+
+            return scene;
+        };
+
+        addFurniture(scene);
+
+        engine.runRenderLoop(() => {
+            scene.render();
+        });
+
+        window.addEventListener("resize", () => {
+            engine.resize();
+        });
+    </script>
+</body>
+</html>
