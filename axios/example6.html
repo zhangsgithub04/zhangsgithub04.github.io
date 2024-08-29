@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stability.AI Image Generation</title>
+  <style>
+    #imageContainer img {
+      max-width: 100%;
+      height: auto;
+    }
+  </style>
+</head>
+<body>
+  <h1>Generate an Image</h1>
+  <input type="text" id="promptInput" placeholder="Enter a text prompt" style="width: 300px;">
+  <button id="generateBtn">Generate Image</button>
+  <div id="imageContainer"></div>
+
+  <script>
+    document.getElementById('generateBtn').addEventListener('click', generateImage);
+
+    async function generateImage() {
+      const engineId = 'stable-diffusion-v1-6';
+      const apiHost = 'https://api.stability.ai';
+      const apiKey = 'YOUR_API_KEY';  // Replace with your actual API key
+      const text = document.getElementById('promptInput').value;
+
+      const response = await fetch(
+        `${apiHost}/v1/generation/${engineId}/text-to-image`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+            Authorization: `Bearer ${apiKey}`
+          },
+          body: JSON.stringify({
+            text_prompts: [
+              {
+                text: text
+              }
+            ],
+            cfg_scale: 7,
+            clip_guidance_preset: 'FAST_BLUE',
+            width: 512,
+            height: 512,
+            samples: 1,
+            steps: 50
+          })
+        }
+      );
+
+      const data = await response.json();
+
+      if (data.artifacts && data.artifacts.length > 0) {
+        const img = document.createElement('img');
+        img.src = `${apiHost}/v1/generation/${engineId}/image/${data.artifacts[0].image_id}`;  // Adjust the URL based on API's actual response structure
+        document.getElementById('imageContainer').innerHTML = '';  // Clear previous images
+        document.getElementById('imageContainer').appendChild(img);
+      } else {
+        console.error('Error generating image:', data);
+      }
+    }
+  </script>
+</body>
+</html>
