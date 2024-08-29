@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Image Generation</title>
+</head>
+<body>
+  <h1>Generate Image from Text Prompt</h1>
+  <form id="imageGenerationForm">
+    <label for="textPrompt">Text Prompt:</label>
+    <input type="text" id="textPrompt" name="textPrompt" required><br><br>
+
+    <label for="width">Width:</label>
+    <input type="number" id="width" name="width" value="512"><br><br>
+
+    <label for="height">Height:</label>
+    <input type="number" id="height" name="height" value="512"><br><br>
+
+    <label for="num">Number of Samples:</label>
+    <input type="number" id="num" name="num" value="1"><br><br>
+
+    <button type="submit">Generate Image</button>
+  </form>
+
+  <h2>Generated Image:</h2>
+  <img id="generatedImage" alt="Generated Image" style="max-width: 100%; height: auto;">
+
+  <script>
+    async function generateImage(text, commandData) {
+      return new Promise(async (resolve, reject) => {
+        const engineId = 'stable-diffusion-v1-6';
+        const apiHost = 'https://api.stability.ai';
+        const apiKey = 'YOUR_API_KEY_HERE'; // Replace with your actual API key
+
+        try {
+          const response = await fetch(
+            `${apiHost}/v1/generation/${engineId}/text-to-image`,
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'Authorization': `Bearer ${apiKey}`
+              },
+              body: JSON.stringify({
+                text_prompts: [
+                  {
+                    text: text
+                  }
+                ],
+                cfg_scale: 7,
+                clip_guidance_preset: 'FAST_BLUE',
+                width: commandData.width ? Number(commandData.width) : 512,
+                height: commandData.height ? Number(commandData.height) : 512,
+                samples: commandData.num ? Number(commandData.num) : 1,
+                steps: 50
+              })
+            }
+          );
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            reject(`Non-200 response: ${errorText}`);
+            throw new Error(`Non-200 response: ${errorText}`);
+          }
+
+          const responseJSON = await response.json();
+          resolve(responseJSON.artifacts);
+        } catch (error) {
+          reject(`Error: ${error.message}`);
+        }
+      });
+    }
+
+    document.getElementById('imageGenerationForm').addEventListener('submit', async function(event) {
+      event.preventDefault();
+
+      const textPrompt = document.getElementById('textPrompt').value;
+      const width = document.getElementById('width').value;
+      const height = document.getElementById('height').value;
+      const num = document.getElementById('num').value;
+
+      const commandData = {
+        width: width,
+        height: height,
+        num: num
+      };
+
+      try {
+        const artifacts = await generateImage(textPrompt, commandData);
+        if (artifacts.length > 0) {
+          const imgElement = document.getElementById('generatedImage');
+          imgElement.src = `data:image/png;base64,${artifacts[0].base64}`;
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert(`Error: ${error.message}`);
+      }
+    });
+  </script>
+</body>
+</html>
