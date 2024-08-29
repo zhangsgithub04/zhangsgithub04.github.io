@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<style>
+canvas {
+    display: block;
+    margin: auto;
+    background: black;
+    border: 1px solid #d3d3d3;
+}
+</style>
+</head>
+<body onload="startGame()">
+<script>
+
+var player;
+var bullets = [];
+var enemies = [];
+var score = 0;
+var interval;
+
+function startGame() {
+    player = new component(30, 30, "blue", 220, 240);
+    interval = setInterval(updateGameArea, 20);
+    spawnEnemies();
+}
+
+var myGameArea = {
+    canvas : document.createElement("canvas"),
+    start : function() {
+        this.canvas.width = 480;
+        this.canvas.height = 270;
+        this.context = this.canvas.getContext("2d");
+        document.body.insertBefore(this.canvas, document.body.childNodes[0]);
+        window.addEventListener('keydown', function (e) {
+            myGameArea.keys = (myGameArea.keys || []);
+            myGameArea.keys[e.keyCode] = true;
+        })
+        window.addEventListener('keyup', function (e) {
+            myGameArea.keys[e.keyCode] = false; 
+        })
+    }, 
+    clear : function() {
+        this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    }
+}
+
+function component(width, height, color, x, y) {
+    this.width = width;
+    this.height = height;
+    this.speedX = 0;
+    this.speedY = 0;    
+    this.x = x;
+    this.y = y;
+    this.update = function() {
+        ctx = myGameArea.context;
+        ctx.fillStyle = color;
+        ctx.fillRect(this.x, this.y, this.width, this.height);
+    }
+    this.newPos = function() {
+        this.x += this.speedX;
+        this.y += this.speedY;
+        this.hitBorder();
+    }
+    this.hitBorder = function() {
+        var rightEdge = myGameArea.canvas.width - this.width;
+        var bottomEdge = myGameArea.canvas.height - this.height;
+        if (this.x < 0) this.x = 0;
+        if (this.x > rightEdge) this.x = rightEdge;
+        if (this.y < 0) this.y = 0;
+        if (this.y > bottomEdge) this.y = bottomEdge;
+    }
+    this.crashWith = function(otherobj) {
+        var myleft = this.x;
+        var myright = this.x + (this.width);
+        var mytop = this.y;
+        var mybottom = this.y + (this.height);
+        var otherleft = otherobj.x;
+        var otherright = otherobj.x + (otherobj.width);
+        var othertop = otherobj.y;
+        var otherbottom = otherobj.y + (otherobj.height);
+        var crash = true;
+        if ((mybottom < othertop) || (mytop > otherbottom) || (myright < otherleft) || (myleft > otherright)) {
+            crash = false;
+        }
+        return crash;
+    }
+}
+
+function updateGameArea() {
+    myGameArea.clear();
+
+    // Player controls
+    if (myGameArea.keys && myGameArea.keys[37]) {player.speedX = -2; }
+    if (myGameArea.keys && myGameArea.keys[39]) {player.speedX = 2; }
+    if (myGameArea.keys && myGameArea.keys[32]) { shootBullet(); } // Space bar for shooting
+
+    player.newPos();
+    player.update();
+
+    for (var i = 0; i < bullets.length; i++) {
+        bullets[i].y += -3;
+        bullets[i].update();
+        if (bullets[i].y < 0) {
+            bullets.splice(i, 1);
+        }
+    }
+
+    for (var i = 0; i < enemies.length; i++) {
+        enemies[i].y += 1;
+        enemies[i].update();
+        if (enemies[i].y > myGameArea.canvas.height) {
+            enemies.splice(i, 1);
+            score -= 10; // Penalty for letting an enemy get past
+        }
+    }
+
+    for (var i = 0; i < enemies.length; i++) {
+        for (var j = 0; j < bullets.length; j++) {
+            if (bullets[j].crashWith(enemies[i])) {
+                enemies.splice(i, 1);
+                bullets.splice(j, 1);
+                score += 10;
+                break;
+            }
+        }
+    }
+
+    // Display the score
+    myGameArea.context.fillStyle = "white";
+    myGameArea.context.font = "20px Consolas";
+    myGameArea.context.fillText("Score: " + score, 350, 20);
+
+    if (myGameArea.keys && myGameArea.keys[37] == false && myGameArea.keys[39] == false) {player.speedX = 0; }
+}
+
+function shootBullet() {
+    bullets.push(new component(5, 10, "white", player.x + player.width/2 - 2.5, player.y));
+}
+
+function spawnEnemies() {
+    setInterval(function() {
+        var x = Math.floor(Math.random() * (myGameArea.canvas.width - 30));
+        enemies.push(new component(30, 30, "red", x, 0));
+    }, 1000);
+}
+
+</script>
+</body>
+</html>
