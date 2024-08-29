@@ -30,7 +30,7 @@
   <img id="generatedImage" alt="Generated Image" style="max-width: 100%; height: auto;">
 
   <script>
-    YOUR_API_KEY_HERE='k1QzWHA9TXiUDmGgwLEmpjANIggNOLKjPGTgb0w8RFezFwlB';
+    YOUR_API_KEY_HERE='...';
     async function generateImage(imageBase64, text, commandData) {
       return new Promise(async (resolve, reject) => {
         const buffer = Uint8Array.from(atob(imageBase64), c => c.charCodeAt(0));
