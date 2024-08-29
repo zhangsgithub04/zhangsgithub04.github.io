@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stability.AI Image Generation</title>
+  <style>
+    #imageContainer img {
+      max-width: 100%;
+      height: auto;
+    }
+  </style>
+</head>
+<body>
+  <h1>Generate an Image</h1>
+  <button id="generateBtn">Generate Image</button>
+  <div id="imageContainer"></div>
+
+  <script>
+    document.getElementById('generateBtn').addEventListener('click', generateImage);
+
+    async function generateImage() {
+      const apiKey = 'k1QzWHA9TXiUDmGgwLEmpjANIggNOLKjPGTgb0w8RFezFwlB';  // Replace with your actual API key
+      const url = 'https://api.stability.ai/v1/generate';
+
+      const requestOptions = {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({
+          prompt: 'A beautiful landscape painting'
+          // Add other necessary parameters as required by the API
+        })
+      };
+
+      try {
+        const response = await fetch(url, requestOptions);
+        const data = await response.json();
+
+        if (data.image_url) {
+          const img = document.createElement('img');
+          img.src = data.image_url;
+          document.getElementById('imageContainer').innerHTML = '';  // Clear previous images
+          document.getElementById('imageContainer').appendChild(img);
+        } else {
+          console.error('Error generating image:', data);
+        }
+      } catch (error) {
+        console.error('Error:', error);
+      }
+    }
+  </script>
+</body>
+</html>
