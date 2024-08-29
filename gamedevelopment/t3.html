@@ -21,7 +21,8 @@ var score = 0;
 var interval;
 
 function startGame() {
-    player = new component(30, 30, "blue", 220, 240);
+    myGameArea.start();
+    player = new component(30, 30, "blue", 225, 240);
     interval = setInterval(updateGameArea, 20);
     spawnEnemies();
 }
@@ -46,7 +47,8 @@ var myGameArea = {
     }
 }
 
-function component(width, height, color, x, y) {
+function component(width, height, color, x, y, type) {
+    this.type = type;
     this.width = width;
     this.height = height;
     this.speedX = 0;
@@ -92,9 +94,15 @@ function updateGameArea() {
     myGameArea.clear();
 
     // Player controls
+    player.speedX = 0;
     if (myGameArea.keys && myGameArea.keys[37]) {player.speedX = -2; }
     if (myGameArea.keys && myGameArea.keys[39]) {player.speedX = 2; }
-    if (myGameArea.keys && myGameArea.keys[32]) { shootBullet(); } // Space bar for shooting
+    if (myGameArea.keys && myGameArea.keys[32] && !myGameArea.keys[32].fired) { 
+        shootBullet(); 
+        myGameArea.keys[32].fired = true;
+    } else if (!myGameArea.keys[32]) {
+        myGameArea.keys[32] = { fired: false };
+    }
 
     player.newPos();
     player.update();
@@ -131,12 +139,10 @@ function updateGameArea() {
     myGameArea.context.fillStyle = "white";
     myGameArea.context.font = "20px Consolas";
     myGameArea.context.fillText("Score: " + score, 350, 20);
-
-    if (myGameArea.keys && myGameArea.keys[37] == false && myGameArea.keys[39] == false) {player.speedX = 0; }
 }
 
 function shootBullet() {
-    bullets.push(new component(5, 10, "white", player.x + player.width/2 - 2.5, player.y));
+    bullets.push(new component(5, 10, "white", player.x + player.width / 2 - 2.5, player.y));
 }
 
 function spawnEnemies() {
