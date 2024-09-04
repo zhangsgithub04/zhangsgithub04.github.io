@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fabric.js 6.0 Example</title>
+    <script src="https://cdn.jsdelivr.net/npm/fabric@6.0.0-beta.11/dist/fabric.js"></script>
+</head>
+<body>
+    <canvas id="canvas" width="600" height="400" style="border:1px solid #ccc;"></canvas>
+
+    <script>
+        // Wait for the DOM to be fully loaded before running the script
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize the Fabric.js canvas
+            const canvas = new fabric.Canvas('canvas');
+
+            // Create a rectangle
+            const rect = new fabric.Rect({
+                left: 100,
+                top: 100,
+                fill: 'red',
+                width: 200,
+                height: 100
+            });
+
+            // Add the rectangle to the canvas
+            canvas.add(rect);
+
+            // Create a circle
+            const circle = new fabric.Circle({
+                left: 300,
+                top: 200,
+                radius: 50,
+                fill: 'green'
+            });
+
+            // Add the circle to the canvas
+            canvas.add(circle);
+
+            // Create a text object
+            const text = new fabric.Text('Hello Fabric.js 6.0!', {
+                left: 150,
+                top: 50,
+                fontSize: 24,
+                fill: 'blue'
+            });
+
+            // Add the text to the canvas
+            canvas.add(text);
+        });
+    </script>
+</body>
+</html>
