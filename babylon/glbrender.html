@@ -32,7 +32,7 @@
             pointLight.intensity = 0.6;
 
             // Load the GLB file from the local "models" directory
-            BABYLON.SceneLoader.Append("models/", "model.glb", scene, function (scene) {
+            BABYLON.SceneLoader.Append("models/", "rook.glb", scene, function (scene) {
                 scene.createDefaultCameraOrLight(true, true, true);
                 scene.activeCamera.alpha += Math.PI / 4;
             });
