@@ -42,7 +42,7 @@
             light.intensity = 0.7;
 
             // Load the GLB model
-            BABYLON.SceneLoader.Append("https://models.babylonjs.com/", "BoomBox.glb", scene, function (scene) {
+            BABYLON.SceneLoader.Append("./", "humanoid1.glb", scene, function (scene) {
                 scene.createDefaultCameraOrLight(true, true, true);
 
                 // Assuming the model has an animation, let's start it
