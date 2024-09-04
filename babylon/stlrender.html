@@ -23,17 +23,17 @@
             const camera = new BABYLON.ArcRotateCamera('Camera', Math.PI / 2, Math.PI / 2.5, 10, BABYLON.Vector3.Zero(), scene);
             camera.attachControl(canvas, true);
 
-            // Add a light
+            // Add a hemispheric light
             const light = new BABYLON.HemisphericLight('hemiLight', new BABYLON.Vector3(0, 1, 0), scene);
             light.intensity = 0.8;
 
-            // Add a directional light for better shading
+            // Add a directional light
             const dirLight = new BABYLON.DirectionalLight('dirLight', new BABYLON.Vector3(0, -1, 1), scene);
             dirLight.position = new BABYLON.Vector3(0, 10, -10);
             dirLight.intensity = 0.6;
 
             // Load the STL file
-            BABYLON.SceneLoader.ImportMesh("", "models/", "rook.stl", scene, function (meshes) {
+            BABYLON.SceneLoader.ImportMesh("", "https://models.babylonjs.com/", "rook.stl", scene, function (meshes) {
                 // Apply material to the loaded mesh
                 const material = new BABYLON.StandardMaterial("stlMaterial", scene);
                 material.diffuseColor = new BABYLON.Color3(0.5, 0.5, 0.5);
@@ -46,7 +46,9 @@
                 });
 
                 // Adjust camera target to the loaded mesh
-                camera.target = meshes[0].position;
+                if (meshes.length > 0) {
+                    camera.target = meshes[0].position;
+                }
             });
 
             return scene;
