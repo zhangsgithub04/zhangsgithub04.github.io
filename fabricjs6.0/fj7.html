@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fabric.js 6.4.1 Example with ES Modules</title>
+    <style>
+        #canvas-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+        }
+        canvas {
+            border: 1px solid #ccc;
+        }
+    </style>
+</head>
+<body>
+    <div id="canvas-container">
+        <canvas id="myCanvas" width="800" height="600"></canvas>
+    </div>
+    <script type="module">
+        import { fabric } from 'https://cdn.jsdelivr.net/npm/fabric@6.4.1/+esm';
+
+        // Initialize Fabric.js canvas
+        const canvas = new fabric.Canvas('myCanvas');
+
+        // Add a rectangle
+        const rectangle = new fabric.Rect({
+            left: 100,
+            top: 100,
+            fill: 'blue',
+            width: 200,
+            height: 100,
+            angle: 0
+        });
+
+        // Add a circle
+        const circle = new fabric.Circle({
+            left: 400,
+            top: 150,
+            radius: 50,
+            fill: 'red',
+            stroke: 'black',
+            strokeWidth: 2
+        });
+
+        // Add some text
+        const text = new fabric.Text('Hello Fabric.js 6.4.1!', {
+            left: 200,
+            top: 300,
+            fontSize: 30,
+            fill: 'green'
+        });
+
+        // Add the objects to the canvas
+        canvas.add(rectangle);
+        canvas.add(circle);
+        canvas.add(text);
+
+        // Center the canvas contents
+        canvas.centerObject(rectangle);
+        canvas.centerObject(circle);
+        canvas.centerObject(text);
+        canvas.renderAll();
+    </script>
+</body>
+</html>
