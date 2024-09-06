@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ray Tracing in HTML5 Canvas</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #333;
+        }
+        canvas {
+            border: 1px solid #000;
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="rayCanvas" width="400" height="400"></canvas>
+
+<script>
+const canvas = document.getElementById('rayCanvas');
+const ctx = canvas.getContext('2d');
+const imageData = ctx.createImageData(canvas.width, canvas.height);
+
+function Sphere(center, radius, color) {
+    this.center = center;
+    this.radius = radius;
+    this.color = color;
+}
+
+function traceRay(ray, spheres) {
+    let closest = Infinity;
+    let hitColor = [0, 0, 0];  // Background color
+
+    spheres.forEach(sphere => {
+        const t = intersectRaySphere(ray, sphere);
+        if (t > 0 && t < closest) {
+            closest = t;
+            hitColor = sphere.color;
+        }
+    });
+
+    return hitColor;
+}
+
+function intersectRaySphere(ray, sphere) {
+    const oc = [ray.origin[0] - sphere.center[0], ray.origin[1] - sphere.center[1], ray.origin[2] - sphere.center[2]];
+    const a = dot(ray.direction, ray.direction);
+    const b = 2 * dot(oc, ray.direction);
+    const c = dot(oc, oc) - sphere.radius * sphere.radius;
+    const discriminant = b * b - 4 * a * c;
+
+    if (discriminant > 0) {
+        return (-b - Math.sqrt(discriminant)) / (2 * a);
+    }
+    return -1;
+}
+
+function dot(v1, v2) {
+    return v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2];
+}
+
+// Rendering the scene
+function render(spheres) {
+    for (let y = 0; y < canvas.height; y++) {
+        for (let x = 0; x < canvas.width; x++) {
+            const ray = {
+                origin: [0, 0, -5],
+                direction: [(x / canvas.width) * 2 - 1, (y / canvas.height) * 2 - 1, 1]
+            };
+            const color = traceRay(ray, spheres);
+            setPixel(imageData, x, y, color[0], color[1], color[2], 255);
+        }
+    }
+    ctx.putImageData(imageData, 0, 0);
+}
+
+function setPixel(imageData, x, y, r, g, b, a) {
+    const index = (y * imageData.width + x) * 4;
+    imageData.data[index] = r;
+    imageData.data[index + 1] = g;
+    imageData.data[index + 2] = b;
+    imageData.data[index + 3] = a;
+}
+
+const spheres = [
+    new Sphere([0, 0, 5], 1, [255, 0, 0]),  // Red sphere
+    new Sphere([-2, 1, 4], 1, [0, 255, 0])  // Green sphere
+];
+
+render(spheres);
+</script>
+
+</body>
+</html>
