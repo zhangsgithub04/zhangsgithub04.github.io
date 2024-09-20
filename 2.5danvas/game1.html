@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>2.5D Canvas Game</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+    }
+    canvas {
+      display: block;
+      background-color: #87CEEB; /* Sky color */
+    }
+  </style>
+</head>
+<body>
+  <canvas id="gameCanvas" width="800" height="600"></canvas>
+  <script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // Set up game variables
+    const keys = {};
+    const player = {
+      x: 200,
+      y: 200,
+      speed: 2,
+      scale: 1,
+      image: new Image(),
+    };
+    player.image.src = 'https://example.com/player.png'; // Replace with your player image URL
+
+    // Background layers for parallax
+    const bgLayers = [
+      { image: new Image(), x: 0, speedFactor: 0.2 },
+      { image: new Image(), x: 0, speedFactor: 0.5 },
+    ];
+    bgLayers[0].image.src = 'https://example.com/bg-layer1.png'; // Replace with background image URL
+    bgLayers[1].image.src = 'https://example.com/bg-layer2.png';
+
+    // Objects to display in the game with depths
+    const objects = [
+      { x: 300, y: 300, depth: 1, image: new Image() },
+      { x: 150, y: 150, depth: 2, image: new Image() },
+    ];
+    objects[0].image.src = 'https://example.com/object1.png'; // Replace with object image URL
+    objects[1].image.src = 'https://example.com/object2.png';
+
+    // Convert 2D coordinates to isometric
+    function toIso(x, y) {
+      return {
+        isoX: (x - y) * 32 / 2, // assuming tile width of 64px
+        isoY: (x + y) * 16 / 2, // assuming tile height of 32px
+      };
+    }
+
+    // Draw background with parallax effect
+    function drawParallax() {
+      bgLayers.forEach(layer => {
+        ctx.drawImage(layer.image, layer.x, 0);
+        ctx.drawImage(layer.image, layer.x + canvas.width, 0);
+        layer.x -= 1 * layer.speedFactor;
+        if (layer.x <= -canvas.width) {
+          layer.x = 0; // Loop background
+        }
+      });
+    }
+
+    // Draw objects with depth sorting
+    function drawObjects() {
+      objects.sort((a, b) => a.depth - b.depth); // Sort by depth
+      objects.forEach(obj => {
+        const isoPos = toIso(obj.x, obj.y);
+        ctx.drawImage(obj.image, isoPos.isoX, isoPos.isoY);
+      });
+    }
+
+    // Draw player with scale based on position (depth)
+    function drawPlayer() {
+      const isoPos = toIso(player.x, player.y);
+      ctx.save();
+      ctx.translate(isoPos.isoX, isoPos.isoY);
+      ctx.scale(player.scale, player.scale); // Adjust scale based on "depth"
+      ctx.drawImage(player.image, -player.image.width / 2, -player.image.height / 2);
+      ctx.restore();
+    }
+
+    // Update player position and scale
+    function updatePlayer() {
+      if (keys['ArrowUp']) player.y -= player.speed;
+      if (keys['ArrowDown']) player.y += player.speed;
+      if (keys['ArrowLeft']) player.x -= player.speed;
+      if (keys['ArrowRight']) player.x += player.speed;
+
+      // Simulate scale based on player's y position for depth effect
+      player.scale = 1 + player.y / canvas.height * 0.5;
+    }
+
+    // Main game loop
+    function gameLoop() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
+
+      drawParallax(); // Draw parallax background
+      drawObjects();  // Draw sorted objects
+      updatePlayer(); // Update player position and scale
+      drawPlayer();   // Draw the player
+
+      requestAnimationFrame(gameLoop); // Continue the loop
+    }
+
+    // Handle keyboard input
+    window.addEventListener('keydown', (e) => {
+      keys[e.key] = true;
+    });
+    window.addEventListener('keyup', (e) => {
+      keys[e.key] = false;
+    });
+
+    // Start the game once assets are loaded
+    window.onload = function() {
+      gameLoop(); // Start the game loop
+    };
+
+  </script>
+</body>
+</html>
