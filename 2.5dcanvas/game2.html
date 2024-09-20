@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>2.5D Canvas Game with Procedural Animation</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+    }
+    canvas {
+      display: block;
+      background-color: #87CEEB; /* Sky color */
+    }
+  </style>
+</head>
+<body>
+  <canvas id="gameCanvas" width="800" height="600"></canvas>
+  <script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // Game variables
+    const keys = {};
+    const player = {
+      x: 200,
+      y: 200,
+      speed: 2,
+      scale: 1,
+      image: new Image(),
+      frame: 0, // Frame for animation
+      frameSpeed: 0.1, // Speed of frame change
+      frameCount: 4, // Number of frames in sprite
+      state: 'idle', // Player state (idle, walking)
+    };
+    player.image.src = 'https://example.com/player-spritesheet.png'; // Replace with sprite sheet URL
+
+    // Background layers for parallax
+    const bgLayers = [
+      { image: new Image(), x: 0, speedFactor: 0.2 },
+      { image: new Image(), x: 0, speedFactor: 0.5 },
+    ];
+    bgLayers[0].image.src = 'https://example.com/bg-layer1.png'; // Replace with background image URL
+    bgLayers[1].image.src = 'https://example.com/bg-layer2.png';
+
+    // Procedurally animated objects
+    const objects = [
+      { x: 300, y: 300, depth: 1, image: new Image(), bounce: 0 },
+      { x: 150, y: 150, depth: 2, image: new Image(), floating: 0 },
+    ];
+    objects[0].image.src = 'https://example.com/object1.png'; // Replace with object image URL
+    objects[1].image.src = 'https://example.com/object2.png';
+
+    // Convert 2D coordinates to isometric
+    function toIso(x, y) {
+      return {
+        isoX: (x - y) * 32 / 2, // assuming tile width of 64px
+        isoY: (x + y) * 16 / 2, // assuming tile height of 32px
+      };
+    }
+
+    // Draw background with parallax effect
+    function drawParallax() {
+      bgLayers.forEach(layer => {
+        ctx.drawImage(layer.image, layer.x, 0);
+        ctx.drawImage(layer.image, layer.x + canvas.width, 0);
+        layer.x -= 1 * layer.speedFactor;
+        if (layer.x <= -canvas.width) {
+          layer.x = 0; // Loop background
+        }
+      });
+    }
+
+    // Procedural Animation for Objects
+    function animateObjects() {
+      objects.forEach(obj => {
+        // Simple bounce animation
+        obj.bounce += 0.05;
+        const bounceOffset = Math.sin(obj.bounce) * 10;
+
+        // Simple floating animation
+        obj.floating += 0.02;
+        const floatOffset = Math.cos(obj.floating) * 5;
+
+        obj.y += bounceOffset; // Apply bounce offset
+        obj.x += floatOffset;  // Apply float offset
+      });
+    }
+
+    // Draw objects with depth sorting
+    function drawObjects() {
+      objects.sort((a, b) => a.depth - b.depth); // Sort by depth
+      objects.forEach(obj => {
+        const isoPos = toIso(obj.x, obj.y);
+        ctx.drawImage(obj.image, isoPos.isoX, isoPos.isoY);
+      });
+    }
+
+    // Draw player with procedural animation
+    function drawPlayer() {
+      const isoPos = toIso(player.x, player.y);
+      ctx.save();
+      ctx.translate(isoPos.isoX, isoPos.isoY);
+      ctx.scale(player.scale, player.scale);
+
+      // Draw sprite frame (simple walk cycle)
+      const frameX = Math.floor(player.frame) % player.frameCount;
+      ctx.drawImage(player.image, frameX * 64, 0, 64, 64, -32, -32, 64, 64); // Assuming each frame is 64x64px
+
+      ctx.restore();
+    }
+
+    // Update player position and animation state
+    function updatePlayer() {
+      if (keys['ArrowUp'] || keys['ArrowDown'] || keys['ArrowLeft'] || keys['ArrowRight']) {
+        player.state = 'walking'; // Set player state to walking
+        player.frame += player.frameSpeed; // Update frame for walk animation
+      } else {
+        player.state = 'idle'; // Player is idle
+        player.frame = 0; // Reset animation
+      }
+
+      if (keys['ArrowUp']) player.y -= player.speed;
+      if (keys['ArrowDown']) player.y += player.speed;
+      if (keys['ArrowLeft']) player.x -= player.speed;
+      if (keys['ArrowRight']) player.x += player.speed;
+
+      // Simulate scale based on player's y position for depth effect
+      player.scale = 1 + player.y / canvas.height * 0.5;
+    }
+
+    // Main game loop
+    function gameLoop() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
+
+      drawParallax();   // Draw parallax background
+      animateObjects(); // Apply procedural animation to objects
+      drawObjects();    // Draw objects with depth sorting
+      updatePlayer();   // Update player position and animation state
+      drawPlayer();     // Draw the player
+
+      requestAnimationFrame(gameLoop); // Continue the loop
+    }
+
+    // Handle keyboard input
+    window.addEventListener('keydown', (e) => {
+      keys[e.key] = true;
+    });
+    window.addEventListener('keyup', (e) => {
+      keys[e.key] = false;
+    });
+
+    // Start the game once assets are loaded
+    window.onload = function() {
+      gameLoop(); // Start the game loop
+    };
+
+  </script>
+</body>
+</html>
