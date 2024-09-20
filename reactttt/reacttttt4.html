@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tic-Tac-Toe MVC</title>
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone@7.10.3/babel.min.js" crossorigin></script>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel" data-presets="react,stage-3">
+    // Model: game state in 2D array
+    const initialGameState = [
+      [0, 0, 0],
+      [0, 0, 0],
+      [0, 0, 0],
+    ];
+
+    function Game() {
+      const [game, setGame] = React.useState(initialGameState);
+      const [xIsNext, setXIsNext] = React.useState(true);
+      const [winner, setWinner] = React.useState(null);
+
+      // Controller: handle button click
+      function handleClick(row, col) {
+        if (winner || game[row][col] !== 0) {
+          return; // Ignore if the game is over or square is filled
+        }
+
+        const newGame = game.map((rowArray, rowIndex) => 
+          rowArray.map((value, colIndex) => 
+            rowIndex === row && colIndex === col ? (xIsNext ? 1 : -1) : value
+          )
+        );
+
+        setGame(newGame);
+        setXIsNext(!xIsNext);
+        const gameWinner = checkWinner(newGame, row, col);
+        if (gameWinner) {
+          setWinner(gameWinner);
+        }
+      }
+
+      let status;
+      if (winner) {
+        status = winner === 1 ? "Player X wins!" : "Player O wins!";
+      } else {
+        status = "Next player: " + (xIsNext ? "X" : "O");
+      }
+
+      return (
+        <div>
+          <div>{status}</div>
+          <Board game={game} onSquareClick={handleClick} />
+        </div>
+      );
+    }
+
+    // View: Board and buttons reflecting the game state
+    function Board({ game, onSquareClick }) {
+      return (
+        <div>
+          {game.map((row, rowIndex) => (
+            <div key={rowIndex} className="board-row">
+              {row.map((value, colIndex) => (
+                <Square
+                  key={colIndex}
+                  value={value}
+                  onClick={() => onSquareClick(rowIndex, colIndex)}
+                />
+              ))}
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    function Square({ value, onClick }) {
+      let displayValue;
+      if (value === 1) displayValue = 'X';
+      else if (value === -1) displayValue = 'O';
+      else displayValue = '';
+
+      return (
+        <button 
+          onClick={onClick}
+          style={{
+            width: '100px', 
+            height: '100px',
+            fontSize: '24px',
+            fontWeight: 'bold',
+            textAlign: 'center',
+            verticalAlign: 'middle'
+          }}
+        >
+          {displayValue}
+        </button>
+      );
+    }
+
+    // Controller: check if there's a winner based on the most recent move
+    function checkWinner(game, row, col) {
+      const player = game[row][col];
+
+      // Check the row
+      if (game[row].every(cell => cell === player)) {
+        return player;
+      }
+
+      // Check the column
+      if (game.every(rowArray => rowArray[col] === player)) {
+        return player;
+      }
+
+      // Check diagonal (top-left to bottom-right)
+      if (row === col && game.every((rowArray, index) => rowArray[index] === player)) {
+        return player;
+      }
+
+      // Check anti-diagonal (top-right to bottom-left)
+      if (row + col === 2 && game.every((rowArray, index) => rowArray[2 - index] === player)) {
+        return player;
+      }
+
+      return null;
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById("root"));
+    root.render(<Game />);
+
+  </script>
+</body>
+</html>
