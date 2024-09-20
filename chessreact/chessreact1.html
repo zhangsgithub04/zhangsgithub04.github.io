@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>React Chessboard</title>
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone@7.10.3/babel.min.js" crossorigin></script>
+  <style>
+    .chessboard {
+      display: grid;
+      grid-template-columns: repeat(8, 50px);
+      grid-template-rows: repeat(8, 50px);
+      gap: 1px;
+    }
+
+    .square {
+      width: 50px;
+      height: 50px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .light {
+      background-color: #f0d9b5;
+    }
+
+    .dark {
+      background-color: #b58863;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel" data-presets="react,stage-3">
+
+    // Create a square component
+    function Square({ isLight }) {
+      const squareClass = isLight ? 'square light' : 'square dark';
+      return React.createElement('div', { className: squareClass });
+    }
+
+    // Create a chessboard component using a double for loop
+    function ChessBoard() {
+      const squares = [];
+
+      // Generate an 8x8 board using two loops
+      for (let row = 0; row < 8; row++) {
+        for (let col = 0; col < 8; col++) {
+          // Light squares on even rows have even columns, dark squares on odd
+          const isLight = (row + col) % 2 === 0;
+          squares.push(React.createElement(Square, { key: row * 8 + col, isLight }));
+        }
+      }
+
+      return React.createElement('div', { className: 'chessboard' }, squares);
+    }
+
+    // Render the chessboard
+    const root = ReactDOM.createRoot(document.getElementById("root"));
+    root.render(React.createElement(ChessBoard));
+
+  </script>
+</body>
+
+</html>
