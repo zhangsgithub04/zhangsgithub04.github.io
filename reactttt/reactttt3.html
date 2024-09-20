@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tic-Tac-Toe MVC</title>
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone@7.10.3/babel.min.js" crossorigin></script>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel" data-presets="react,stage-3">
+    // Model: game state in 2D array
+    const initialGameState = [
+      [0, 0, 0],
+      [0, 0, 0],
+      [0, 0, 0],
+    ];
+
+    function Game() {
+      const [game, setGame] = React.useState(initialGameState);
+      const [xIsNext, setXIsNext] = React.useState(true);
+
+      // Controller: handle button click
+      function handleClick(row, col) {
+        if (calculateWinner(game) || game[row][col] !== 0) {
+          return; // Ignore click if the game is over or square is filled
+        }
+
+        const newGame = game.map((rowArray, rowIndex) => 
+          rowArray.map((value, colIndex) => 
+            rowIndex === row && colIndex === col ? (xIsNext ? 1 : -1) : value
+          )
+        );
+
+        setGame(newGame);
+        setXIsNext(!xIsNext);
+      }
+
+      const winner = calculateWinner(game);
+      let status;
+      if (winner) {
+        status = winner === 1 ? "Player X wins!" : "Player O wins!";
+      } else {
+        status = "Next player: " + (xIsNext ? "X" : "O");
+      }
+
+      return (
+        <div>
+          <div>{status}</div>
+          <Board game={game} onSquareClick={handleClick} />
+        </div>
+      );
+    }
+
+    // View: Board and buttons reflecting the game state
+    function Board({ game, onSquareClick }) {
+      return (
+        <div>
+          {game.map((row, rowIndex) => (
+            <div key={rowIndex} className="board-row">
+              {row.map((value, colIndex) => (
+                <Square
+                  key={colIndex}
+                  value={value}
+                  onClick={() => onSquareClick(rowIndex, colIndex)}
+                />
+              ))}
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    function Square({ value, onClick }) {
+      let displayValue;
+      if (value === 1) displayValue = 'X';
+      else if (value === -1) displayValue = 'O';
+      else displayValue = '';
+
+      return (
+        <button 
+          onClick={onClick}
+          style={{
+            width: '100px', 
+            height: '100px',
+            fontSize: '24px',
+            fontWeight: 'bold',
+            textAlign: 'center',
+            verticalAlign: 'middle'
+          }}
+        >
+          {displayValue}
+        </button>
+      );
+    }
+
+    // Model: calculate winner
+    // Notice that, this function could be implemented in a better way, especially for other games.
+    function calculateWinner(game) {
+      const lines = [
+        // Rows
+        [[0, 0], [0, 1], [0, 2]],
+        [[1, 0], [1, 1], [1, 2]],
+        [[2, 0], [2, 1], [2, 2]],
+        // Columns
+        [[0, 0], [1, 0], [2, 0]],
+        [[0, 1], [1, 1], [2, 1]],
+        [[0, 2], [1, 2], [2, 2]],
+        // Diagonals
+        [[0, 0], [1, 1], [2, 2]],
+        [[0, 2], [1, 1], [2, 0]],
+      ];
+
+      for (let i = 0; i < lines.length; i++) {
+        const [[a1, a2], [b1, b2], [c1, c2]] = lines[i];
+        if (game[a1][a2] !== 0 && game[a1][a2] === game[b1][b2] && game[a1][a2] === game[c1][c2]) {
+          return game[a1][a2]; // Return 1 for 'X' or -1 for 'O'
+        }
+      }
+      return null;
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById("root"));
+    root.render(<Game />);
+
+  </script>
+</body>
+</html>
