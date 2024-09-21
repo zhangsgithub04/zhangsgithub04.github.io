@@ -1,13 +1,14 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Babylon.js Chessboard with GLB Models</title>
+    <title>Babylon.js Chessboard with STL Export</title>
     <script src="https://cdn.babylonjs.com/babylon.js"></script>
     <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
+    <script src="https://cdn.babylonjs.com/stlExporter/babylon.stlExporter.min.js"></script>
 </head>
 <body>
     <canvas id="renderCanvas" style="width: 100%; height: 100%;"></canvas>
-    <button id="exportButton" style="position: absolute; top: 10px; left: 10px;">Export GLB</button>
+    <button id="exportButton" style="position: absolute; top: 10px; left: 10px;">Export STL</button>
     <script>
         const canvas = document.getElementById("renderCanvas");
         const engine = new BABYLON.Engine(canvas, true);
@@ -41,32 +42,37 @@
 
         const scene = createScene();
 
-        const createPiece = (modelPath, position, color) => {
-            BABYLON.SceneLoader.Append("", modelPath, scene, (newMeshes) => {
-                const piece = newMeshes[0];
-                piece.position = position;
-                const pieceMaterial = new BABYLON.StandardMaterial("pieceMat", scene);
-                pieceMaterial.diffuseColor = color;
-                piece.material = pieceMaterial;
+        const createPiece = (name, position) => {
+            let piece;
+            switch (name) {
+                case "rook":
+                    piece = new BABYLON.AssetsManager(scene).addMeshTask("loadRook", "", "path/to/models/", "rook.glb");
+                    piece.onSuccess = (task) => {
+                        const rookMesh = task.loadedMeshes[0];
+                        rookMesh.position = position;
+                        rookMesh.scaling.scaleInPlace(0.5); // Adjust scaling as necessary
+                        rookMesh.actionManager = new BABYLON.ActionManager(scene);
+                        rookMesh.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnPickTrigger, () => {
+                            selectedPiece = rookMesh;
+                        }));
+                    };
+                    break;
 
-                piece.actionManager = new BABYLON.ActionManager(scene);
-                piece.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnPickTrigger, () => {
-                    selectedPiece = piece;
-                }));
-            });
+                // Add cases for other pieces similarly with their respective GLB files
+
+                default:
+                    piece = BABYLON.MeshBuilder.CreateBox(name, {size: 0.5}, scene);
+            }
+            return piece;
         };
 
-        // Load pieces using .glb models from the same directory
-        createPiece("rook.glb", new BABYLON.Vector3(-3.5, 0.5, 3.5), new BABYLON.Color3(1, 1, 1));
-        createPiece("rook.glb", new BABYLON.Vector3(3.5, 0.5, 3.5), new BABYLON.Color3(1, 1, 1));
-        createPiece("rook.glb", new BABYLON.Vector3(-3.5, 0.5, -3.5), new BABYLON.Color3(0, 0, 0));
-        createPiece("rook.glb", new BABYLON.Vector3(3.5, 0.5, -3.5), new BABYLON.Color3(0, 0, 0));
-
-        // Repeat for other pieces
-        createPiece("knight.glb", new BABYLON.Vector3(-2.5, 0.5, 3.5), new BABYLON.Color3(1, 1, 1));
-        createPiece("bishop.glb", new BABYLON.Vector3(-1.5, 0.5, 3.5), new BABYLON.Color3(1, 1, 1));
-        createPiece("queen.glb", new BABYLON.Vector3(-0.5, 0.5, 3.5), new BABYLON.Color3(1, 1, 1));
-        createPiece("king.glb", new BABYLON.Vector3(0.5, 0.5, 3.5), new BABYLON.Color3(1, 1, 1));
+        const pieces = [];
+        
+        // Place rooks with GLB models
+        pieces.push(createPiece("rook", new BABYLON.Vector3(-3.5, 0.5, 3.5)));
+        pieces.push(createPiece("rook", new BABYLON.Vector3(3.5, 0.5, 3.5)));
+        pieces.push(createPiece("rook", new BABYLON.Vector3(-3.5, 0.5, -3.5)));
+        pieces.push(createPiece("rook", new BABYLON.Vector3(3.5, 0.5, -3.5)));
 
         let selectedPiece = null;
 
@@ -82,8 +88,14 @@
         };
 
         document.getElementById("exportButton").addEventListener("click", () => {
-            BABYLON.GLTF2Export.GLBAsync(scene, "chessboard").then((glb) => {
-                glb.downloadFiles();
+            pieces.forEach(piece => {
+                const stlString = BABYLON.STLExport.CreateSTL(scene, false, piece);
+                const blob = new Blob([stlString], { type: 'application/octet-stream' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `${piece.name}.stl`;
+                link.click();
             });
         });
 
