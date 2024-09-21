@@ -29,11 +29,11 @@
             const light = new BABYLON.HemisphericLight('hemiLight', new BABYLON.Vector3(0, 1, 0), scene);
 
             // Create the bishop shape by combining basic geometries
-            const base = BABYLON.MeshBuilder.CreateCylinder('bishopBase', { diameter: 2, height: 0.5 }, scene);
-            const body = BABYLON.MeshBuilder.CreateCylinder('bishopBody', { diameter: 1.2, height: 4 }, scene);
-            body.position.y = 2;
-            const hat = BABYLON.MeshBuilder.CreateCone('bishopHat', { diameter: 1.5, height: 2 }, scene);
-            hat.position.y = 4;
+            const base = BABYLON.MeshBuilder.CreateCylinder('bishopBase', { diameter: 1.5, height: 0.5 }, scene);
+            const body = BABYLON.MeshBuilder.CreateCylinder('bishopBody', { diameter: 1, height: 3 }, scene);
+            body.position.y = 1.75;
+            const hat = BABYLON.MeshBuilder.CreateCone('bishopHat', { diameter: 1.5, height: 1.5 }, scene);
+            hat.position.y = 3.25;
 
             // Create a CSG operation to combine meshes
             const bishopCSG = BABYLON.CSG.FromMesh(base)
