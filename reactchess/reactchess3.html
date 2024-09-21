@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chessboard with Move Functionality</title>
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone@7.10.3/babel.min.js" crossorigin></script>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel" data-presets="react,stage-3">
+    // Model: Starting state of the chessboard in 2D array
+    const initialGameState = [
+      ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'],
+      ['p', 'p', 'p', 'p', 'p', 'p', 'p', 'p'],
+      ['', '', '', '', '', '', '', ''],
+      ['', '', '', '', '', '', '', ''],
+      ['', '', '', '', '', '', '', ''],
+      ['', '', '', '', '', '', '', ''],
+      ['P', 'P', 'P', 'P', 'P', 'P', 'P', 'P'],
+      ['R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R']
+    ];
+
+    function Game() {
+      const [game, setGame] = React.useState(initialGameState);
+      const [selectedSquare, setSelectedSquare] = React.useState(null);
+
+      // Handle square click for moving pieces
+      function handleClick(row, col) {
+        if (selectedSquare) {
+          // Move the piece
+          const newGame = game.map(row => row.slice());
+          const [selectedRow, selectedCol] = selectedSquare;
+
+          // Move the piece to the new location
+          newGame[row][col] = newGame[selectedRow][selectedCol];
+          newGame[selectedRow][selectedCol] = ''; // Empty the original square
+          setGame(newGame);
+          setSelectedSquare(null); // Deselect the square
+        } else {
+          // Select the piece
+          if (game[row][col]) {
+            setSelectedSquare([row, col]);
+          }
+        }
+      }
+
+      return (
+        <div>
+          <Board game={game} onSquareClick={handleClick} selectedSquare={selectedSquare} />
+        </div>
+      );
+    }
+
+    // View: Board and buttons reflecting the game state
+    function Board({ game, onSquareClick, selectedSquare }) {
+      return (
+        <div>
+          {game.map((row, rowIndex) => (
+            <div key={rowIndex} style={{ display: 'flex' }}>
+              {row.map((value, colIndex) => (
+                <Square
+                  key={colIndex}
+                  value={value}
+                  onClick={() => onSquareClick(rowIndex, colIndex)}
+                  isLight={(rowIndex + colIndex) % 2 === 0}
+                  isSelected={selectedSquare && selectedSquare[0] === rowIndex && selectedSquare[1] === colIndex}
+                />
+              ))}
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    function Square({ value, onClick, isLight, isSelected }) {
+      // Inline styles for alternating colors
+      const squareStyle = {
+        width: '80px',
+        height: '80px',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        fontSize: '24px',
+        fontWeight: 'bold',
+        cursor: 'pointer',
+        backgroundColor: isSelected ? '#ffeb3b' : (isLight ? '#f0d9b5' : '#b58863'),
+        border: '1px solid #999'
+      };
+
+      // Display piece based on the value
+      const pieceDisplay = value ? value : '';
+
+      return (
+        <button style={squareStyle} onClick={onClick}>
+          {pieceDisplay}
+        </button>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById("root"));
+    root.render(<Game />);
+  </script>
+</body>
+</html>
