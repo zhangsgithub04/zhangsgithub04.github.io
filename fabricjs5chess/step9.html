@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fabric.js Chessboard with Moveable Pieces</title>
+    <title>Fabric.js Chessboard with Enhanced Features</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
     <style>
         canvas {
@@ -15,10 +15,20 @@
             overflow-y: auto;
             border: 1px solid #000;
             margin-top: 10px;
+            padding: 5px;
+        }
+        #hud {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
         }
     </style>
 </head>
 <body>
+    <div id="hud">
+        <div id="white-timer">White: 00:00</div>
+        <div id="black-timer">Black: 00:00</div>
+    </div>
     <canvas id="canvas" width="400" height="400"></canvas>
     <div id="history"></div>
     <script>
@@ -26,7 +36,37 @@
         const squareSize = 50;
         let turn = 'white';
         const history = [];
+        let whiteTime = 300; // 5 minutes
+        let blackTime = 300; // 5 minutes
+        let timerInterval;
 
+        // Initialize the timers
+        function startTimer() {
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                if (turn === 'white') {
+                    whiteTime--;
+                    updateTimerDisplay('white');
+                } else {
+                    blackTime--;
+                    updateTimerDisplay('black');
+                }
+            }, 1000);
+        }
+
+        function updateTimerDisplay(color) {
+            const timerElement = document.getElementById(`${color}-timer`);
+            const time = color === 'white' ? whiteTime : blackTime;
+            const minutes = String(Math.floor(time / 60)).padStart(2, '0');
+            const seconds = String(time % 60).padStart(2, '0');
+            timerElement.innerText = `${color.charAt(0).toUpperCase() + color.slice(1)}: ${minutes}:${seconds}`;
+            if (time <= 0) {
+                clearInterval(timerInterval);
+                alert(`${color.charAt(0).toUpperCase() + color.slice(1)} time's up!`);
+            }
+        }
+
+        // Create the chessboard
         function createChessboard() {
             for (let row = 0; row < 8; row++) {
                 for (let col = 0; col < 8; col++) {
@@ -44,6 +84,7 @@
             }
         }
 
+        // Load SVG pieces onto the chessboard
         function addPieces() {
             const pieces = {
                 'r': 'https://upload.wikimedia.org/wikipedia/commons/f/ff/Chess_rdt45.svg',
@@ -86,12 +127,34 @@
                                 selectable: true,
                                 pieceColor: piece === piece.toUpperCase() ? 'white' : 'black'
                             });
-
+                            
+                            // Mouse event handlers
+                            svgPiece.on('mousedown', function() {
+                                console.log(`Piece selected: ${piece}`);
+                                if ((turn === 'white' && this.pieceColor === 'white') || 
+                                    (turn === 'black' && this.pieceColor === 'black')) {
+                                    canvas.setActiveObject(this);
+                                }
+                            });
+                            svgPiece.on('mouseup', function() {
+                                const activeObject = canvas.getActiveObject();
+                                if (activeObject === this) {
+                                    const fromPosition = coordsToPosition(this.left, this.top);
+                                    console.log(`Move from: ${fromPosition}`);
+                                    alert(`Select destination square for ${piece} (current position: ${fromPosition})`);
+                                }
+                            });
                             canvas.add(svgPiece);
                         });
                     }
                 }
             }
+        }
+
+        function coordsToPosition(left, top) {
+            const col = Math.floor(left / squareSize);
+            const row = 8 - Math.floor(top / squareSize);
+            return String.fromCharCode(col + 'a'.charCodeAt(0)) + row;
         }
 
         function updateHistory(move) {
@@ -115,7 +178,8 @@
                 piece.setCoords();
                 canvas.renderAll();
                 updateHistory(`${piece.pieceColor} moves from ${from} to ${to}`);
-                turn = turn === 'white' ? 'black' : 'white';
+                turn = turn === 'white' ? 'black' : 'white'; // Switch turns
+                startTimer(); // Restart timer for the next player
             }
         }
 
@@ -130,7 +194,7 @@
 
         window.addEventListener('keydown', function(event) {
             if (event.key.match(/[a-h][1-8]/)) { // Check for valid square
-                const from = prompt("Enter the piece's position (e.g., e2):");
+                const from = prompt("Enter the piece's current position (e.g., e2):");
                 if (from) {
                     movePiece(from, event.key); // Move to the square indicated by the key
                 }
@@ -139,6 +203,7 @@
 
         createChessboard();
         addPieces();
+        startTimer();
     </script>
 </body>
 </html>
