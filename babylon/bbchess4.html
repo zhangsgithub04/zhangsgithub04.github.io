@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Babylon.js Chessboard with STL Export</title>
+    <title>Babylon.js Chessboard with GLB Export</title>
     <script src="https://cdn.babylonjs.com/babylon.js"></script>
     <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
     <script src="https://cdn.babylonjs.com/stlExporter/babylon.stlExporter.min.js"></script>
@@ -12,7 +12,6 @@
     <script>
         const canvas = document.getElementById("renderCanvas");
         const engine = new BABYLON.Engine(canvas, true);
-        let pieces = [];
 
         const createScene = () => {
             const scene = new BABYLON.Scene(engine);
@@ -44,47 +43,57 @@
         const scene = createScene();
 
         const createPiece = (name, position, color) => {
-            let piece;
-            switch (name) {
-                case "rook":
-                    // Load rook.glb model
-                    BABYLON.SceneLoader.ImportMesh("", "./", "rook.glb", scene, (meshes) => {
-                        piece = meshes[0];
-                        piece.position = position;
-                        piece.scaling = new BABYLON.Vector3(0.5, 0.5, 0.5); // Adjust scaling if needed
+            BABYLON.SceneLoader.ImportMesh("", "./", `${name}.glb`, scene, (meshes) => {
+                const piece = meshes[0];
+                piece.position = position;
+                piece.scaling = new BABYLON.Vector3(0.5, 0.5, 0.5); // Adjust scaling if needed
 
-                        const pieceMaterial = new BABYLON.StandardMaterial(name + "Mat", scene);
-                        pieceMaterial.diffuseColor = color;
-                        piece.material = pieceMaterial;
+                const pieceMaterial = new BABYLON.StandardMaterial(name + "Mat", scene);
+                pieceMaterial.diffuseColor = color;
+                piece.material = pieceMaterial;
 
-                        pieces.push(piece); // Add piece to pieces array
-                    });
-                    break;
-                default:
-                    piece = BABYLON.MeshBuilder.CreateBox(name, {size: 0.5}, scene);
-                    piece.position = position;
-                    const pieceMaterial = new BABYLON.StandardMaterial(name + "Mat", scene);
-                    pieceMaterial.diffuseColor = color;
-                    piece.material = pieceMaterial;
-                    pieces.push(piece); // Add piece to pieces array
-                    break;
-            }
-
-            return piece;
+                piece.actionManager = new BABYLON.ActionManager(scene);
+                piece.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnPickTrigger, () => {
+                    selectedPiece = piece;
+                }));
+            });
         };
 
-        // Place rooks (using rook.glb model)
-        createPiece("rook", new BABYLON.Vector3(-3.5, 0.5, 3.5), new BABYLON.Color3(1, 1, 1)); // Light rook
-        createPiece("rook", new BABYLON.Vector3(3.5, 0.5, 3.5), new BABYLON.Color3(1, 0.5, 0.5)); // Light rook
-        createPiece("rook", new BABYLON.Vector3(-3.5, 0.5, -3.5), new BABYLON.Color3(0, 0, 0)); // Dark rook
-        createPiece("rook", new BABYLON.Vector3(3.5, 0.5, -3.5), new BABYLON.Color3(0.5, 0.5, 0.5)); // Dark rook
+        const pieces = [];
+        const lightColor = new BABYLON.Color3(1, 1, 1);
+        const darkColor = new BABYLON.Color3(0, 0, 0);
 
-        // Create other pieces
-        createPiece("pawn", new BABYLON.Vector3(-2.5, 0.5, 3.5), new BABYLON.Color3(1, 1, 1));
-        createPiece("knight", new BABYLON.Vector3(0, 0.5, 3.5), new BABYLON.Color3(1, 1, 1));
-        createPiece("bishop", new BABYLON.Vector3(2.5, 0.5, 3.5), new BABYLON.Color3(1, 1, 1));
-        createPiece("queen", new BABYLON.Vector3(-2.5, 0.5, -3.5), new BABYLON.Color3(0, 0, 0));
-        createPiece("king", new BABYLON.Vector3(0, 0.5, -3.5), new BABYLON.Color3(0, 0, 0));
+        // Place pawns
+        for (let i = 0; i < 8; i++) {
+            createPiece("pawn", new BABYLON.Vector3(i - 3.5, 0.5, 1.5), lightColor);
+            createPiece("pawn", new BABYLON.Vector3(i - 3.5, 0.5, -1.5), darkColor);
+        }
+
+        // Place rooks
+        createPiece("rook", new BABYLON.Vector3(-3.5, 0.5, 3.5), lightColor);
+        createPiece("rook", new BABYLON.Vector3(3.5, 0.5, 3.5), lightColor);
+        createPiece("rook", new BABYLON.Vector3(-3.5, 0.5, -3.5), darkColor);
+        createPiece("rook", new BABYLON.Vector3(3.5, 0.5, -3.5), darkColor);
+
+        // Place knights
+        createPiece("knight", new BABYLON.Vector3(-2.5, 0.5, 3.5), lightColor);
+        createPiece("knight", new BABYLON.Vector3(2.5, 0.5, 3.5), lightColor);
+        createPiece("knight", new BABYLON.Vector3(-2.5, 0.5, -3.5), darkColor);
+        createPiece("knight", new BABYLON.Vector3(2.5, 0.5, -3.5), darkColor);
+
+        // Place bishops
+        createPiece("bishop", new BABYLON.Vector3(-1.5, 0.5, 3.5), lightColor);
+        createPiece("bishop", new BABYLON.Vector3(1.5, 0.5, 3.5), lightColor);
+        createPiece("bishop", new BABYLON.Vector3(-1.5, 0.5, -3.5), darkColor);
+        createPiece("bishop", new BABYLON.Vector3(1.5, 0.5, -3.5), darkColor);
+
+        // Place queens
+        createPiece("queen", new BABYLON.Vector3(-0.5, 0.5, 3.5), lightColor);
+        createPiece("queen", new BABYLON.Vector3(-0.5, 0.5, -3.5), darkColor);
+
+        // Place kings
+        createPiece("king", new BABYLON.Vector3(0.5, 0.5, 3.5), lightColor);
+        createPiece("king", new BABYLON.Vector3(0.5, 0.5, -3.5), darkColor);
 
         let selectedPiece = null;
 
