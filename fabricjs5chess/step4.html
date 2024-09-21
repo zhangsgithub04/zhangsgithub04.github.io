@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fabric.js Chessboard with SVG Rook</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
+    <style>
+        canvas {
+            border: 1px solid #000;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas" width="400" height="400"></canvas>
+    <script>
+        // Initialize Fabric.js canvas
+        const canvas = new fabric.Canvas('canvas');
+
+        // Size of each square
+        const squareSize = 50;
+
+        // Create the chessboard
+        function createChessboard() {
+            for (let row = 0; row < 8; row++) {
+                for (let col = 0; col < 8; col++) {
+                    const isLightSquare = (row + col) % 2 === 0;
+                    const square = new fabric.Rect({
+                        left: col * squareSize,
+                        top: row * squareSize,
+                        fill: isLightSquare ? '#eee' : '#333', // Light or dark color
+                        width: squareSize,
+                        height: squareSize,
+                        selectable: false
+                    });
+                    canvas.add(square);
+                }
+            }
+        }
+
+        // Load the black rook SVG and place on a dark and a light square
+        function addRooks() {
+            const rookSVGUrl = 'https://upload.wikimedia.org/wikipedia/commons/f/ff/Chess_rdt45.svg';
+
+            // Place rook on a dark square (0, 0) and a light square (0, 1)
+            fabric.loadSVGFromURL(rookSVGUrl, function(objects, options) {
+                const svgRookDark = fabric.util.groupSVGElements(objects, options);
+                const svgRookLight = fabric.util.groupSVGElements(objects, options);
+
+                // Set the position for the rook on the dark square
+                svgRookDark.set({
+                    left: squareSize / 2,
+                    top: squareSize / 2,
+                    originX: 'center',
+                    originY: 'center',
+                    selectable: false
+                });
+
+                // Set the position for the rook on the light square
+                svgRookLight.set({
+                    left: squareSize * 1.5, // Second column (1)
+                    top: squareSize / 2, // First row (0)
+                    originX: 'center',
+                    originY: 'center',
+                    selectable: false
+                });
+
+                // Add both rooks to the canvas
+                canvas.add(svgRookDark);
+                canvas.add(svgRookLight);
+            });
+        }
+
+        // Initialize the chessboard and add the rooks
+        createChessboard();
+        addRooks();
+    </script>
+</body>
+</html>
