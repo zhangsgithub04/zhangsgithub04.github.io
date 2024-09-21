@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chessboard with Rooks</title>
+    <script src="https://cdn.babylonjs.com/babylon.js"></script>
+    <script src="https://cdn.babylonjs.com/loaders/babylon.glTF2FileLoader.min.js"></script>
+</head>
+<body>
+    <canvas id="renderCanvas" style="width: 100%; height: 100vh;"></canvas>
+
+    <script>
+        const canvas = document.getElementById("renderCanvas");
+        const engine = new BABYLON.Engine(canvas, true);
+
+        const createScene = () => {
+            const scene = new BABYLON.Scene(engine);
+
+            // Camera
+            const camera = new BABYLON.ArcRotateCamera("camera", -Math.PI / 2, Math.PI / 2.5, 15, BABYLON.Vector3.Zero(), scene);
+            camera.attachControl(canvas, true);
+
+            // Light
+            const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
+
+            // Chessboard
+            const boardSize = 8;
+            const tileSize = 1;
+
+            for (let row = 0; row < boardSize; row++) {
+                for (let col = 0; col < boardSize; col++) {
+                    const tile = BABYLON.MeshBuilder.CreateBox(`tile${row}_${col}`, { size: tileSize }, scene);
+                    tile.position = new BABYLON.Vector3(row - boardSize / 2 + 0.5, 0, col - boardSize / 2 + 0.5);
+                    const tileMaterial = new BABYLON.StandardMaterial(`tileMat${row}_${col}`, scene);
+                    tileMaterial.diffuseColor = (row + col) % 2 === 0 ? new BABYLON.Color3(1, 1, 1) : new BABYLON.Color3(0, 0, 0);
+                    tile.material = tileMaterial;
+                }
+            }
+
+            // Load Rooks with Different Colors
+            const loadRook = (position, color) => {
+                BABYLON.SceneLoader.ImportMesh("", "./", "rook.glb", scene, (meshes) => {
+                    const rook = meshes[0];
+                    rook.position = position;
+                    rook.scaling = new BABYLON.Vector3(0.5, 0.5, 0.5);  // Adjust scaling if needed
+
+                    // Apply a unique color material
+                    const rookMaterial = new BABYLON.StandardMaterial("rookMat", scene);
+                    rookMaterial.diffuseColor = color;
+                    rook.material = rookMaterial;
+                });
+            };
+
+            // Place rooks with different colors
+            const lightColor = new BABYLON.Color3(1, 1, 1); // White rook
+            const darkColor = new BABYLON.Color3(0, 0, 0);  // Black rook
+
+            loadRook(new BABYLON.Vector3(-3.5, 0.5, 3.5), lightColor); // White rook 1
+            loadRook(new BABYLON.Vector3(3.5, 0.5, 3.5), lightColor);  // White rook 2
+            loadRook(new BABYLON.Vector3(-3.5, 0.5, -3.5), darkColor); // Black rook 1
+            loadRook(new BABYLON.Vector3(3.5, 0.5, -3.5), darkColor);  // Black rook 2
+
+            return scene;
+        };
+
+        const scene = createScene();
+
+        engine.runRenderLoop(() => {
+            scene.render();
+        });
+
+        window.addEventListener("resize", () => {
+            engine.resize();
+        });
+    </script>
+</body>
+</html>
