@@ -4,11 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fabric.js Chess Board with Letters</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.0.0/fabric.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
     <style>
-        body { margin: 0; padding: 0; }
         canvas {
-            border: 1px solid black;
+            border: 1px solid #000;
         }
     </style>
 </head>
@@ -41,9 +40,9 @@
                         fill: isLightSquare ? '#eee' : '#333',
                         width: squareSize,
                         height: squareSize,
-                        selectable: false, // Prevent squares from being selectable
+                        selectable: false // Ensure squares are not selectable
                     });
-                    canvas.add(square); // Add square to canvas
+                    canvas.add(square);
                 }
             }
         }
@@ -61,9 +60,9 @@
                             fill: piece === piece.toUpperCase() ? 'white' : 'black', // White for uppercase, black for lowercase
                             originX: 'center',
                             originY: 'center',
-                            selectable: false, // Prevent text from being selectable
+                            selectable: false // Ensure pieces are not selectable
                         });
-                        canvas.add(text); // Add text to canvas
+                        canvas.add(text);
                     }
                 }
             }
@@ -72,8 +71,8 @@
         // Initialize the chessboard and add the pieces
         createChessboard();
         addPieces();
-
-        // Render everything on canvas
+        
+        // Render everything
         canvas.renderAll();
     </script>
 </body>
