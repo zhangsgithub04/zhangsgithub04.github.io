@@ -91,11 +91,11 @@
       // Display piece based on the value
       const pieceDisplay = () => {
         if (value === 'p') {
-          return <i className="ti ti-chess-bishop" style={{ color: 'white' }} />;
+          return <i className="ti ti-chess-bishop" style={{ color: 'white', fontSize: '40px' }} />;
         } else if (value === 'P') {
-          return <i className="ti ti-chess-bishop" style={{ color: 'black' }} />;
+          return <i className="ti ti-chess-bishop" style={{ color: 'black', fontSize: '40px' }} />;
         } else {
-          return '';
+          return value.toUpperCase(); // Display other pieces as letters
         }
       };
 
