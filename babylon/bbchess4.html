@@ -52,19 +52,20 @@
             });
         };
 
-        const pieces = [];
         const lightColor = new BABYLON.Color3(1, 1, 1);
         const darkColor = new BABYLON.Color3(0, 0, 0);
+        const lightPawnColor = new BABYLON.Color3(0.8, 0.8, 0.8); // Light pawn color
+        const darkPawnColor = new BABYLON.Color3(0.3, 0.3, 0.3); // Dark pawn color
 
         // Place light pieces
-        createPiece("pawn", new BABYLON.Vector3(-3.5, 0.5, 1.5), lightColor);
-        createPiece("pawn", new BABYLON.Vector3(-2.5, 0.5, 1.5), lightColor);
-        createPiece("pawn", new BABYLON.Vector3(-1.5, 0.5, 1.5), lightColor);
-        createPiece("pawn", new BABYLON.Vector3(-0.5, 0.5, 1.5), lightColor);
-        createPiece("pawn", new BABYLON.Vector3(0.5, 0.5, 1.5), lightColor);
-        createPiece("pawn", new BABYLON.Vector3(1.5, 0.5, 1.5), lightColor);
-        createPiece("pawn", new BABYLON.Vector3(2.5, 0.5, 1.5), lightColor);
-        createPiece("pawn", new BABYLON.Vector3(3.5, 0.5, 1.5), lightColor);
+        createPiece("pawn", new BABYLON.Vector3(-3.5, 0.5, 1.5), lightPawnColor);
+        createPiece("pawn", new BABYLON.Vector3(-2.5, 0.5, 1.5), lightPawnColor);
+        createPiece("pawn", new BABYLON.Vector3(-1.5, 0.5, 1.5), lightPawnColor);
+        createPiece("pawn", new BABYLON.Vector3(-0.5, 0.5, 1.5), lightPawnColor);
+        createPiece("pawn", new BABYLON.Vector3(0.5, 0.5, 1.5), lightPawnColor);
+        createPiece("pawn", new BABYLON.Vector3(1.5, 0.5, 1.5), lightPawnColor);
+        createPiece("pawn", new BABYLON.Vector3(2.5, 0.5, 1.5), lightPawnColor);
+        createPiece("pawn", new BABYLON.Vector3(3.5, 0.5, 1.5), lightPawnColor);
         createPiece("rook", new BABYLON.Vector3(-3.5, 0.5, 0.5), lightColor);
         createPiece("knight", new BABYLON.Vector3(-2.5, 0.5, 0.5), lightColor);
         createPiece("bishop", new BABYLON.Vector3(-1.5, 0.5, 0.5), lightColor);
@@ -75,14 +76,14 @@
         createPiece("rook", new BABYLON.Vector3(3.5, 0.5, 0.5), lightColor);
 
         // Place dark pieces
-        createPiece("pawn", new BABYLON.Vector3(-3.5, 0.5, -1.5), darkColor);
-        createPiece("pawn", new BABYLON.Vector3(-2.5, 0.5, -1.5), darkColor);
-        createPiece("pawn", new BABYLON.Vector3(-1.5, 0.5, -1.5), darkColor);
-        createPiece("pawn", new BABYLON.Vector3(-0.5, 0.5, -1.5), darkColor);
-        createPiece("pawn", new BABYLON.Vector3(0.5, 0.5, -1.5), darkColor);
-        createPiece("pawn", new BABYLON.Vector3(1.5, 0.5, -1.5), darkColor);
-        createPiece("pawn", new BABYLON.Vector3(2.5, 0.5, -1.5), darkColor);
-        createPiece("pawn", new BABYLON.Vector3(3.5, 0.5, -1.5), darkColor);
+        createPiece("pawn", new BABYLON.Vector3(-3.5, 0.5, -1.5), darkPawnColor);
+        createPiece("pawn", new BABYLON.Vector3(-2.5, 0.5, -1.5), darkPawnColor);
+        createPiece("pawn", new BABYLON.Vector3(-1.5, 0.5, -1.5), darkPawnColor);
+        createPiece("pawn", new BABYLON.Vector3(-0.5, 0.5, -1.5), darkPawnColor);
+        createPiece("pawn", new BABYLON.Vector3(0.5, 0.5, -1.5), darkPawnColor);
+        createPiece("pawn", new BABYLON.Vector3(1.5, 0.5, -1.5), darkPawnColor);
+        createPiece("pawn", new BABYLON.Vector3(2.5, 0.5, -1.5), darkPawnColor);
+        createPiece("pawn", new BABYLON.Vector3(3.5, 0.5, -1.5), darkPawnColor);
         createPiece("rook", new BABYLON.Vector3(-3.5, 0.5, -0.5), darkColor);
         createPiece("knight", new BABYLON.Vector3(-2.5, 0.5, -0.5), darkColor);
         createPiece("bishop", new BABYLON.Vector3(-1.5, 0.5, -0.5), darkColor);
@@ -104,15 +105,13 @@
         };
 
         document.getElementById("exportButton").addEventListener("click", () => {
-            pieces.forEach(piece => {
-                const stlString = BABYLON.STLExport.CreateSTL(scene, false, piece);
-                const blob = new Blob([stlString], { type: 'application/octet-stream' });
-                const url = URL.createObjectURL(blob);
-                const link = document.createElement('a');
-                link.href = url;
-                link.download = `${piece.name}.stl`;
-                link.click();
-            });
+            const stlString = BABYLON.STLExport.CreateSTL(scene, false, selectedPiece);
+            const blob = new Blob([stlString], { type: 'application/octet-stream' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `${selectedPiece.name}.stl`;
+            link.click();
         });
 
         engine.runRenderLoop(() => {
