@@ -34,14 +34,18 @@
                 rook1.position = new BABYLON.Vector3(-2, 0, 0);
                 rook2.position = new BABYLON.Vector3(2, 0, 0);
 
-                // Apply different materials for each rook
-                const material1 = new BABYLON.StandardMaterial("mat1", scene);
-                material1.diffuseColor = new BABYLON.Color3(1, 0, 0); // Red color
-                rook1.material = material1;
+                // Remove existing material
+                rook1.material = null;
+                rook2.material = null;
 
-                const material2 = new BABYLON.StandardMaterial("mat2", scene);
-                material2.diffuseColor = new BABYLON.Color3(0, 0, 1); // Blue color
-                rook2.material = material2;
+                // Apply PBR materials for each rook
+                const pbrMaterial1 = new BABYLON.PBRMaterial("pbr1", scene);
+                pbrMaterial1.albedoColor = new BABYLON.Color3(1, 0, 0); // Red color
+                rook1.material = pbrMaterial1;
+
+                const pbrMaterial2 = new BABYLON.PBRMaterial("pbr2", scene);
+                pbrMaterial2.albedoColor = new BABYLON.Color3(0, 0, 1); // Blue color
+                rook2.material = pbrMaterial2;
             });
 
             return scene;
@@ -50,14 +54,4 @@
         const scene = createScene();
 
         // Render loop
-        engine.runRenderLoop(function () {
-            scene.render();
-        });
-
-        // Resize event handling
-        window.addEventListener("resize", function () {
-            engine.resize();
-        });
-    </script>
-</body>
-</html>
+        engine.runRenderLoop
