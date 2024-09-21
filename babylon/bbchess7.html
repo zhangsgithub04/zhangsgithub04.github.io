@@ -1,15 +1,13 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Babylon.js Chessboard with GLB Export</title>
+    <title>Babylon.js Chessboard with GLB Models</title>
     <script src="https://cdn.babylonjs.com/babylon.js"></script>
-    <script src="https://cdn.babylonjs.com/loaders/babylon.glTF2FileLoader.min.js"></script>
-    <script src="https://cdn.babylonjs.com/serializers/babylon.glTF2Serializer.min.js"></script>
+    <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
 </head>
 <body>
     <canvas id="renderCanvas" style="width: 100%; height: 100%;"></canvas>
     <button id="exportButton" style="position: absolute; top: 10px; left: 10px;">Export GLB</button>
-    
     <script>
         const canvas = document.getElementById("renderCanvas");
         const engine = new BABYLON.Engine(canvas, true);
@@ -30,7 +28,7 @@
 
             for (let row = 0; row < boardSize; row++) {
                 for (let col = 0; col < boardSize; col++) {
-                    const tile = BABYLON.MeshBuilder.CreateBox(`tile${row}_${col}`, { size: tileSize }, scene);
+                    const tile = BABYLON.MeshBuilder.CreateBox(`tile${row}_${col}`, {size: tileSize}, scene);
                     tile.position = new BABYLON.Vector3(row - boardSize / 2 + 0.5, 0, col - boardSize / 2 + 0.5);
                     const tileMaterial = new BABYLON.StandardMaterial(`tileMat${row}_${col}`, scene);
                     tileMaterial.diffuseColor = (row + col) % 2 === 0 ? new BABYLON.Color3(1, 1, 1) : new BABYLON.Color3(0, 0, 0);
@@ -43,11 +41,13 @@
 
         const scene = createScene();
 
-        const createPiece = (name, position) => {
-            BABYLON.SceneLoader.ImportMesh("", "./", `${name}.glb`, scene, (meshes) => {
-                const piece = meshes[0];
+        const createPiece = (modelPath, position, color) => {
+            BABYLON.SceneLoader.Append("", modelPath, scene, (newMeshes) => {
+                const piece = newMeshes[0];
                 piece.position = position;
-                piece.scaling = new BABYLON.Vector3(0.5, 0.5, 0.5); // Adjust scaling if needed
+                const pieceMaterial = new BABYLON.StandardMaterial("pieceMat", scene);
+                pieceMaterial.diffuseColor = color;
+                piece.material = pieceMaterial;
 
                 piece.actionManager = new BABYLON.ActionManager(scene);
                 piece.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnPickTrigger, () => {
@@ -56,20 +56,17 @@
             });
         };
 
-        // Piece starting positions
-        const positions = {
-            rook: [new BABYLON.Vector3(-3.5, 0.5, 3.5), new BABYLON.Vector3(3.5, 0.5, 3.5)],
-            knight: [new BABYLON.Vector3(-2.5, 0.5, 3.5), new BABYLON.Vector3(2.5, 0.5, 3.5)],
-            bishop: [new BABYLON.Vector3(-1.5, 0.5, 3.5), new BABYLON.Vector3(1.5, 0.5, 3.5)],
-            queen: [new BABYLON.Vector3(-0.5, 0.5, 3.5)],
-            king: [new BABYLON.Vector3(0.5, 0.5, 3.5)],
-            pawn: [new BABYLON.Vector3(-3.5, 0.5, 2.5), new BABYLON.Vector3(-2.5, 0.5, 2.5)]
-        };
+        // Load pieces using .glb models from the same directory
+        createPiece("rook.glb", new BABYLON.Vector3(-3.5, 0.5, 3.5), new BABYLON.Color3(1, 1, 1));
+        createPiece("rook.glb", new BABYLON.Vector3(3.5, 0.5, 3.5), new BABYLON.Color3(1, 1, 1));
+        createPiece("rook.glb", new BABYLON.Vector3(-3.5, 0.5, -3.5), new BABYLON.Color3(0, 0, 0));
+        createPiece("rook.glb", new BABYLON.Vector3(3.5, 0.5, -3.5), new BABYLON.Color3(0, 0, 0));
 
-        // Load pieces
-        for (const piece in positions) {
-            positions[piece].forEach((pos) => createPiece(piece, pos));
-        }
+        // Repeat for other pieces
+        createPiece("knight.glb", new BABYLON.Vector3(-2.5, 0.5, 3.5), new BABYLON.Color3(1, 1, 1));
+        createPiece("bishop.glb", new BABYLON.Vector3(-1.5, 0.5, 3.5), new BABYLON.Color3(1, 1, 1));
+        createPiece("queen.glb", new BABYLON.Vector3(-0.5, 0.5, 3.5), new BABYLON.Color3(1, 1, 1));
+        createPiece("king.glb", new BABYLON.Vector3(0.5, 0.5, 3.5), new BABYLON.Color3(1, 1, 1));
 
         let selectedPiece = null;
 
@@ -79,7 +76,7 @@
                 if (pickedTile && pickedTile.name.startsWith("tile")) {
                     selectedPiece.position.x = pickedTile.position.x;
                     selectedPiece.position.z = pickedTile.position.z;
-                    selectedPiece = null; // Deselect the piece after moving
+                    selectedPiece = null;
                 }
             }
         };
