@@ -28,24 +28,19 @@
             // Add a light
             const light = new BABYLON.HemisphericLight('hemiLight', new BABYLON.Vector3(0, 1, 0), scene);
 
-            // Create the bishop shape using a simple design
-            const base = BABYLON.MeshBuilder.CreateCylinder('bishopBase', { diameter: 1.5, height: 0.5 }, scene);
-            const body = BABYLON.MeshBuilder.CreateSphere('bishopBody', { diameter: 1.2 }, scene);
-            body.position.y = 1; // Positioning the body above the base
-            const hat = BABYLON.MeshBuilder.CreateCone('bishopHat', { diameter: 1.2, height: 1.5 }, scene);
-            hat.position.y = 2; // Positioning the hat above the body
-            hat.rotation.x = Math.PI; // Inverting the hat
+            // Create the bishop shape using a pyramid
+            const base = BABYLON.MeshBuilder.CreateCylinder('bishopBase', { diameter: 1, height: 0.5 }, scene);
+            const body = BABYLON.MeshBuilder.CreateCylinder('bishopBody', { diameter: 1, height: 2, tessellation: 4 }, scene);
+            body.position.y = 1.5;
 
-            // Combine the meshes using CSG
+            // Combine the base and body into a single mesh
             const bishopCSG = BABYLON.CSG.FromMesh(base)
                 .union(BABYLON.CSG.FromMesh(body))
-                .union(BABYLON.CSG.FromMesh(hat))
                 .toMesh('bishop', null, scene);
 
             // Dispose original geometry
             base.dispose();
             body.dispose();
-            hat.dispose();
 
             return scene;
         };
