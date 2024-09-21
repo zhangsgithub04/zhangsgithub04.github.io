@@ -1,10 +1,9 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Babylon.js Chessboard with GLB Pieces</title>
+    <title>Babylon.js Chessboard with GLB Models</title>
     <script src="https://cdn.babylonjs.com/babylon.js"></script>
     <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
-    <script src="https://cdn.babylonjs.com/stlExporter/babylon.stlExporter.min.js"></script>
 </head>
 <body>
     <canvas id="renderCanvas" style="width: 100%; height: 100%;"></canvas>
@@ -12,7 +11,6 @@
     <script>
         const canvas = document.getElementById("renderCanvas");
         const engine = new BABYLON.Engine(canvas, true);
-        let selectedPiece = null;
 
         const createScene = () => {
             const scene = new BABYLON.Scene(engine);
@@ -26,9 +24,11 @@
 
             // Chessboard
             const boardSize = 8;
+            const tileSize = 1;
+
             for (let row = 0; row < boardSize; row++) {
                 for (let col = 0; col < boardSize; col++) {
-                    const tile = BABYLON.MeshBuilder.CreateBox(`tile${row}_${col}`, { size: 1 }, scene);
+                    const tile = BABYLON.MeshBuilder.CreateBox(`tile${row}_${col}`, {size: tileSize}, scene);
                     tile.position = new BABYLON.Vector3(row - boardSize / 2 + 0.5, 0, col - boardSize / 2 + 0.5);
                     const tileMaterial = new BABYLON.StandardMaterial(`tileMat${row}_${col}`, scene);
                     tileMaterial.diffuseColor = (row + col) % 2 === 0 ? new BABYLON.Color3(1, 1, 1) : new BABYLON.Color3(0, 0, 0);
@@ -41,15 +41,16 @@
 
         const scene = createScene();
 
-        const createPiece = (name, position, color) => {
-            BABYLON.SceneLoader.ImportMesh("", "./", `${name}.glb`, scene, (meshes) => {
-                const piece = meshes[0];
-                piece.position = position;
-                piece.scaling = new BABYLON.Vector3(0.5, 0.5, 0.5); // Adjust scaling if needed
+        const createPiece = (name, position) => {
+            const piecePath = `${name}.glb`; // Adjust the path to your GLB files
 
-                const pieceMaterial = new BABYLON.StandardMaterial(name + "Mat", scene);
-                pieceMaterial.diffuseColor = color;
-                piece.material = pieceMaterial;
+            BABYLON.SceneLoader.Append("", piecePath, scene, (newMeshes) => {
+                const piece = newMeshes[0]; // Assuming each GLB has one main mesh
+                piece.position = position;
+
+                // Make sure the piece is properly scaled and centered
+                piece.scaling = new BABYLON.Vector3(0.5, 0.5, 0.5); // Adjust the scaling as needed
+                piece.isPickable = true;
 
                 piece.actionManager = new BABYLON.ActionManager(scene);
                 piece.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnPickTrigger, () => {
@@ -58,41 +59,40 @@
             });
         };
 
-        // Define colors for pieces
-        const lightColor = new BABYLON.Color3(1, 1, 1);
-        const darkColor = new BABYLON.Color3(0.1, 0.1, 0.1);
-        const lightPawnColor = new BABYLON.Color3(0.8, 0.8, 0.8);
-        const darkPawnColor = new BABYLON.Color3(0.3, 0.3, 0.3);
-
-        // Place light pieces
-        createPiece("rook_white", new BABYLON.Vector3(-3.5, 0.5, 3.5), lightColor);
-        createPiece("knight_white", new BABYLON.Vector3(-2.5, 0.5, 3.5), lightColor);
-        createPiece("bishop_white", new BABYLON.Vector3(-1.5, 0.5, 3.5), lightColor);
-        createPiece("queen_white", new BABYLON.Vector3(-0.5, 0.5, 3.5), lightColor);
-        createPiece("king_white", new BABYLON.Vector3(0.5, 0.5, 3.5), lightColor);
-        createPiece("bishop_white", new BABYLON.Vector3(1.5, 0.5, 3.5), lightColor);
-        createPiece("knight_white", new BABYLON.Vector3(2.5, 0.5, 3.5), lightColor);
-        createPiece("rook_white", new BABYLON.Vector3(3.5, 0.5, 3.5), lightColor);
-        
-        // Place light pawns
-        for (let i = -3.5; i <= 3.5; i += 1) {
-            createPiece("pawn_white", new BABYLON.Vector3(i, 0.5, 1.5), lightPawnColor);
+        const pieces = [];
+        // Place pawns
+        for (let i = 0; i < 8; i++) {
+            createPiece("pawn", new BABYLON.Vector3(i - 3.5, 0.5, 1.5));
+            createPiece("pawn", new BABYLON.Vector3(i - 3.5, 0.5, -1.5));
         }
 
-        // Place dark pieces
-        createPiece("rook_black", new BABYLON.Vector3(-3.5, 0.5, -3.5), darkColor);
-        createPiece("knight_black", new BABYLON.Vector3(-2.5, 0.5, -3.5), darkColor);
-        createPiece("bishop_black", new BABYLON.Vector3(-1.5, 0.5, -3.5), darkColor);
-        createPiece("queen_black", new BABYLON.Vector3(-0.5, 0.5, -3.5), darkColor);
-        createPiece("king_black", new BABYLON.Vector3(0.5, 0.5, -3.5), darkColor);
-        createPiece("bishop_black", new BABYLON.Vector3(1.5, 0.5, -3.5), darkColor);
-        createPiece("knight_black", new BABYLON.Vector3(2.5, 0.5, -3.5), darkColor);
-        createPiece("rook_black", new BABYLON.Vector3(3.5, 0.5, -3.5), darkColor);
-        
-        // Place dark pawns
-        for (let i = -3.5; i <= 3.5; i += 1) {
-            createPiece("pawn_black", new BABYLON.Vector3(i, 0.5, -1.5), darkPawnColor);
-        }
+        // Place rooks
+        createPiece("rook", new BABYLON.Vector3(-3.5, 0.5, 3.5));
+        createPiece("rook", new BABYLON.Vector3(3.5, 0.5, 3.5));
+        createPiece("rook", new BABYLON.Vector3(-3.5, 0.5, -3.5));
+        createPiece("rook", new BABYLON.Vector3(3.5, 0.5, -3.5));
+
+        // Place knights
+        createPiece("knight", new BABYLON.Vector3(-2.5, 0.5, 3.5));
+        createPiece("knight", new BABYLON.Vector3(2.5, 0.5, 3.5));
+        createPiece("knight", new BABYLON.Vector3(-2.5, 0.5, -3.5));
+        createPiece("knight", new BABYLON.Vector3(2.5, 0.5, -3.5));
+
+        // Place bishops
+        createPiece("bishop", new BABYLON.Vector3(-1.5, 0.5, 3.5));
+        createPiece("bishop", new BABYLON.Vector3(1.5, 0.5, 3.5));
+        createPiece("bishop", new BABYLON.Vector3(-1.5, 0.5, -3.5));
+        createPiece("bishop", new BABYLON.Vector3(1.5, 0.5, -3.5));
+
+        // Place queens
+        createPiece("queen", new BABYLON.Vector3(-0.5, 0.5, 3.5));
+        createPiece("queen", new BABYLON.Vector3(-0.5, 0.5, -3.5));
+
+        // Place kings
+        createPiece("king", new BABYLON.Vector3(0.5, 0.5, 3.5));
+        createPiece("king", new BABYLON.Vector3(0.5, 0.5, -3.5));
+
+        let selectedPiece = null;
 
         scene.onPointerDown = (evt, pickResult) => {
             if (selectedPiece) {
@@ -104,18 +104,6 @@
                 }
             }
         };
-
-        document.getElementById("exportButton").addEventListener("click", () => {
-            if (selectedPiece) {
-                const stlString = BABYLON.STLExport.CreateSTL(scene, false, selectedPiece);
-                const blob = new Blob([stlString], { type: 'application/octet-stream' });
-                const url = URL.createObjectURL(blob);
-                const link = document.createElement('a');
-                link.href = url;
-                link.download = `${selectedPiece.name}.stl`;
-                link.click();
-            }
-        });
 
         engine.runRenderLoop(() => {
             scene.render();
