@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fabric.js Chess Game with Tabler Icons</title>
+    <title>Fabric.js Chess Board with Letters</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.0.0/fabric.min.js"></script>
     <style>
         canvas {
@@ -16,7 +16,7 @@
     <script>
         const canvas = new fabric.Canvas('chessboard');
 
-        // 2D character array to represent the chessboard
+        // 2D array to represent the chessboard with letters for pieces
         const boardState = [
             ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'],
             ['p', 'p', 'p', 'p', 'p', 'p', 'p', 'p'],
@@ -28,32 +28,16 @@
             ['R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R']
         ];
 
-        // SVG paths for chess pieces (replace with actual SVG code from Tabler Icons or your preferred source)
-        const pieceSVGs = {
-            'r': '<svg xmlns="https://commons.wikimedia.org/wiki/Category:SVG_chess_pieces#/media/File:Chess_kdt45.svg></svg>', // Replace with actual SVG paths
-            'n': '<svg xmlns="https://commons.wikimedia.org/wiki/Category:SVG_chess_pieces#/media/File:Chess_kdt45.svg></svg>',
-            'b': '<svg xmlns="https://commons.wikimedia.org/wiki/Category:SVG_chess_pieces#/media/File:Chess_kdt45.svg></svg>',
-            'q': '<svg xmlns="https://commons.wikimedia.org/wiki/Category:SVG_chess_pieces#/media/File:Chess_kdt45.svg></svg>',
-            'k': '<svg xmlns="https://commons.wikimedia.org/wiki/Category:SVG_chess_pieces#/media/File:Chess_kdt45.svg></svg>',
-            'p': '<svg xmlns="https://commons.wikimedia.org/wiki/Category:SVG_chess_pieces#/media/File:Chess_kdt45.svg></svg>',
-            'R': '<svg xmlns="https://commons.wikimedia.org/wiki/Category:SVG_chess_pieces#/media/File:Chess_kdt45.svg></svg>',
-            'N': '<svg xmlns="https://commons.wikimedia.org/wiki/Category:SVG_chess_pieces#/media/File:Chess_kdt45.svg></svg>',
-            'B': '<svg xmlns="https://commons.wikimedia.org/wiki/Category:SVG_chess_pieces#/media/File:Chess_klt45.svg></svg>',
-            'Q': '<svg xmlns="https://commons.wikimedia.org/wiki/Category:SVG_chess_pieces#/media/File:Chess_klt45.svg></svg>',
-            'K': '<svg xmlns="https://commons.wikimedia.org/wiki/Category:SVG_chess_pieces#/media/File:Chess_klt45.svg></svg>',
-            'P': '<svg xmlns="https://commons.wikimedia.org/wiki/Category:SVG_chess_pieces#/media/File:Chess_klt45.svg></svg>'
-        };
-
         // Function to create the chessboard
         function createChessboard() {
-            const squareSize = 50; // Size of each square
+            const squareSize = 50; // Each square is 50x50
             for (let row = 0; row < 8; row++) {
                 for (let col = 0; col < 8; col++) {
-                    const isEven = (row + col) % 2 === 0;
+                    const isLightSquare = (row + col) % 2 === 0;
                     const square = new fabric.Rect({
                         left: col * squareSize,
                         top: row * squareSize,
-                        fill: isEven ? '#eee' : '#333',
+                        fill: isLightSquare ? '#eee' : '#333',
                         width: squareSize,
                         height: squareSize,
                     });
@@ -62,31 +46,27 @@
             }
         }
 
-        // Function to add pieces using SVG paths
+        // Function to add letters as chess pieces
         function addPieces() {
             for (let row = 0; row < 8; row++) {
                 for (let col = 0; col < 8; col++) {
                     const piece = boardState[row][col];
                     if (piece !== '.') {
-                        const svgIcon = pieceSVGs[piece];  // Get the SVG for the piece
-                        fabric.loadSVGFromString(svgIcon, function (objects, options) {
-                            const icon = fabric.util.groupSVGElements(objects, options);
-                            icon.set({
-                                left: col * 50 + 25,
-                                top: row * 50 + 25,
-                                scaleX: 0.4, // Adjust the size of the pieces
-                                scaleY: 0.4,
-                                originX: 'center',
-                                originY: 'center',
-                            });
-                            canvas.add(icon);
+                        const text = new fabric.Text(piece, {
+                            left: col * 50 + 25,
+                            top: row * 50 + 15,
+                            fontSize: 30,
+                            fill: piece === piece.toUpperCase() ? 'white' : 'black', // White for uppercase, black for lowercase
+                            originX: 'center',
+                            originY: 'center',
                         });
+                        canvas.add(text);
                     }
                 }
             }
         }
 
-        // Initialize the chessboard and add pieces
+        // Initialize the chessboard and add the pieces
         createChessboard();
         addPieces();
     </script>
