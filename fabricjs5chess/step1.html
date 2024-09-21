@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fabric.js Simple Square</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
+    <style>
+        canvas {
+            border: 1px solid #000;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas" width="400" height="400"></canvas>
+    <script>
+        // Initialize Fabric.js canvas
+        const canvas = new fabric.Canvas('canvas');
+
+        // Create a square
+        const square = new fabric.Rect({
+            left: 100, // X position
+            top: 100,  // Y position
+            fill: 'blue', // Fill color
+            width: 100,  // Width of the square
+            height: 100, // Height of the square
+            angle: 0,    // Angle of rotation
+            selectable: true // Allow selection
+        });
+
+        // Add the square to the canvas
+        canvas.add(square);
+    </script>
+</body>
+</html>
