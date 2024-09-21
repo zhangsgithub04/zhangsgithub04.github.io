@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chess Piece 3D Model Export</title>
+    <title>Fancy Chess Piece 3D Model Export</title>
     <script src="https://cdn.babylonjs.com/babylon.js"></script>
     <script src="https://cdn.babylonjs.com/loaders/babylon.glTF2FileLoader.min.js"></script>
     <script src="https://cdn.babylonjs.com/serializers/babylon.glTF2Serializer.min.js"></script>
@@ -53,25 +53,54 @@
             const engine = new BABYLON.Engine(canvas, true);
 
             const scene = new BABYLON.Scene(engine);
-            const camera = new BABYLON.ArcRotateCamera('camera', Math.PI / 2, Math.PI / 2.5, 5, BABYLON.Vector3.Zero(), scene);
+            const camera = new BABYLON.ArcRotateCamera('camera', Math.PI / 2, Math.PI / 2.5, 7, BABYLON.Vector3.Zero(), scene);
             camera.attachControl(canvas, true);
             const light = new BABYLON.HemisphericLight('hemiLight', new BABYLON.Vector3(0, 1, 0), scene);
 
             let piece;
+            const material = new BABYLON.StandardMaterial("mat", scene);
+            material.diffuseColor = new BABYLON.Color3(1, 0.8, 0.6); // light wood color
+
             if (pieceName === 'rook') {
-                piece = BABYLON.MeshBuilder.CreateCylinder('rook', { diameter: 1.5, height: 3 }, scene);
+                const base = BABYLON.MeshBuilder.CreateCylinder('base', { diameter: 2, height: 0.5, tessellation: 32 }, scene);
+                const body = BABYLON.MeshBuilder.CreateCylinder('body', { diameter: 1.5, height: 4, tessellation: 32 }, scene);
+                body.position.y = 2;
+                const top = BABYLON.MeshBuilder.CreateCylinder('top', { diameter: 1.7, height: 0.5, tessellation: 32 }, scene);
+                top.position.y = 4;
+
+                piece = BABYLON.Mesh.MergeMeshes([base, body, top], true);
             } else if (pieceName === 'knight') {
-                piece = BABYLON.MeshBuilder.CreateSphere('knight', { diameter: 1.5 }, scene);
+                piece = BABYLON.MeshBuilder.CreateTorus('knightBody', { diameter: 1.5, thickness: 0.3 }, scene);
+                const head = BABYLON.MeshBuilder.CreateSphere('knightHead', { diameter: 1 }, scene);
+                head.position.y = 1.5;
+                piece = BABYLON.Mesh.MergeMeshes([piece, head], true);
             } else if (pieceName === 'bishop') {
-                piece = BABYLON.MeshBuilder.CreateCone('bishop', { diameter: 1.5, height: 3 }, scene);
+                const body = BABYLON.MeshBuilder.CreateCylinder('bishopBody', { diameter: 1.2, height: 4 }, scene);
+                const hat = BABYLON.MeshBuilder.CreateCone('bishopHat', { diameter: 1.5, height: 2 }, scene);
+                hat.position.y = 3;
+                piece = BABYLON.Mesh.MergeMeshes([body, hat], true);
             } else if (pieceName === 'queen') {
-                piece = BABYLON.MeshBuilder.CreateTorus('queen', { diameter: 1.5, thickness: 0.3 }, scene);
+                const base = BABYLON.MeshBuilder.CreateCylinder('queenBase', { diameter: 2, height: 0.5 }, scene);
+                const body = BABYLON.MeshBuilder.CreateCylinder('queenBody', { diameter: 1.5, height: 4 }, scene);
+                body.position.y = 2;
+                const crown = BABYLON.MeshBuilder.CreateTorus('queenCrown', { diameter: 1.7, thickness: 0.3 }, scene);
+                crown.position.y = 3.5;
+                piece = BABYLON.Mesh.MergeMeshes([base, body, crown], true);
             } else if (pieceName === 'king') {
-                piece = BABYLON.MeshBuilder.CreateTorusKnot('king', { radius: 1, tube: 0.3 }, scene);
+                const base = BABYLON.MeshBuilder.CreateCylinder('kingBase', { diameter: 2, height: 0.5 }, scene);
+                const body = BABYLON.MeshBuilder.CreateCylinder('kingBody', { diameter: 1.5, height: 4 }, scene);
+                body.position.y = 2;
+                const cross = BABYLON.MeshBuilder.CreateBox('kingCross', { size: 0.8 }, scene);
+                cross.position.y = 4;
+                piece = BABYLON.Mesh.MergeMeshes([base, body, cross], true);
             } else if (pieceName === 'pawn') {
-                piece = BABYLON.MeshBuilder.CreateSphere('pawn', { diameter: 1.5 }, scene);
+                const base = BABYLON.MeshBuilder.CreateCylinder('pawnBase', { diameter: 1.2, height: 0.5 }, scene);
+                const body = BABYLON.MeshBuilder.CreateSphere('pawnBody', { diameter: 1.5 }, scene);
+                body.position.y = 1.5;
+                piece = BABYLON.Mesh.MergeMeshes([base, body], true);
             }
 
+            piece.material = material;
             engine.runRenderLoop(() => scene.render());
 
             window.addEventListener('resize', () => engine.resize());
