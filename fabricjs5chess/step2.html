@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fabric.js Row of Squares</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
+    <style>
+        canvas {
+            border: 1px solid #000;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas" width="800" height="200"></canvas>
+    <script>
+        // Initialize Fabric.js canvas
+        const canvas = new fabric.Canvas('canvas');
+
+        // Number of squares
+        const numberOfSquares = 8;
+        const squareSize = 50; // Size of each square
+        const spacing = 10; // Space between squares
+
+        // Create and add squares to the canvas
+        for (let i = 0; i < numberOfSquares; i++) {
+            const square = new fabric.Rect({
+                left: i * (squareSize + spacing), // Positioning squares next to each other
+                top: 75, // Center vertically in the canvas
+                fill: 'blue', // Fill color for the square
+                width: squareSize,  // Width of the square
+                height: squareSize, // Height of the square
+                selectable: true // Allow selection
+            });
+
+            // Add the square to the canvas
+            canvas.add(square);
+        }
+    </script>
+</body>
+</html>
