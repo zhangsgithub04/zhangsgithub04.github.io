@@ -12,6 +12,9 @@
             display: inline-block;
             margin: 20px;
         }
+        canvas {
+            border: 1px solid #ccc; /* Add a border for visibility */
+        }
     </style>
 </head>
 <body>
@@ -123,7 +126,7 @@
         createScene('kingCanvas', 'king');
         createScene('pawnCanvas', 'pawn');
 
-        // Add download functionality
+        // Add download functionality for all pieces
         addDownloadEvent('downloadRook', 'rookCanvas');
         addDownloadEvent('downloadKnight', 'knightCanvas');
         addDownloadEvent('downloadBishop', 'bishopCanvas');
