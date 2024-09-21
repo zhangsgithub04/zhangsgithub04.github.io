@@ -46,8 +46,9 @@
             let piece;
             switch (name) {
                 case "rook":
-                    piece = new BABYLON.AssetsManager(scene).addMeshTask("loadRook", "", "path/to/models/", "rook.glb");
-                    piece.onSuccess = (task) => {
+                    const assetsManager = new BABYLON.AssetsManager(scene);
+                    const meshTask = assetsManager.addMeshTask("loadRook", "", "./", "rook.glb");
+                    meshTask.onSuccess = (task) => {
                         const rookMesh = task.loadedMeshes[0];
                         rookMesh.position = position;
                         rookMesh.scaling.scaleInPlace(0.5); // Adjust scaling as necessary
@@ -56,6 +57,7 @@
                             selectedPiece = rookMesh;
                         }));
                     };
+                    assetsManager.load();
                     break;
 
                 // Add cases for other pieces similarly with their respective GLB files
