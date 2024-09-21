@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fabric.js Chessboard with Two-Click Move</title>
+    <title>Fabric.js Chessboard with Moveable Pieces</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
     <style>
         canvas {
@@ -14,10 +14,10 @@
 <body>
     <canvas id="canvas" width="400" height="400"></canvas>
     <script>
+        // Initialize Fabric.js canvas
         const canvas = new fabric.Canvas('canvas');
-        const squareSize = 50;
-        let selectedPiece = null;
-        let turn = 'white'; // White's turn initially
+        const squareSize = 50; // Size of each square
+        let turn = 'white'; // White goes first
 
         // Create the chessboard
         function createChessboard() {
@@ -27,7 +27,7 @@
                     const square = new fabric.Rect({
                         left: col * squareSize,
                         top: row * squareSize,
-                        fill: isLightSquare ? '#eee' : '#8B4513',
+                        fill: isLightSquare ? '#eee' : '#8B4513', // Dark brown for dark squares
                         width: squareSize,
                         height: squareSize,
                         selectable: false
@@ -40,18 +40,18 @@
         // Load SVG pieces onto the chessboard
         function addPieces() {
             const pieces = {
-                'r': 'https://upload.wikimedia.org/wikipedia/commons/f/ff/Chess_rdt45.svg', // black rook
-                'n': 'https://upload.wikimedia.org/wikipedia/commons/8/81/Chess_ndt45.svg', // black knight
-                'b': 'https://upload.wikimedia.org/wikipedia/commons/e/e4/Chess_bdt45.svg', // black bishop
-                'q': 'https://upload.wikimedia.org/wikipedia/commons/4/49/Chess_qdt45.svg', // black queen
-                'k': 'https://upload.wikimedia.org/wikipedia/commons/6/6b/Chess_kdt45.svg', // black king
-                'p': 'https://upload.wikimedia.org/wikipedia/commons/4/45/Chess_pdt45.svg', // black pawn
-                'R': 'https://upload.wikimedia.org/wikipedia/commons/7/72/Chess_rlt45.svg', // white rook
-                'N': 'https://upload.wikimedia.org/wikipedia/commons/2/25/Chess_nlt45.svg', // white knight
-                'B': 'https://upload.wikimedia.org/wikipedia/commons/7/74/Chess_blt45.svg', // white bishop
-                'Q': 'https://upload.wikimedia.org/wikipedia/commons/1/1a/Chess_qlt45.svg', // white queen
-                'K': 'https://upload.wikimedia.org/wikipedia/commons/5/5c/Chess_klf45.svg', // white king
-                'P': 'https://upload.wikimedia.org/wikipedia/commons/3/39/Chess_plt45.svg'  // white pawn
+                'r': 'https://upload.wikimedia.org/wikipedia/commons/f/ff/Chess_rdt45.svg',
+                'n': 'https://upload.wikimedia.org/wikipedia/commons/e/ef/Chess_ndt45.svg',
+                'b': 'https://upload.wikimedia.org/wikipedia/commons/9/98/Chess_bdt45.svg',
+                'q': 'https://upload.wikimedia.org/wikipedia/commons/4/47/Chess_qdt45.svg',
+                'k': 'https://upload.wikimedia.org/wikipedia/commons/f/f0/Chess_kdt45.svg',
+                'p': 'https://upload.wikimedia.org/wikipedia/commons/c/c7/Chess_pdt45.svg',
+                'R': 'https://upload.wikimedia.org/wikipedia/commons/7/72/Chess_rlt45.svg',
+                'N': 'https://upload.wikimedia.org/wikipedia/commons/7/70/Chess_nlt45.svg',
+                'B': 'https://upload.wikimedia.org/wikipedia/commons/b/b1/Chess_blt45.svg',
+                'Q': 'https://upload.wikimedia.org/wikipedia/commons/1/15/Chess_qlt45.svg',
+                'K': 'https://upload.wikimedia.org/wikipedia/commons/4/42/Chess_klt45.svg',
+                'P': 'https://upload.wikimedia.org/wikipedia/commons/4/45/Chess_plt45.svg'
             };
 
             const boardState = [
@@ -79,11 +79,29 @@
                                 originY: 'center',
                                 hasControls: false,
                                 selectable: true,
-                                pieceColor: piece === piece.toUpperCase() ? 'white' : 'black'
+                                pieceColor: piece === piece.toUpperCase() ? 'white' : 'black' // Track piece color
                             });
 
+                            // Handle mouse down event
                             svgPiece.on('mousedown', function() {
-                                handlePieceClick(this);
+                                if ((turn === 'white' && this.pieceColor === 'white') || 
+                                    (turn === 'black' && this.pieceColor === 'black')) {
+                                    console.log(`Selected ${this.pieceColor} piece`);
+                                    this.set({ opacity: 0.5 }); // Dim the selected piece
+                                    canvas.setActiveObject(this);
+                                } else {
+                                    console.log(`It's not your turn to move ${this.pieceColor} pieces.`);
+                                }
+                            });
+
+                            // Handle mouse up event
+                            svgPiece.on('mouseup', function() {
+                                if (canvas.getActiveObject() === this) {
+                                    console.log(`Released ${this.pieceColor} piece`);
+                                    this.set({ opacity: 1 }); // Restore opacity
+                                    turn = turn === 'white' ? 'black' : 'white'; // Switch turns
+                                    console.log(`Turn switched to ${turn}`);
+                                }
                             });
 
                             canvas.add(svgPiece);
@@ -93,41 +111,19 @@
             }
         }
 
-        // Handle click to select and move pieces
-        function handlePieceClick(piece) {
-            if (selectedPiece) {
-                // If a piece is selected, move it to the clicked position
-                if (canMove(selectedPiece, piece)) {
-                    movePiece(selectedPiece, piece.left, piece.top);
-                    selectedPiece = null; // Deselect the piece
-                    turn = turn === 'white' ? 'black' : 'white'; // Switch turns
-                }
-            } else if (turn === piece.pieceColor) {
-                // Select the piece if it's the player's turn
-                selectedPiece = piece;
-                piece.set({ stroke: 'yellow', strokeWidth: 3 }); // Highlight selected piece
-                canvas.renderAll();
-            }
-        }
-
-        // Check if the piece can be moved
-        function canMove(piece, targetLeft, targetTop) {
-            return true; // For now, allow all moves
-        }
-
-        // Move the selected piece to the target position
-        function movePiece(piece, left, top) {
-            piece.set({
-                left: left + squareSize / 2,
-                top: top + squareSize / 2,
-                stroke: null // Remove highlight
-            });
-            canvas.renderAll();
-        }
-
         // Initialize the chessboard and add the pieces
         createChessboard();
         addPieces();
+
+        // Enable piece dragging
+        canvas.on('object:moving', function(e) {
+            const obj = e.target;
+            obj.set({
+                left: Math.round(obj.left / squareSize) * squareSize + squareSize / 2,
+                top: Math.round(obj.top / squareSize) * squareSize + squareSize / 2
+            });
+            console.log(`Moving piece to (${obj.left}, ${obj.top})`);
+        });
     </script>
 </body>
 </html>
