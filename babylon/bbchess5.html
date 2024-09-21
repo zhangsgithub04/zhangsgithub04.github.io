@@ -1,18 +1,18 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Babylon.js Chessboard with STL Export</title>
+    <title>Babylon.js Chessboard with GLB Export</title>
     <script src="https://cdn.babylonjs.com/babylon.js"></script>
-    <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
-    <script src="https://cdn.babylonjs.com/stlExporter/babylon.stlExporter.min.js"></script>
+    <script src="https://cdn.babylonjs.com/loaders/babylon.glTF2FileLoader.min.js"></script>
+    <script src="https://cdn.babylonjs.com/serializers/babylon.glTF2Serializer.min.js"></script>
 </head>
 <body>
     <canvas id="renderCanvas" style="width: 100%; height: 100%;"></canvas>
-    <button id="exportButton" style="position: absolute; top: 10px; left: 10px;">Export STL</button>
+    <button id="exportButton" style="position: absolute; top: 10px; left: 10px;">Export GLB</button>
+    
     <script>
         const canvas = document.getElementById("renderCanvas");
         const engine = new BABYLON.Engine(canvas, true);
-        let pieces = [];
 
         const createScene = () => {
             const scene = new BABYLON.Scene(engine);
@@ -44,47 +44,43 @@
         const scene = createScene();
 
         const createPiece = (name, position, color) => {
-            let piece;
-            switch (name) {
-                case "rook":
-                    // Load rook.glb model
-                    BABYLON.SceneLoader.ImportMesh("", "./", "rook.glb", scene, (meshes) => {
-                        piece = meshes[0];
-                        piece.position = position;
-                        piece.scaling = new BABYLON.Vector3(0.5, 0.5, 0.5); // Adjust scaling if needed
+            BABYLON.SceneLoader.ImportMesh("", "./", `${name}.glb`, scene, (meshes) => {
+                const piece = meshes[0];
+                piece.position = position;
+                piece.scaling = new BABYLON.Vector3(0.5, 0.5, 0.5); // Adjust scaling if needed
 
-                        const pieceMaterial = new BABYLON.StandardMaterial(name + "Mat", scene);
-                        pieceMaterial.diffuseColor = color;
-                        piece.material = pieceMaterial;
+                const pieceMaterial = new BABYLON.StandardMaterial(name + "Mat", scene);
+                pieceMaterial.diffuseColor = color;
+                piece.material = pieceMaterial;
 
-                        pieces.push(piece); // Add piece to pieces array
-                    });
-                    break;
-                default:
-                    piece = BABYLON.MeshBuilder.CreateBox(name, {size: 0.5}, scene);
-                    piece.position = position;
-                    const pieceMaterial = new BABYLON.StandardMaterial(name + "Mat", scene);
-                    pieceMaterial.diffuseColor = color;
-                    piece.material = pieceMaterial;
-                    pieces.push(piece); // Add piece to pieces array
-                    break;
-            }
-
-            return piece;
+                piece.actionManager = new BABYLON.ActionManager(scene);
+                piece.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnPickTrigger, () => {
+                    selectedPiece = piece;
+                }));
+            });
         };
 
-        // Place rooks (using rook.glb model)
-        createPiece("rook", new BABYLON.Vector3(-3.5, 0.5, 3.5), new BABYLON.Color3(1, 1, 1)); // Light rook
-        createPiece("rook", new BABYLON.Vector3(3.5, 0.5, 3.5), new BABYLON.Color3(1, 0.5, 0.5)); // Light rook
-        createPiece("rook", new BABYLON.Vector3(-3.5, 0.5, -3.5), new BABYLON.Color3(0, 0, 0)); // Dark rook
-        createPiece("rook", new BABYLON.Vector3(3.5, 0.5, -3.5), new BABYLON.Color3(0.5, 0.5, 0.5)); // Dark rook
+        const pieces = [];
+        const lightColor = new BABYLON.Color3(1, 1, 1);
+        const darkColor = new BABYLON.Color3(0, 0, 0);
 
-        // Create other pieces
-        createPiece("pawn", new BABYLON.Vector3(-2.5, 0.5, 3.5), new BABYLON.Color3(1, 1, 1));
-        createPiece("knight", new BABYLON.Vector3(0, 0.5, 3.5), new BABYLON.Color3(1, 1, 1));
-        createPiece("bishop", new BABYLON.Vector3(2.5, 0.5, 3.5), new BABYLON.Color3(1, 1, 1));
-        createPiece("queen", new BABYLON.Vector3(-2.5, 0.5, -3.5), new BABYLON.Color3(0, 0, 0));
-        createPiece("king", new BABYLON.Vector3(0, 0.5, -3.5), new BABYLON.Color3(0, 0, 0));
+        // Place pieces with corresponding GLB files and colors
+        const positions = {
+            rook: [new BABYLON.Vector3(-3.5, 0.5, 3.5), new BABYLON.Vector3(3.5, 0.5, 3.5), new BABYLON.Vector3(-3.5, 0.5, -3.5), new BABYLON.Vector3(3.5, 0.5, -3.5)],
+            knight: [new BABYLON.Vector3(-2.5, 0.5, 3.5), new BABYLON.Vector3(2.5, 0.5, 3.5), new BABYLON.Vector3(-2.5, 0.5, -3.5), new BABYLON.Vector3(2.5, 0.5, -3.5)],
+            bishop: [new BABYLON.Vector3(-1.5, 0.5, 3.5), new BABYLON.Vector3(1.5, 0.5, 3.5), new BABYLON.Vector3(-1.5, 0.5, -3.5), new BABYLON.Vector3(1.5, 0.5, -3.5)],
+            queen: [new BABYLON.Vector3(-0.5, 0.5, 3.5), new BABYLON.Vector3(-0.5, 0.5, -3.5)],
+            king: [new BABYLON.Vector3(0.5, 0.5, 3.5), new BABYLON.Vector3(0.5, 0.5, -3.5)],
+            pawn: [new BABYLON.Vector3(0, 0.5, 1.5), new BABYLON.Vector3(0, 0.5, -1.5)]
+        };
+
+        // Load pieces
+        for (const piece in positions) {
+            positions[piece].forEach((pos, index) => {
+                const color = index < 2 ? lightColor : darkColor; // Light pieces are first two, dark are second two
+                createPiece(piece, pos, color);
+            });
+        }
 
         let selectedPiece = null;
 
@@ -100,14 +96,8 @@
         };
 
         document.getElementById("exportButton").addEventListener("click", () => {
-            pieces.forEach(piece => {
-                const stlString = BABYLON.STLExport.CreateSTL(scene, false, piece);
-                const blob = new Blob([stlString], { type: 'application/octet-stream' });
-                const url = URL.createObjectURL(blob);
-                const link = document.createElement('a');
-                link.href = url;
-                link.download = `${piece.name}.stl`;
-                link.click();
+            BABYLON.GLTF2Export.GLBAsync(scene, "chessboard").then((glb) => {
+                glb.downloadFiles();
             });
         });
 
