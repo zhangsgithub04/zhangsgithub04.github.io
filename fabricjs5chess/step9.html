@@ -3,23 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fabric.js Chessboard with Two-Click Move</title>
+    <title>Fabric.js Chessboard with Moveable Pieces</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
     <style>
         canvas {
             border: 1px solid #000;
         }
+        #history {
+            width: 400px;
+            height: 200px;
+            overflow-y: auto;
+            border: 1px solid #000;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
     <canvas id="canvas" width="400" height="400"></canvas>
+    <div id="history"></div>
     <script>
         const canvas = new fabric.Canvas('canvas');
         const squareSize = 50;
-        let selectedPiece = null;
-        let turn = 'white'; // White's turn initially
+        let turn = 'white';
+        const history = [];
 
-        // Create the chessboard
         function createChessboard() {
             for (let row = 0; row < 8; row++) {
                 for (let col = 0; col < 8; col++) {
@@ -37,21 +44,20 @@
             }
         }
 
-        // Load SVG pieces onto the chessboard
         function addPieces() {
             const pieces = {
-                'r': 'https://upload.wikimedia.org/wikipedia/commons/f/ff/Chess_rdt45.svg', // black rook
-                'n': 'https://upload.wikimedia.org/wikipedia/commons/8/81/Chess_ndt45.svg', // black knight
-                'b': 'https://upload.wikimedia.org/wikipedia/commons/e/e4/Chess_bdt45.svg', // black bishop
-                'q': 'https://upload.wikimedia.org/wikipedia/commons/4/49/Chess_qdt45.svg', // black queen
-                'k': 'https://upload.wikimedia.org/wikipedia/commons/6/6b/Chess_kdt45.svg', // black king
-                'p': 'https://upload.wikimedia.org/wikipedia/commons/4/45/Chess_pdt45.svg', // black pawn
-                'R': 'https://upload.wikimedia.org/wikipedia/commons/7/72/Chess_rlt45.svg', // white rook
-                'N': 'https://upload.wikimedia.org/wikipedia/commons/2/25/Chess_nlt45.svg', // white knight
-                'B': 'https://upload.wikimedia.org/wikipedia/commons/7/74/Chess_blt45.svg', // white bishop
-                'Q': 'https://upload.wikimedia.org/wikipedia/commons/1/1a/Chess_qlt45.svg', // white queen
-                'K': 'https://upload.wikimedia.org/wikipedia/commons/5/5c/Chess_klf45.svg', // white king
-                'P': 'https://upload.wikimedia.org/wikipedia/commons/3/39/Chess_plt45.svg'  // white pawn
+                'r': 'https://upload.wikimedia.org/wikipedia/commons/f/ff/Chess_rdt45.svg',
+                'n': 'https://upload.wikimedia.org/wikipedia/commons/e/ef/Chess_ndt45.svg',
+                'b': 'https://upload.wikimedia.org/wikipedia/commons/9/98/Chess_bdt45.svg',
+                'q': 'https://upload.wikimedia.org/wikipedia/commons/4/47/Chess_qdt45.svg',
+                'k': 'https://upload.wikimedia.org/wikipedia/commons/f/f0/Chess_kdt45.svg',
+                'p': 'https://upload.wikimedia.org/wikipedia/commons/c/c7/Chess_pdt45.svg',
+                'R': 'https://upload.wikimedia.org/wikipedia/commons/7/72/Chess_rlt45.svg',
+                'N': 'https://upload.wikimedia.org/wikipedia/commons/7/70/Chess_nlt45.svg',
+                'B': 'https://upload.wikimedia.org/wikipedia/commons/b/b1/Chess_blt45.svg',
+                'Q': 'https://upload.wikimedia.org/wikipedia/commons/1/15/Chess_qlt45.svg',
+                'K': 'https://upload.wikimedia.org/wikipedia/commons/4/42/Chess_klt45.svg',
+                'P': 'https://upload.wikimedia.org/wikipedia/commons/4/45/Chess_plt45.svg'
             };
 
             const boardState = [
@@ -69,7 +75,6 @@
                 for (let col = 0; col < 8; col++) {
                     const piece = boardState[row][col];
                     if (piece !== '.') {
-                        // Load the SVG piece
                         fabric.loadSVGFromURL(pieces[piece], function(objects, options) {
                             const svgPiece = fabric.util.groupSVGElements(objects, options);
                             svgPiece.set({
@@ -82,10 +87,6 @@
                                 pieceColor: piece === piece.toUpperCase() ? 'white' : 'black'
                             });
 
-                            svgPiece.on('mousedown', function() {
-                                handlePieceClick(this);
-                            });
-
                             canvas.add(svgPiece);
                         });
                     }
@@ -93,39 +94,49 @@
             }
         }
 
-        // Handle click to select and move pieces
-        function handlePieceClick(piece) {
-            if (selectedPiece) {
-                // If a piece is selected, move it to the clicked position
-                if (canMove(selectedPiece, piece)) {
-                    movePiece(selectedPiece, piece.left, piece.top);
-                    selectedPiece = null; // Deselect the piece
-                    turn = turn === 'white' ? 'black' : 'white'; // Switch turns
-                }
-            } else if (turn === piece.pieceColor) {
-                // Select the piece if it's the player's turn
-                selectedPiece = piece;
-                piece.set({ stroke: 'yellow', strokeWidth: 3 }); // Highlight selected piece
+        function updateHistory(move) {
+            history.push(move);
+            const historyDiv = document.getElementById('history');
+            historyDiv.innerHTML = history.join('<br/>');
+        }
+
+        function movePiece(from, to) {
+            const piece = canvas.getActiveObject();
+            if (!piece) return;
+
+            const fromCoords = positionToCoords(from);
+            const toCoords = positionToCoords(to);
+
+            if (piece && piece.left === fromCoords.x && piece.top === fromCoords.y) {
+                piece.set({
+                    left: toCoords.x,
+                    top: toCoords.y,
+                });
+                piece.setCoords();
                 canvas.renderAll();
+                updateHistory(`${piece.pieceColor} moves from ${from} to ${to}`);
+                turn = turn === 'white' ? 'black' : 'white';
             }
         }
 
-        // Check if the piece can be moved
-        function canMove(piece, targetLeft, targetTop) {
-            return true; // For now, allow all moves
+        function positionToCoords(position) {
+            const col = position.charCodeAt(0) - 'a'.charCodeAt(0);
+            const row = 8 - parseInt(position[1]);
+            return {
+                x: col * squareSize + squareSize / 2,
+                y: row * squareSize + squareSize / 2
+            };
         }
 
-        // Move the selected piece to the target position
-        function movePiece(piece, left, top) {
-            piece.set({
-                left: left + squareSize / 2,
-                top: top + squareSize / 2,
-                stroke: null // Remove highlight
-            });
-            canvas.renderAll();
-        }
+        window.addEventListener('keydown', function(event) {
+            if (event.key.match(/[a-h][1-8]/)) { // Check for valid square
+                const from = prompt("Enter the piece's position (e.g., e2):");
+                if (from) {
+                    movePiece(from, event.key); // Move to the square indicated by the key
+                }
+            }
+        });
 
-        // Initialize the chessboard and add the pieces
         createChessboard();
         addPieces();
     </script>
