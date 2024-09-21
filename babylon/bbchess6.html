@@ -42,17 +42,12 @@
 
         const scene = createScene();
 
-        const createPiece = (name, position, color) => {
+        const createPiece = (name, position) => {
             const piecePath = `${name}.glb`; // Adjust the path to your GLB files
 
             BABYLON.SceneLoader.Append("", piecePath, scene, (newMeshes) => {
                 const piece = newMeshes[0]; // Assuming each GLB has one main mesh
                 piece.position = position;
-
-                // Set the piece color
-                const pieceMaterial = new BABYLON.StandardMaterial(`${name}Mat`, scene);
-                pieceMaterial.diffuseColor = color;
-                piece.material = pieceMaterial;
 
                 // Make sure the piece is properly scaled and centered
                 piece.scaling = new BABYLON.Vector3(0.5, 0.5, 0.5); // Adjust the scaling as needed
@@ -68,29 +63,29 @@
         const pieces = [];
 
         // White pieces (home positions)
-        createPiece("rook", new BABYLON.Vector3(-3.5, 0.5, 3.5), new BABYLON.Color3(1, 0, 0)); // Red rook
-        createPiece("knight", new BABYLON.Vector3(-2.5, 0.5, 3.5), new BABYLON.Color3(1, 0, 0));
-        createPiece("bishop", new BABYLON.Vector3(-1.5, 0.5, 3.5), new BABYLON.Color3(1, 0, 0));
-        createPiece("queen", new BABYLON.Vector3(-0.5, 0.5, 3.5), new BABYLON.Color3(1, 0, 0));
-        createPiece("king", new BABYLON.Vector3(0.5, 0.5, 3.5), new BABYLON.Color3(1, 0, 0));
-        createPiece("bishop", new BABYLON.Vector3(1.5, 0.5, 3.5), new BABYLON.Color3(1, 0, 0));
-        createPiece("knight", new BABYLON.Vector3(2.5, 0.5, 3.5), new BABYLON.Color3(1, 0, 0));
-        createPiece("rook", new BABYLON.Vector3(3.5, 0.5, 3.5), new BABYLON.Color3(1, 0, 0)); // Red rook
+        createPiece("rook", new BABYLON.Vector3(-3.5, 0.5, 3.5)); // White rook
+        createPiece("knight", new BABYLON.Vector3(-2.5, 0.5, 3.5));
+        createPiece("bishop", new BABYLON.Vector3(-1.5, 0.5, 3.5));
+        createPiece("queen", new BABYLON.Vector3(-0.5, 0.5, 3.5));
+        createPiece("king", new BABYLON.Vector3(0.5, 0.5, 3.5));
+        createPiece("bishop", new BABYLON.Vector3(1.5, 0.5, 3.5));
+        createPiece("knight", new BABYLON.Vector3(2.5, 0.5, 3.5));
+        createPiece("rook", new BABYLON.Vector3(3.5, 0.5, 3.5)); // White rook
         for (let i = 0; i < 8; i++) {
-            createPiece("pawn", new BABYLON.Vector3(i - 3.5, 0.5, 1.5), new BABYLON.Color3(1, 0, 0)); // Red pawns
+            createPiece("pawn", new BABYLON.Vector3(i - 3.5, 0.5, 1.5)); // White pawns
         }
 
         // Black pieces (home positions)
-        createPiece("rook", new BABYLON.Vector3(-3.5, 0.5, -3.5), new BABYLON.Color3(0, 0, 1)); // Blue rook
-        createPiece("knight", new BABYLON.Vector3(-2.5, 0.5, -3.5), new BABYLON.Color3(0, 0, 1));
-        createPiece("bishop", new BABYLON.Vector3(-1.5, 0.5, -3.5), new BABYLON.Color3(0, 0, 1));
-        createPiece("queen", new BABYLON.Vector3(-0.5, 0.5, -3.5), new BABYLON.Color3(0, 0, 1));
-        createPiece("king", new BABYLON.Vector3(0.5, 0.5, -3.5), new BABYLON.Color3(0, 0, 1));
-        createPiece("bishop", new BABYLON.Vector3(1.5, 0.5, -3.5), new BABYLON.Color3(0, 0, 1));
-        createPiece("knight", new BABYLON.Vector3(2.5, 0.5, -3.5), new BABYLON.Color3(0, 0, 1));
-        createPiece("rook", new BABYLON.Vector3(3.5, 0.5, -3.5), new BABYLON.Color3(0, 0, 1)); // Blue rook
+        createPiece("rook", new BABYLON.Vector3(-3.5, 0.5, -3.5)); // Black rook
+        createPiece("knight", new BABYLON.Vector3(-2.5, 0.5, -3.5));
+        createPiece("bishop", new BABYLON.Vector3(-1.5, 0.5, -3.5));
+        createPiece("queen", new BABYLON.Vector3(-0.5, 0.5, -3.5));
+        createPiece("king", new BABYLON.Vector3(0.5, 0.5, -3.5));
+        createPiece("bishop", new BABYLON.Vector3(1.5, 0.5, -3.5));
+        createPiece("knight", new BABYLON.Vector3(2.5, 0.5, -3.5));
+        createPiece("rook", new BABYLON.Vector3(3.5, 0.5, -3.5)); // Black rook
         for (let i = 0; i < 8; i++) {
-            createPiece("pawn", new BABYLON.Vector3(i - 3.5, 0.5, -1.5), new BABYLON.Color3(0, 0, 1)); // Blue pawns
+            createPiece("pawn", new BABYLON.Vector3(i - 3.5, 0.5, -1.5)); // Black pawns
         }
 
         let selectedPiece = null;
