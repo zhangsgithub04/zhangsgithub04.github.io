@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Queen 3D Model Export</title>
+    <title>Knight 3D Model Export</title>
     <script src="https://cdn.babylonjs.com/babylon.js"></script>
     <script src="https://cdn.babylonjs.com/loaders/babylon.glTF2FileLoader.min.js"></script>
     <script src="https://cdn.babylonjs.com/serializers/babylon.glTF2Serializer.min.js"></script>
@@ -28,23 +28,22 @@
             // Add a light
             const light = new BABYLON.HemisphericLight('hemiLight', new BABYLON.Vector3(0, 1, 0), scene);
 
-            // Create a queen shape by combining basic geometries
-            const base = BABYLON.MeshBuilder.CreateCylinder('queenBase', { diameter: 2, height: 0.5 }, scene);
-            const body = BABYLON.MeshBuilder.CreateCylinder('queenBody', { diameter: 1.5, height: 3 }, scene);
-            body.position.y = 1.75;
-            const crown = BABYLON.MeshBuilder.CreateTorus('queenCrown', { diameter: 1.7, thickness: 0.3 }, scene);
-            crown.position.y = 3.25;
+            // Create the knight shape by combining basic geometries
+            const base = BABYLON.MeshBuilder.CreateCylinder('knightBase', { diameter: 2, height: 0.5 }, scene);
+            const body = BABYLON.MeshBuilder.CreateTorus('knightBody', { diameter: 1.5, thickness: 0.3 }, scene);
+            const head = BABYLON.MeshBuilder.CreateSphere('knightHead', { diameter: 1.2 }, scene);
+            head.position.y = 1.5;
 
             // Create a CSG operation to combine meshes
-            const queenCSG = BABYLON.CSG.FromMesh(base)
+            const knightCSG = BABYLON.CSG.FromMesh(base)
                 .union(BABYLON.CSG.FromMesh(body))
-                .union(BABYLON.CSG.FromMesh(crown))
-                .toMesh('queen', null, scene);
+                .union(BABYLON.CSG.FromMesh(head))
+                .toMesh('knight', null, scene);
 
             // Dispose original geometry
             base.dispose();
             body.dispose();
-            crown.dispose();
+            head.dispose();
 
             return scene;
         };
@@ -63,7 +62,7 @@
 
         // Export function to download GLB file
         document.getElementById('downloadButton').addEventListener('click', function () {
-            BABYLON.GLTF2Export.GLBAsync(scene, "queen").then((glb) => {
+            BABYLON.GLTF2Export.GLBAsync(scene, "knight").then((glb) => {
                 glb.downloadFiles();
             });
         });
