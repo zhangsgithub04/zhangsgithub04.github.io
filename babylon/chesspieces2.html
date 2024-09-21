@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chess Piece 3D Model Export</title>
+    <script src="https://cdn.babylonjs.com/babylon.js"></script>
+    <script src="https://cdn.babylonjs.com/loaders/babylon.glTF2FileLoader.min.js"></script>
+    <script src="https://cdn.babylonjs.com/serializers/babylon.glTF2Serializer.min.js"></script>
+    <style>
+        .canvas-container {
+            display: inline-block;
+            margin: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="canvas-container">
+        <canvas id="rookCanvas" width="300" height="300"></canvas>
+        <button id="downloadRook">Download Rook</button>
+    </div>
+
+    <div class="canvas-container">
+        <canvas id="knightCanvas" width="300" height="300"></canvas>
+        <button id="downloadKnight">Download Knight</button>
+    </div>
+
+    <div class="canvas-container">
+        <canvas id="bishopCanvas" width="300" height="300"></canvas>
+        <button id="downloadBishop">Download Bishop</button>
+    </div>
+
+    <div class="canvas-container">
+        <canvas id="queenCanvas" width="300" height="300"></canvas>
+        <button id="downloadQueen">Download Queen</button>
+    </div>
+
+    <div class="canvas-container">
+        <canvas id="kingCanvas" width="300" height="300"></canvas>
+        <button id="downloadKing">Download King</button>
+    </div>
+
+    <div class="canvas-container">
+        <canvas id="pawnCanvas" width="300" height="300"></canvas>
+        <button id="downloadPawn">Download Pawn</button>
+    </div>
+
+    <script>
+        const engineConfigs = [];
+
+        const createScene = (canvasId, pieceName) => {
+            const canvas = document.getElementById(canvasId);
+            const engine = new BABYLON.Engine(canvas, true);
+
+            const scene = new BABYLON.Scene(engine);
+            const camera = new BABYLON.ArcRotateCamera('camera', Math.PI / 2, Math.PI / 2, 5, BABYLON.Vector3.Zero(), scene);
+            camera.attachControl(canvas, true);
+            const light = new BABYLON.HemisphericLight('hemiLight', new BABYLON.Vector3(0, 1, 0), scene);
+
+            let piece;
+            if (pieceName === 'rook') {
+                piece = BABYLON.MeshBuilder.CreateCylinder('rook', { diameter: 1.5, height: 3 }, scene);
+            } else if (pieceName === 'knight') {
+                piece = BABYLON.MeshBuilder.CreateSphere('knight', { diameter: 1.5 }, scene);
+            } else if (pieceName === 'bishop') {
+                piece = BABYLON.MeshBuilder.CreateCone('bishop', { diameter: 1.5, height: 3 }, scene);
+            } else if (pieceName === 'queen') {
+                piece = BABYLON.MeshBuilder.CreateTorus('queen', { diameter: 1.5, thickness: 0.3 }, scene);
+            } else if (pieceName === 'king') {
+                piece = BABYLON.MeshBuilder.CreateTorusKnot('king', { radius: 1, tube: 0.3 }, scene);
+            } else if (pieceName === 'pawn') {
+                piece = BABYLON.MeshBuilder.CreateSphere('pawn', { diameter: 1.5 }, scene);
+            }
+
+            engine.runRenderLoop(() => scene.render());
+
+            window.addEventListener('resize', () => engine.resize());
+
+            engineConfigs.push({ engine, scene, pieceName });
+        };
+
+        const addDownloadEvent = (buttonId, canvasId) => {
+            document.getElementById(buttonId).addEventListener('click', () => {
+                const { scene, pieceName } = engineConfigs.find(config => config.pieceName === canvasId.replace('Canvas', '').toLowerCase());
+                BABYLON.GLTF2Export.GLBAsync(scene, pieceName).then(glb => glb.downloadFiles());
+            });
+        };
+
+        // Initialize all scenes
+        createScene('rookCanvas', 'rook');
+        createScene('knightCanvas', 'knight');
+        createScene('bishopCanvas', 'bishop');
+        createScene('queenCanvas', 'queen');
+        createScene('kingCanvas', 'king');
+        createScene('pawnCanvas', 'pawn');
+
+        // Add download functionality
+        addDownloadEvent('downloadRook', 'rookCanvas');
+        addDownloadEvent('downloadKnight', 'knightCanvas');
+        addDownloadEvent('downloadBishop', 'bishopCanvas');
+        addDownloadEvent('downloadQueen', 'queenCanvas');
+        addDownloadEvent('downloadKing', 'kingCanvas');
+        addDownloadEvent('downloadPawn', 'pawnCanvas');
+    </script>
+</body>
+</html>
