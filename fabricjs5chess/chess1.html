@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fabric.js Chess Game</title>
+    <title>Fabric.js Chess Game with Tabler Icons</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.0.0/fabric.min.js"></script>
+    <script src="https://unpkg.com/@tabler/icons@latest"></script> <!-- Tabler Icons CDN -->
     <style>
         canvas {
             border: 1px solid #000;
@@ -28,6 +29,22 @@
             ['R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R']
         ];
 
+        // Mapping pieces to Tabler Icons SVGs
+        const pieceIcons = {
+            'r': 'tabler-icon-chess-rook',
+            'n': 'tabler-icon-chess-knight',
+            'b': 'tabler-icon-chess-bishop',
+            'q': 'tabler-icon-chess-queen',
+            'k': 'tabler-icon-chess-king',
+            'p': 'tabler-icon-chess-pawn',
+            'R': 'tabler-icon-chess-rook',
+            'N': 'tabler-icon-chess-knight',
+            'B': 'tabler-icon-chess-bishop',
+            'Q': 'tabler-icon-chess-queen',
+            'K': 'tabler-icon-chess-king',
+            'P': 'tabler-icon-chess-pawn'
+        };
+
         // Function to create the chessboard
         function createChessboard() {
             const squareSize = 50; // Size of each square
@@ -46,35 +63,29 @@
             }
         }
 
-        // Function to add pieces based on board state
+        // Function to add pieces using Tabler Icons SVG paths
         function addPieces() {
-            const pieceImages = {
-                'r': 'path_to_black_rook.png',  // Replace with actual image paths
-                'n': 'path_to_black_knight.png',
-                'b': 'path_to_black_bishop.png',
-                'q': 'path_to_black_queen.png',
-                'k': 'path_to_black_king.png',
-                'p': 'path_to_black_pawn.png',
-                'R': 'path_to_white_rook.png',
-                'N': 'path_to_white_knight.png',
-                'B': 'path_to_white_bishop.png',
-                'Q': 'path_to_white_queen.png',
-                'K': 'path_to_white_king.png',
-                'P': 'path_to_white_pawn.png',
-            };
-
             for (let row = 0; row < 8; row++) {
                 for (let col = 0; col < 8; col++) {
                     const piece = boardState[row][col];
                     if (piece !== '.') {
-                        fabric.Image.fromURL(pieceImages[piece], (img) => {
-                            img.set({
-                                left: col * 50,
-                                top: row * 50,
-                                scaleX: 0.5, // Adjust size
-                                scaleY: 0.5
+                        const iconName = pieceIcons[piece];
+                        const color = piece === piece.toUpperCase() ? 'white' : 'black';
+
+                        // Create an SVG path from Tabler Icons
+                        const svgIcon = window.Tabler[iconName]({ strokeWidth: 2 });
+                        fabric.loadSVGFromString(svgIcon.outerHTML, function (objects, options) {
+                            const icon = fabric.util.groupSVGElements(objects, options);
+                            icon.set({
+                                left: col * 50 + 10,
+                                top: row * 50 + 10,
+                                scaleX: 0.2,
+                                scaleY: 0.2,
+                                fill: color,
+                                originX: 'center',
+                                originY: 'center'
                             });
-                            canvas.add(img);
+                            canvas.add(icon);
                         });
                     }
                 }
