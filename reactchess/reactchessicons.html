@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chess Pieces with Light and Dark Colors</title>
+
+    <!-- React and ReactDOM CDN -->
+    <script src="https://unpkg.com/react@17/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js" crossorigin></script>
+
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+      }
+
+      .container {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 20px;
+        margin: 50px;
+      }
+
+      .chess-button {
+        width: 80px;
+        height: 80px;
+        border-radius: 8px;
+        border: none;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .dark-bg {
+        background-color: #333;
+      }
+
+      .light-bg {
+        background-color: #f1f1f1;
+      }
+
+      svg {
+        width: 50px;
+        height: 50px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+      // Sample SVG for a pawn piece
+      const Pawn = ({ color }) => (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill={color} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="6" r="3"></circle>
+          <path d="M10 14h4v7h-4z"></path>
+          <path d="M5 20h14v1H5z"></path>
+        </svg>
+      );
+
+      // Sample SVG for a knight piece
+      const Knight = ({ color }) => (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill={color} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M9 20L12 14H17L20 20H9z"></path>
+          <path d="M12 4C10 4 10 7 8 7c-2 0-2-3-4-3s-3 3-3 5c0 5 9 8 9 8"></path>
+        </svg>
+      );
+
+      // List of pieces and their components (can add more later)
+      const pieces = [
+        { name: 'Pawn', component: Pawn },
+        { name: 'Knight', component: Knight },
+        // Add other pieces like Bishop, Rook, Queen, King with their own SVGs here...
+      ];
+
+      // Background and color configurations
+      const backgrounds = [
+        { className: "dark-bg", text: "Dark Background", pieceColor: "#fff", altColor: "#333" },
+        { className: "light-bg", text: "Light Background", pieceColor: "#333", altColor: "#fff" }
+      ];
+
+      const ChessPieces = () => {
+        return (
+          <div className="container">
+            {pieces.map((piece) =>
+              backgrounds.map((bg) => (
+                <div key={`${piece.name}-${bg.text}`}>
+                  <button className={`chess-button ${bg.className}`}>
+                    {/* Piece with dark color */}
+                    <piece.component color={bg.pieceColor} />
+                  </button>
+                  <button className={`chess-button ${bg.className}`}>
+                    {/* Piece with light color */}
+                    <piece.component color={bg.altColor} />
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
+        );
+      };
+
+      ReactDOM.render(<ChessPieces />, document.getElementById('root'));
+    </script>
+  </body>
+</html>
