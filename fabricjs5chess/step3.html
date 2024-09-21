@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fabric.js Chessboard</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
+    <style>
+        canvas {
+            border: 1px solid #000;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas" width="400" height="400"></canvas>
+    <script>
+        // Initialize Fabric.js canvas
+        const canvas = new fabric.Canvas('canvas');
+
+        // Size of each square
+        const squareSize = 50;
+
+        // Create the chessboard
+        function createChessboard() {
+            for (let row = 0; row < 8; row++) {
+                for (let col = 0; col < 8; col++) {
+                    const isLightSquare = (row + col) % 2 === 0;
+                    const square = new fabric.Rect({
+                        left: col * squareSize,
+                        top: row * squareSize,
+                        fill: isLightSquare ? '#eee' : '#333', // Light or dark color
+                        width: squareSize,
+                        height: squareSize,
+                        selectable: false // Squares are not selectable
+                    });
+                    canvas.add(square);
+                }
+            }
+        }
+
+        // Call the function to create the chessboard
+        createChessboard();
+    </script>
+</body>
+</html>
