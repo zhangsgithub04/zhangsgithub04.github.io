@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fabric.js Chessboard with SVG Pieces</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
+    <style>
+        canvas {
+            border: 1px solid #000;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas" width="400" height="400"></canvas>
+    <script>
+        // Initialize Fabric.js canvas
+        const canvas = new fabric.Canvas('canvas');
+
+        // Size of each square
+        const squareSize = 50;
+
+        // Create the chessboard
+        function createChessboard() {
+            for (let row = 0; row < 8; row++) {
+                for (let col = 0; col < 8; col++) {
+                    const isLightSquare = (row + col) % 2 === 0;
+                    const square = new fabric.Rect({
+                        left: col * squareSize,
+                        top: row * squareSize,
+                        fill: isLightSquare ? '#eee' : '#333',
+                        width: squareSize,
+                        height: squareSize,
+                        selectable: false
+                    });
+                    canvas.add(square);
+                }
+            }
+        }
+
+        // Load SVG pieces onto the chessboard
+        function addPieces() {
+            const pieces = {
+                'r': 'https://upload.wikimedia.org/wikipedia/commons/1/1b/Chess_rdt45.svg', // black rook
+                'n': 'https://upload.wikimedia.org/wikipedia/commons/8/81/Chess_ndt45.svg', // black knight
+                'b': 'https://upload.wikimedia.org/wikipedia/commons/e/e4/Chess_bdt45.svg', // black bishop
+                'q': 'https://upload.wikimedia.org/wikipedia/commons/4/49/Chess_qdt45.svg', // black queen
+                'k': 'https://upload.wikimedia.org/wikipedia/commons/6/6b/Chess_kdt45.svg', // black king
+                'p': 'https://upload.wikimedia.org/wikipedia/commons/4/45/Chess_pdt45.svg', // black pawn
+                'R': 'https://upload.wikimedia.org/wikipedia/commons/3/3b/Chess_rlt45.svg', // white rook
+                'N': 'https://upload.wikimedia.org/wikipedia/commons/2/25/Chess_nlt45.svg', // white knight
+                'B': 'https://upload.wikimedia.org/wikipedia/commons/7/74/Chess_blt45.svg', // white bishop
+                'Q': 'https://upload.wikimedia.org/wikipedia/commons/1/1a/Chess_qlt45.svg', // white queen
+                'K': 'https://upload.wikimedia.org/wikipedia/commons/5/5c/Chess_klf45.svg', // white king
+                'P': 'https://upload.wikimedia.org/wikipedia/commons/3/39/Chess_plt45.svg'  // white pawn
+            };
+
+            const boardState = [
+                ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'],
+                ['p', 'p', 'p', 'p', 'p', 'p', 'p', 'p'],
+                ['.', '.', '.', '.', '.', '.', '.', '.'],
+                ['.', '.', '.', '.', '.', '.', '.', '.'],
+                ['.', '.', '.', '.', '.', '.', '.', '.'],
+                ['.', '.', '.', '.', '.', '.', '.', '.'],
+                ['P', 'P', 'P', 'P', 'P', 'P', 'P', 'P'],
+                ['R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R']
+            ];
+
+            for (let row = 0; row < 8; row++) {
+                for (let col = 0; col < 8; col++) {
+                    const piece = boardState[row][col];
+                    if (piece !== '.') {
+                        // Load the SVG piece
+                        fabric.loadSVGFromURL(pieces[piece], function(objects, options) {
+                            const svgPiece = fabric.util.groupSVGElements(objects, options);
+                            svgPiece.set({
+                                left: col * squareSize + squareSize / 2,
+                                top: row * squareSize + squareSize / 2,
+                                originX: 'center',
+                                originY: 'center',
+                                selectable: false // Pieces are not selectable
+                            });
+                            canvas.add(svgPiece);
+                        });
+                    }
+                }
+            }
+        }
+
+        // Initialize the chessboard and add the pieces
+        createChessboard();
+        addPieces();
+    </script>
+</body>
+</html>
