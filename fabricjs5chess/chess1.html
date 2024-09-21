@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fabric.js Chess Game with Tabler Icons</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.0.0/fabric.min.js"></script>
-    <script src="https://unpkg.com/@tabler/icons@latest"></script> <!-- Tabler Icons CDN -->
     <style>
         canvas {
             border: 1px solid #000;
@@ -29,20 +28,20 @@
             ['R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R']
         ];
 
-        // Mapping pieces to Tabler Icons SVGs
-        const pieceIcons = {
-            'r': 'tabler-icon-chess-rook',
-            'n': 'tabler-icon-chess-knight',
-            'b': 'tabler-icon-chess-bishop',
-            'q': 'tabler-icon-chess-queen',
-            'k': 'tabler-icon-chess-king',
-            'p': 'tabler-icon-chess-pawn',
-            'R': 'tabler-icon-chess-rook',
-            'N': 'tabler-icon-chess-knight',
-            'B': 'tabler-icon-chess-bishop',
-            'Q': 'tabler-icon-chess-queen',
-            'K': 'tabler-icon-chess-king',
-            'P': 'tabler-icon-chess-pawn'
+        // SVG paths for chess pieces (replace with actual SVG code from Tabler Icons or your preferred source)
+        const pieceSVGs = {
+            'r': '<svg xmlns="https://commons.wikimedia.org/wiki/Category:SVG_chess_pieces#/media/File:Chess_kdt45.svg></svg>', // Replace with actual SVG paths
+            'n': '<svg xmlns="https://commons.wikimedia.org/wiki/Category:SVG_chess_pieces#/media/File:Chess_kdt45.svg></svg>',
+            'b': '<svg xmlns="https://commons.wikimedia.org/wiki/Category:SVG_chess_pieces#/media/File:Chess_kdt45.svg></svg>',
+            'q': '<svg xmlns="https://commons.wikimedia.org/wiki/Category:SVG_chess_pieces#/media/File:Chess_kdt45.svg></svg>',
+            'k': '<svg xmlns="https://commons.wikimedia.org/wiki/Category:SVG_chess_pieces#/media/File:Chess_kdt45.svg></svg>',
+            'p': '<svg xmlns="https://commons.wikimedia.org/wiki/Category:SVG_chess_pieces#/media/File:Chess_kdt45.svg></svg>',
+            'R': '<svg xmlns="https://commons.wikimedia.org/wiki/Category:SVG_chess_pieces#/media/File:Chess_kdt45.svg></svg>',
+            'N': '<svg xmlns="https://commons.wikimedia.org/wiki/Category:SVG_chess_pieces#/media/File:Chess_kdt45.svg></svg>',
+            'B': '<svg xmlns="https://commons.wikimedia.org/wiki/Category:SVG_chess_pieces#/media/File:Chess_klt45.svg></svg>',
+            'Q': '<svg xmlns="https://commons.wikimedia.org/wiki/Category:SVG_chess_pieces#/media/File:Chess_klt45.svg></svg>',
+            'K': '<svg xmlns="https://commons.wikimedia.org/wiki/Category:SVG_chess_pieces#/media/File:Chess_klt45.svg></svg>',
+            'P': '<svg xmlns="https://commons.wikimedia.org/wiki/Category:SVG_chess_pieces#/media/File:Chess_klt45.svg></svg>'
         };
 
         // Function to create the chessboard
@@ -63,27 +62,22 @@
             }
         }
 
-        // Function to add pieces using Tabler Icons SVG paths
+        // Function to add pieces using SVG paths
         function addPieces() {
             for (let row = 0; row < 8; row++) {
                 for (let col = 0; col < 8; col++) {
                     const piece = boardState[row][col];
                     if (piece !== '.') {
-                        const iconName = pieceIcons[piece];
-                        const color = piece === piece.toUpperCase() ? 'white' : 'black';
-
-                        // Create an SVG path from Tabler Icons
-                        const svgIcon = window.Tabler[iconName]({ strokeWidth: 2 });
-                        fabric.loadSVGFromString(svgIcon.outerHTML, function (objects, options) {
+                        const svgIcon = pieceSVGs[piece];  // Get the SVG for the piece
+                        fabric.loadSVGFromString(svgIcon, function (objects, options) {
                             const icon = fabric.util.groupSVGElements(objects, options);
                             icon.set({
-                                left: col * 50 + 10,
-                                top: row * 50 + 10,
-                                scaleX: 0.2,
-                                scaleY: 0.2,
-                                fill: color,
+                                left: col * 50 + 25,
+                                top: row * 50 + 25,
+                                scaleX: 0.4, // Adjust the size of the pieces
+                                scaleY: 0.4,
                                 originX: 'center',
-                                originY: 'center'
+                                originY: 'center',
                             });
                             canvas.add(icon);
                         });
