@@ -53,7 +53,7 @@
             const engine = new BABYLON.Engine(canvas, true);
 
             const scene = new BABYLON.Scene(engine);
-            const camera = new BABYLON.ArcRotateCamera('camera', Math.PI / 2, Math.PI / 2, 5, BABYLON.Vector3.Zero(), scene);
+            const camera = new BABYLON.ArcRotateCamera('camera', Math.PI / 2, Math.PI / 2.5, 5, BABYLON.Vector3.Zero(), scene);
             camera.attachControl(canvas, true);
             const light = new BABYLON.HemisphericLight('hemiLight', new BABYLON.Vector3(0, 1, 0), scene);
 
