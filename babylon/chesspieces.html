@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chess Pieces 3D Model Export</title>
+    <script src="https://cdn.babylonjs.com/babylon.js"></script>
+    <script src="https://cdn.babylonjs.com/loaders/babylon.glTF2FileLoader.min.js"></script>
+    <script src="https://cdn.babylonjs.com/serializers/babylon.glTF2Serializer.min.js"></script>
+</head>
+<body>
+    <canvas id="renderCanvas" style="width: 800px; height: 600px;"></canvas>
+    
+    <!-- Buttons for downloading each piece -->
+    <div>
+        <button id="downloadRook">Download Rook</button>
+        <button id="downloadPawn">Download Pawn</button>
+        <button id="downloadKnight">Download Knight</button>
+        <button id="downloadBishop">Download Bishop</button>
+        <button id="downloadQueen">Download Queen</button>
+        <button id="downloadKing">Download King</button>
+    </div>
+
+    <script>
+        // Get the canvas element
+        const canvas = document.getElementById('renderCanvas');
+        const engine = new BABYLON.Engine(canvas, true);
+
+        // Create the scene
+        const createScene = function () {
+            const scene = new BABYLON.Scene(engine);
+
+            // Add a camera
+            const camera = new BABYLON.ArcRotateCamera('Camera', Math.PI / 2, Math.PI / 2, 10, BABYLON.Vector3.Zero(), scene);
+            camera.attachControl(canvas, true);
+
+            // Add a light
+            const light = new BABYLON.HemisphericLight('hemiLight', new BABYLON.Vector3(0, 1, 0), scene);
+
+            // Helper function to create pieces
+            const createRook = function () {
+                const base = BABYLON.MeshBuilder.CreateCylinder('base', { diameter: 2, height: 0.5 }, scene);
+                const body = BABYLON.MeshBuilder.CreateCylinder('body', { diameter: 1.5, height: 3 }, scene);
+                body.position.y = 1.75;
+                const top = BABYLON.MeshBuilder.CreateCylinder('top', { diameter: 1.7, height: 0.5 }, scene);
+                top.position.y = 3.25;
+                const rook = BABYLON.CSG.FromMesh(base).union(BABYLON.CSG.FromMesh(body)).union(BABYLON.CSG.FromMesh(top)).toMesh('rook', null, scene);
+                base.dispose(); body.dispose(); top.dispose();
+                return rook;
+            };
+
+            const createPawn = function () {
+                const body = BABYLON.MeshBuilder.CreateSphere('body', { diameter: 1.5 }, scene);
+                const base = BABYLON.MeshBuilder.CreateCylinder('base', { diameter: 1, height: 0.5 }, scene);
+                base.position.y = -0.75;
+                const pawn = BABYLON.CSG.FromMesh(body).union(BABYLON.CSG.FromMesh(base)).toMesh('pawn', null, scene);
+                body.dispose(); base.dispose();
+                return pawn;
+            };
+
+            const createKnight = function () {
+                const body = BABYLON.MeshBuilder.CreateBox('body', { size: 1.5 }, scene);
+                body.rotation.y = Math.PI / 4;
+                return body;
+            };
+
+            const createBishop = function () {
+                const body = BABYLON.MeshBuilder.CreateCylinder('body', { diameterTop: 0.5, diameterBottom: 1.5, height: 3 }, scene);
+                return body;
+            };
+
+            const createQueen = function () {
+                const body = BABYLON.MeshBuilder.CreateCylinder('body', { diameter: 2, height: 3 }, scene);
+                return body;
+            };
+
+            const createKing = function () {
+                const body = BABYLON.MeshBuilder.CreateCylinder('body', { diameter: 2.2, height: 3.5 }, scene);
+                return body;
+            };
+
+            // Create all pieces and set their position
+            const rook = createRook();
+            const pawn = createPawn();
+            const knight = createKnight();
+            const bishop = createBishop();
+            const queen = createQueen();
+            const king = createKing();
+
+            // Set piece positions for better visualization
+            rook.position.x = -4;
+            pawn.position.x = -2;
+            knight.position.x = 0;
+            bishop.position.x = 2;
+            queen.position.x = 4;
+            king.position.x = 6;
+
+            return scene;
+        };
+
+        const scene = createScene();
+
+        // Run the render loop
+        engine.runRenderLoop(function () {
+            scene.render();
+        });
+
+        // Resize the engine on window resize
+        window.addEventListener('resize', function () {
+            engine.resize();
+        });
+
+        // Export function for GLB download
+        const setupDownloadButton = (buttonId, pieceName) => {
+            document.getElementById(buttonId).addEventListener('click', function () {
+                BABYLON.GLTF2Export.GLBAsync(scene, pieceName).then((glb) => {
+                    glb.downloadFiles();
+                });
+            });
+        };
+
+        // Set up download buttons for each piece
+        setupDownloadButton('downloadRook', 'rook');
+        setupDownloadButton('downloadPawn', 'pawn');
+        setupDownloadButton('downloadKnight', 'knight');
+        setupDownloadButton('downloadBishop', 'bishop');
+        setupDownloadButton('downloadQueen', 'queen');
+        setupDownloadButton('downloadKing', 'king');
+
+    </script>
+</body>
+</html>
