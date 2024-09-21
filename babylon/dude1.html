@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Babylon.js Dude Model Animation</title>
+    <script src="https://cdn.babylonjs.com/babylon.js"></script>
+    <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
+</head>
+<body>
+    <canvas id="renderCanvas" style="width: 100%; height: 100%;"></canvas>
+
+    <script>
+        // Initialize the Babylon.js engine and scene
+        var canvas = document.getElementById("renderCanvas");
+        var engine = new BABYLON.Engine(canvas, true);
+        var scene = new BABYLON.Scene(engine);
+
+        // Create a basic camera and light
+        var camera = new BABYLON.ArcRotateCamera("camera", Math.PI / 2, Math.PI / 2, 4, BABYLON.Vector3.Zero(), scene);
+        camera.attachControl(canvas, true);
+        var light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
+
+        // Load the Dude model
+        BABYLON.SceneLoader.ImportMesh("", "https://models.babylonjs.com/", "dude.babylon", scene, function(meshes, particleSystems, skeletons) {
+            var dudeMesh = meshes[0]; // The mesh
+            var skeleton = skeletons[0]; // The skeleton
+
+            // Scale the model if necessary
+            dudeMesh.scaling.scaleInPlace(0.02); // Adjust the scale
+
+            // Start animating the skeleton
+            scene.beginAnimation(skeleton, 0, 100, true); // Adjust frame range as needed
+        });
+
+        // Render loop
+        engine.runRenderLoop(function() {
+            scene.render();
+        });
+
+        // Resize handling
+        window.addEventListener("resize", function() {
+            engine.resize();
+        });
+    </script>
+</body>
+</html>
