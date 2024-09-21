@@ -12,6 +12,7 @@
     <script>
         const canvas = document.getElementById("renderCanvas");
         const engine = new BABYLON.Engine(canvas, true);
+        let pieces = [];
 
         const createScene = () => {
             const scene = new BABYLON.Scene(engine);
@@ -56,10 +57,7 @@
                         pieceMaterial.diffuseColor = color;
                         piece.material = pieceMaterial;
 
-                        piece.actionManager = new BABYLON.ActionManager(scene);
-                        piece.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnPickTrigger, () => {
-                            selectedPiece = piece;
-                        }));
+                        pieces.push(piece); // Add piece to pieces array
                     });
                     break;
                 default:
@@ -68,18 +66,25 @@
                     const pieceMaterial = new BABYLON.StandardMaterial(name + "Mat", scene);
                     pieceMaterial.diffuseColor = color;
                     piece.material = pieceMaterial;
+                    pieces.push(piece); // Add piece to pieces array
                     break;
             }
 
             return piece;
         };
 
-        const pieces = [];
         // Place rooks (using rook.glb model)
-        createPiece("rook", new BABYLON.Vector3(-3.5, 0.5, 3.5), new BABYLON.Color3(1, 1, 1));
-        createPiece("rook", new BABYLON.Vector3(3.5, 0.5, 3.5), new BABYLON.Color3(1, 1, 1));
-        createPiece("rook", new BABYLON.Vector3(-3.5, 0.5, -3.5), new BABYLON.Color3(0, 0, 0));
-        createPiece("rook", new BABYLON.Vector3(3.5, 0.5, -3.5), new BABYLON.Color3(0, 0, 0));
+        createPiece("rook", new BABYLON.Vector3(-3.5, 0.5, 3.5), new BABYLON.Color3(1, 1, 1)); // Light rook
+        createPiece("rook", new BABYLON.Vector3(3.5, 0.5, 3.5), new BABYLON.Color3(1, 0.5, 0.5)); // Light rook
+        createPiece("rook", new BABYLON.Vector3(-3.5, 0.5, -3.5), new BABYLON.Color3(0, 0, 0)); // Dark rook
+        createPiece("rook", new BABYLON.Vector3(3.5, 0.5, -3.5), new BABYLON.Color3(0.5, 0.5, 0.5)); // Dark rook
+
+        // Create other pieces
+        createPiece("pawn", new BABYLON.Vector3(-2.5, 0.5, 3.5), new BABYLON.Color3(1, 1, 1));
+        createPiece("knight", new BABYLON.Vector3(0, 0.5, 3.5), new BABYLON.Color3(1, 1, 1));
+        createPiece("bishop", new BABYLON.Vector3(2.5, 0.5, 3.5), new BABYLON.Color3(1, 1, 1));
+        createPiece("queen", new BABYLON.Vector3(-2.5, 0.5, -3.5), new BABYLON.Color3(0, 0, 0));
+        createPiece("king", new BABYLON.Vector3(0, 0.5, -3.5), new BABYLON.Color3(0, 0, 0));
 
         let selectedPiece = null;
 
