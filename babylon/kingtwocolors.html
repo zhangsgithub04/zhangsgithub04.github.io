@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Load Chess King Model in Two Different Colors</title>
+    <script src="https://cdn.babylonjs.com/babylon.js"></script>
+    <script src="https://cdn.babylonjs.com/loaders/babylon.glTF2FileLoader.min.js"></script>
+</head>
+<body>
+    <canvas id="renderCanvas" style="width: 800px; height: 600px;"></canvas>
+    <script>
+        const canvas = document.getElementById('renderCanvas');
+        const engine = new BABYLON.Engine(canvas, true);
+
+        // Create the scene
+        const createScene = function () {
+            const scene = new BABYLON.Scene(engine);
+
+            // Add a camera
+            const camera = new BABYLON.ArcRotateCamera("camera", BABYLON.Tools.ToRadians(120), BABYLON.Tools.ToRadians(60), 10, new BABYLON.Vector3(0, 1, 0), scene);
+            camera.attachControl(canvas, true);
+
+            // Add a light
+            const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
+
+            // Load the king.glb model twice
+            BABYLON.SceneLoader.ImportMesh("", "./", "king.glb", scene, function (meshes) {
+                const king1 = meshes[0]; // First king
+                king1.position.x = -2; // Move it to the left
+
+                const king2 = king1.clone("king2"); // Clone the first king
+                king2.position.x = 2; // Move it to the right
+
+                // Create two different materials
+                const whiteMaterial = new BABYLON.StandardMaterial("whiteMaterial", scene);
+                whiteMaterial.diffuseColor = new BABYLON.Color3(1, 1, 1); // White color
+
+                const blackMaterial = new BABYLON.StandardMaterial("blackMaterial", scene);
+                blackMaterial.diffuseColor = new BABYLON.Color3(0, 0, 0); // Black color
+
+                // Apply different materials to the two kings
+                king1.material = whiteMaterial;
+                king2.material = blackMaterial;
+            });
+
+            return scene;
+        };
+
+        const scene = createScene();
+
+        // Render loop
+        engine.runRenderLoop(function () {
+            scene.render();
+        });
+
+        // Resize event handling
+        window.addEventListener("resize", function () {
+            engine.resize();
+        });
+    </script>
+</body>
+</html>
