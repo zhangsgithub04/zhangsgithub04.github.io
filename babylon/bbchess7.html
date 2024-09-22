@@ -43,7 +43,7 @@
                 if (selectedPiece) {
                     const pickedTile = pickResult.pickedMesh;
                     if (pickedTile && pickedTile.name.startsWith("tile")) {
-                        // Move the selected piece to the tile position
+                        // Move the selected piece to the tile position, snapping to the grid
                         selectedPiece.position.x = pickedTile.position.x;
                         selectedPiece.position.z = pickedTile.position.z;
                         selectedPiece = null; // Deselect the piece after moving
@@ -66,19 +66,58 @@
                 const piece = meshes[0];
                 piece.position = position;
                 piece.scaling = new BABYLON.Vector3(0.5, 0.5, 0.5); // Adjust scaling if needed
-
-                piece.actionManager = new BABYLON.ActionManager(scene);
-                piece.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnPickTrigger, () => {
-                    selectedPiece = piece;
-                }));
             });
         };
 
         // Load pieces
         const positions = {
-            king: [new BABYLON.Vector3(0.5, 0.5, 3.5), new BABYLON.Vector3(0.5, 0.5, -3.5)]
+            king: [
+                new BABYLON.Vector3(0.5, 0.5, 3.5),
+                new BABYLON.Vector3(0.5, 0.5, -3.5)
+            ],
+            queen: [
+                new BABYLON.Vector3(-0.5, 0.5, 3.5),
+                new BABYLON.Vector3(-0.5, 0.5, -3.5)
+            ],
+            rook: [
+                new BABYLON.Vector3(-3.5, 0.5, 3.5),
+                new BABYLON.Vector3(3.5, 0.5, 3.5),
+                new BABYLON.Vector3(-3.5, 0.5, -3.5),
+                new BABYLON.Vector3(3.5, 0.5, -3.5)
+            ],
+            bishop: [
+                new BABYLON.Vector3(-1.5, 0.5, 3.5),
+                new BABYLON.Vector3(1.5, 0.5, 3.5),
+                new BABYLON.Vector3(-1.5, 0.5, -3.5),
+                new BABYLON.Vector3(1.5, 0.5, -3.5)
+            ],
+            knight: [
+                new BABYLON.Vector3(-2.5, 0.5, 3.5),
+                new BABYLON.Vector3(2.5, 0.5, 3.5),
+                new BABYLON.Vector3(-2.5, 0.5, -3.5),
+                new BABYLON.Vector3(2.5, 0.5, -3.5)
+            ],
+            pawn: [
+                new BABYLON.Vector3(-3.5, 0.5, 2.5),
+                new BABYLON.Vector3(-2.5, 0.5, 2.5),
+                new BABYLON.Vector3(-1.5, 0.5, 2.5),
+                new BABYLON.Vector3(-0.5, 0.5, 2.5),
+                new BABYLON.Vector3(0.5, 0.5, 2.5),
+                new BABYLON.Vector3(1.5, 0.5, 2.5),
+                new BABYLON.Vector3(2.5, 0.5, 2.5),
+                new BABYLON.Vector3(3.5, 0.5, 2.5),
+                new BABYLON.Vector3(-3.5, 0.5, -2.5),
+                new BABYLON.Vector3(-2.5, 0.5, -2.5),
+                new BABYLON.Vector3(-1.5, 0.5, -2.5),
+                new BABYLON.Vector3(-0.5, 0.5, -2.5),
+                new BABYLON.Vector3(0.5, 0.5, -2.5),
+                new BABYLON.Vector3(1.5, 0.5, -2.5),
+                new BABYLON.Vector3(2.5, 0.5, -2.5),
+                new BABYLON.Vector3(3.5, 0.5, -2.5)
+            ]
         };
 
+        // Load all pieces
         for (const piece in positions) {
             positions[piece].forEach((pos) => {
                 createPiece(piece, pos);
