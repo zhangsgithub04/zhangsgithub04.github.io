@@ -1,17 +1,19 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Babylon.js Chessboard with STL Export</title>
+    <title>Babylon.js Chessboard with GLB Export</title>
     <script src="https://cdn.babylonjs.com/babylon.js"></script>
-    <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
-    <script src="https://cdn.babylonjs.com/stlExporter/babylon.stlExporter.min.js"></script>
+    <script src="https://cdn.babylonjs.com/loaders/babylon.glTF2FileLoader.min.js"></script>
+    <script src="https://cdn.babylonjs.com/serializers/babylon.glTF2Serializer.min.js"></script>
 </head>
 <body>
     <canvas id="renderCanvas" style="width: 100%; height: 100%;"></canvas>
-    <button id="exportButton" style="position: absolute; top: 10px; left: 10px;">Export STL</button>
+    <button id="exportButton" style="position: absolute; top: 10px; left: 10px;">Export GLB</button>
+    
     <script>
         const canvas = document.getElementById("renderCanvas");
         const engine = new BABYLON.Engine(canvas, true);
+        let selectedPiece = null;
 
         const createScene = () => {
             const scene = new BABYLON.Scene(engine);
@@ -29,7 +31,7 @@
 
             for (let row = 0; row < boardSize; row++) {
                 for (let col = 0; col < boardSize; col++) {
-                    const tile = BABYLON.MeshBuilder.CreateBox(`tile${row}_${col}`, {size: tileSize}, scene);
+                    const tile = BABYLON.MeshBuilder.CreateBox(`tile${row}_${col}`, { size: tileSize }, scene);
                     tile.position = new BABYLON.Vector3(row - boardSize / 2 + 0.5, 0, col - boardSize / 2 + 0.5);
                     const tileMaterial = new BABYLON.StandardMaterial(`tileMat${row}_${col}`, scene);
                     tileMaterial.diffuseColor = (row + col) % 2 === 0 ? new BABYLON.Color3(1, 1, 1) : new BABYLON.Color3(0, 0, 0);
@@ -37,67 +39,55 @@
                 }
             }
 
+            scene.onPointerDown = (evt, pickResult) => {
+                if (selectedPiece) {
+                    const pickedTile = pickResult.pickedMesh;
+                    if (pickedTile && pickedTile.name.startsWith("tile")) {
+                        // Move the selected piece to the tile position
+                        selectedPiece.position.x = pickedTile.position.x;
+                        selectedPiece.position.z = pickedTile.position.z;
+                        selectedPiece = null; // Deselect the piece after moving
+                    }
+                } else {
+                    // Select the piece
+                    if (pickResult.pickedMesh && pickResult.pickedMesh.name.includes("king")) {
+                        selectedPiece = pickResult.pickedMesh;
+                    }
+                }
+            };
+
             return scene;
         };
 
         const scene = createScene();
 
         const createPiece = (name, position) => {
-            let piece;
-            switch (name) {
-                case "rook":
-                    const assetsManager = new BABYLON.AssetsManager(scene);
-                    const meshTask = assetsManager.addMeshTask("loadRook", "", "./", "rook.glb");
-                    meshTask.onSuccess = (task) => {
-                        const rookMesh = task.loadedMeshes[0];
-                        rookMesh.position = position;
-                        rookMesh.scaling.scaleInPlace(0.5); // Adjust scaling as necessary
-                        rookMesh.actionManager = new BABYLON.ActionManager(scene);
-                        rookMesh.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnPickTrigger, () => {
-                            selectedPiece = rookMesh;
-                        }));
-                    };
-                    assetsManager.load();
-                    break;
+            BABYLON.SceneLoader.ImportMesh("", "./", `${name}.glb`, scene, (meshes) => {
+                const piece = meshes[0];
+                piece.position = position;
+                piece.scaling = new BABYLON.Vector3(0.5, 0.5, 0.5); // Adjust scaling if needed
 
-                // Add cases for other pieces similarly with their respective GLB files
-
-                default:
-                    piece = BABYLON.MeshBuilder.CreateBox(name, {size: 0.5}, scene);
-            }
-            return piece;
+                piece.actionManager = new BABYLON.ActionManager(scene);
+                piece.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnPickTrigger, () => {
+                    selectedPiece = piece;
+                }));
+            });
         };
 
-        const pieces = [];
-        
-        // Place rooks with GLB models
-        pieces.push(createPiece("rook", new BABYLON.Vector3(-3.5, 0.5, 3.5)));
-        pieces.push(createPiece("rook", new BABYLON.Vector3(3.5, 0.5, 3.5)));
-        pieces.push(createPiece("rook", new BABYLON.Vector3(-3.5, 0.5, -3.5)));
-        pieces.push(createPiece("rook", new BABYLON.Vector3(3.5, 0.5, -3.5)));
-
-        let selectedPiece = null;
-
-        scene.onPointerDown = (evt, pickResult) => {
-            if (selectedPiece) {
-                const pickedTile = pickResult.pickedMesh;
-                if (pickedTile && pickedTile.name.startsWith("tile")) {
-                    selectedPiece.position.x = pickedTile.position.x;
-                    selectedPiece.position.z = pickedTile.position.z;
-                    selectedPiece = null;
-                }
-            }
+        // Load pieces
+        const positions = {
+            king: [new BABYLON.Vector3(0.5, 0.5, 3.5), new BABYLON.Vector3(0.5, 0.5, -3.5)]
         };
+
+        for (const piece in positions) {
+            positions[piece].forEach((pos) => {
+                createPiece(piece, pos);
+            });
+        }
 
         document.getElementById("exportButton").addEventListener("click", () => {
-            pieces.forEach(piece => {
-                const stlString = BABYLON.STLExport.CreateSTL(scene, false, piece);
-                const blob = new Blob([stlString], { type: 'application/octet-stream' });
-                const url = URL.createObjectURL(blob);
-                const link = document.createElement('a');
-                link.href = url;
-                link.download = `${piece.name}.stl`;
-                link.click();
+            BABYLON.GLTF2Export.GLBAsync(scene, "chessboard").then((glb) => {
+                glb.downloadFiles();
             });
         });
 
