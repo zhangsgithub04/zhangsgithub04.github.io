@@ -24,7 +24,7 @@
             const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
 
             // Load the king.glb model twice
-            BABYLON.SceneLoader.ImportMesh("", "./", "king.glb", scene, function (meshes) {
+            BABYLON.SceneLoader.ImportMesh("", "./", "chess-king.glb", scene, function (meshes) {
                 const king1 = meshes[0]; // First king
                 king1.position.x = -2; // Move it to the left
 
