@@ -1,0 +1,235 @@
+var createImage=function(w,h){var i=document.createElement("canvas");i.width=w;i.height=h;i.ctx=i.getContext("2d");return i;}
+var createCanvas=function(w,h){var i=document.createElement("canvas");i.width=w;i.height=h;return i;}
+var can,gl; // canvas and webGL context
+var canvas = createImage(512,512);
+var ctx = canvas.ctx;
+document.body.appendChild(canvas);
+document.body.style.background = "#999";
+var x = 0;
+var y = 0;
+var v1 = {x,y};
+var v2 = {x,y};
+var v3 = {x,y};
+var v4 = {x,y};
+var tng = {x,y};
+var p = {x,y};
+var curvePos = {x,y};
+var c1,u1,b1,a,b,c,d,e,vx,vy;
+
+// the bez we are using
+var bez = {};
+bez.p1 = {x : 50, y : 50};  // start
+bez.p2 = {x : 350, y : 350}; // end
+bez.cp1 = {x : 300, y : 50}; // first control point
+bez.cp2 = {x : 50, y : 310}; // second control point if undefined then this is a quadratic
+
+function getBezierAt(bez,pos){  
+    if(bez.cp2 === undefined){
+        a = (1 - pos); 
+        c = i * pos; 
+        b = a*2*pos;
+        a *= a;  
+        curvePos.x = bez.p1.x * a + bez.cp1.x * b + bez.p2.x * c;
+        curvePos.y = bez.p1.y * a + bez.cp1.y * b + bez.p2.y * c;
+    }else{
+        a = (1 - pos); 
+        c = pos * pos; 
+        b = 3 * a * a * pos; 
+        b1 = 3 * c * a; 
+        a = a*a*a;
+        c *= pos; 
+        curvePos.x = bez.p1.x * a + bez.cp1.x * b + bez.cp2.x * b1 + bez.p2.x * c;
+        curvePos.y = bez.p1.y * a + bez.cp1.y * b + bez.cp2.y * b1 + bez.p2.y * c;
+    }
+    return curvePos;
+};
+
+function tangentAt(bez, position) {  // returns the normalised tangent at position
+    if(bez.cp2 === undefined){
+        a = (1-position) * 2;
+        b = position * 2;
+        tng.x = a * (bez.cp1.x - bez.p1.x) + b * (bez.p2.x - bez.cp1.x);
+        tng.y = a * (bez.cp1.y - bez.p1.y) + b * (bez.p2.y - bez.cp1.y);
+    }else{
+        a  = (1-position)
+        b  = 6 * a * position;        // (6*(1-t)*t)
+        a *= 3 * a;                  // 3 * ( 1 - t) ^ 2
+        c  = 3 * position * position; // 3 * t ^ 2
+        tng.x  = -bez.p1.x * a + bez.cp1.x * (a - b) + bez.cp2.x * (b - c) + bez.p2.x * c;
+        tng.y  = -bez.p1.y * a + bez.cp1.y * (a - b) + bez.cp2.y * (b - c) + bez.p2.y * c;
+    }   
+    var u = Math.sqrt(tng.x * tng.x + tng.y * tng.y);
+    tng.x /= u;
+    tng.y /= u;
+    return tng;                 
+}
+
+function createTestImage(w,h,checkerSize,c1,c2){
+    var testImage = createImage(w,h);
+    var darkG = testImage.ctx.createLinearGradient(0,0,0,h);
+    var lightG = testImage.ctx.createLinearGradient(0,0,0,h);
+    for(var i = 0; i <= 1; i += 1/20){
+        darkG.addColorStop(i,"rgba("+c1.join(",")+","+(Math.pow(Math.sin(i * Math.PI),5))+")");
+        lightG.addColorStop(i,"rgba("+c2.join(",")+","+Math.pow(Math.sin(i * Math.PI),5)+")");
+    }
+    for(var i = 0; i < h; i += checkerSize){
+        for(var j = 0; j < w; j += checkerSize){
+            if(((i/checkerSize+j/checkerSize) % 2) === 0){
+                testImage.ctx.fillStyle = darkG;
+            }else{
+                testImage.ctx.fillStyle = lightG;
+            }
+            testImage.ctx.fillRect(j,i,checkerSize,checkerSize);
+        }
+    }    
+    return testImage;
+}
+
+// Creates a mesh with texture coords for webGL to render
+function createBezierMesh(bezier,steps,tWidth,tHeight){
+    var i,x,y,tx,ty;
+    var array = [];
+    var step = 1/steps;
+    for(var i = 0; i < 1 + step/2; i += step){
+        if(i > 1){  // sometimes there is a slight error
+            i = 1;
+        }
+        curvePos = getBezierAt(bezier,i);
+        tng = tangentAt(bezier,i);
+        x = curvePos.x - tng.y * (tHeight/2);
+        y = curvePos.y + tng.x * (tHeight/2);
+        tx = i;
+        ty = 0;
+        array.push({x,y,tx,ty})
+        x = curvePos.x + tng.y * (tHeight/2);
+        y = curvePos.y - tng.x * (tHeight/2);
+        ty = 1;
+        array.push({x,y,tx,ty})
+    }
+    return array;
+}
+
+function createShaders(){
+    var fShaderSrc = ` 
+        precision mediump float; 
+        uniform sampler2D image;  // texture to draw  
+        varying vec2 texCoord;   // holds text coordinates
+        void main() {
+           gl_FragColor = texture2D(image,texCoord);
+        }`;
+    var vShaderSrc = `
+        attribute vec4 vert;     // holds a vert with pos as xy textures as zw
+        varying vec2 texCoord;   // holds text coordinates
+        void main(){
+            gl_Position = vec4(vert.x,vert.y,0.0,1.0); // seperate out the position
+            texCoord = vec2(vert.z,vert.w);        // and texture coordinate
+        }`;
+    var fShader = gl.createShader(gl.FRAGMENT_SHADER);
+    gl.shaderSource(fShader, fShaderSrc);
+    gl.compileShader(fShader);
+    var vShader = gl.createShader(gl.VERTEX_SHADER);
+    gl.shaderSource(vShader, vShaderSrc);
+    gl.compileShader(vShader);
+    var program = gl.createProgram();
+    gl.attachShader(program, fShader);
+    gl.attachShader(program, vShader);
+    gl.linkProgram(program);
+    gl.useProgram(program);    
+    program.vertAtr = gl.getAttribLocation(program, "vert"); // save location of verts
+    gl.enableVertexAttribArray(program.vertAtr);    // turn em on
+    return program;
+}
+function createTextureFromImage(image){
+    var texture = gl.createTexture()
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
+    gl.bindTexture(gl.TEXTURE_2D, null);    
+    return texture;
+}
+function createMesh(array,vertSize) {
+    var meshBuf ;
+    var w = gl.canvas.width;
+    var h = gl.canvas.height;
+    var verts = [];
+    for(var i = 0; i < array.length; i += 1){
+        var v = array[i];
+        verts.push((v.x - w / 2) / w * 2 , -(v.y - h / 2) / h * 2, v.tx, v.ty);
+    }
+    verts = new Float32Array(verts);
+    gl.bindBuffer(gl.ARRAY_BUFFER, meshBuf = gl.createBuffer());    
+    gl.bufferData(gl.ARRAY_BUFFER, verts, gl.STATIC_DRAW);
+    meshBuf.vertSize = vertSize;
+    meshBuf.numVerts = array.length ;  
+    return {verts,meshBuf}
+ }
+function drawMesh(mesh){
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);    
+    gl.useProgram(mesh.program);
+    gl.bindBuffer(gl.ARRAY_BUFFER, mesh.meshBuf);
+    gl.bufferData(gl.ARRAY_BUFFER, mesh.verts, gl.STATIC_DRAW);
+    gl.vertexAttribPointer(mesh.program.vertAtr, mesh.meshBuf.vertSize, gl.FLOAT, false, 0, 0);    
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, mesh.texture);    
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, mesh.meshBuf.numVerts);
+}
+function startWebGL(imgW,imgH){
+    can = createCanvas(canvas.width,canvas.height);
+    gl = can.getContext("webgl");
+    gl.viewportWidth = can.width;
+    gl.viewportHeight = can.height;
+    gl.enable(gl.DEPTH_TEST);
+    gl.enable(gl.BLEND);
+    var mesh = createMesh(createBezierMesh(bez,50,imgW,imgH),4);
+    mesh.program = createShaders();
+    mesh.W = imgW;
+    mesh.H = imgH;
+    mesh.texture = createTextureFromImage(createTestImage(imgW,imgH,imgH/4,[255,255,255],[0,255,0]));
+    gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);    
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+    gl.clearColor(0,0,0,0);
+    drawMesh(mesh)
+    return mesh;
+}
+// recreates bezier mesh and draws it
+function updateBezier(bezier,mesh){
+    var array = createBezierMesh(bezier,50,mesh.W,mesh.H);
+    var index = 0;
+    var w = gl.canvas.width;
+    var h = gl.canvas.height;    
+    for(var i = 0; i < array.length; i += 1){
+        var v = array[i];
+        mesh.verts[index ++] = (v.x - w / 2) / w * 2;
+        mesh.verts[index ++] = -(v.y - h / 2) / h * 2;
+        mesh.verts[index ++] = v.tx;
+        mesh.verts[index ++] = v.ty;
+    }    
+    drawMesh(mesh);
+}
+
+ctx.font = "26px arial";
+// main update function
+function update(timer){
+    var w = canvas.width;
+    var h = canvas.height;
+    ctx.setTransform(1,0,0,1,0,0); // reset transform
+    ctx.globalAlpha = 1;           // reset alpha
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    var x= Math.cos(timer / 1000) * 100;
+    var y= Math.sin(timer / 1000) * 100;
+    bez.p1.x = 50 + x;
+    bez.p1.y = 50 + y;
+    var x= Math.cos(timer / 2000) * 100;
+    var y= Math.sin(timer / 2000) * 100;
+    bez.p2.x = 350 + x;
+    bez.p2.y = 350 + y;
+    updateBezier(bez,glMesh)
+    ctx.drawImage(can,0,0);
+    ctx.fillText("WebGL rendered to 2D canvas.",10,30)
+    requestAnimationFrame(update);
+}
+var glMesh = startWebGL(512,64);
+requestAnimationFrame(update);
