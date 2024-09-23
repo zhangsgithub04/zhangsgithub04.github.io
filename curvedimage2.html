@@ -1,3 +1,5 @@
+<body>
+<script>
 var createImage=function(w,h){var i=document.createElement("canvas");i.width=w;i.height=h;i.ctx=i.getContext("2d");return i;}
 var createCanvas=function(w,h){var i=document.createElement("canvas");i.width=w;i.height=h;return i;}
 var can,gl; // canvas and webGL context
@@ -233,3 +235,6 @@ function update(timer){
 }
 var glMesh = startWebGL(512,64);
 requestAnimationFrame(update);
+
+</script>
+</body>
