@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fabric.js Path Example</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.2.0/fabric.min.js"></script>
+</head>
+<body>
+  <canvas id="canvas" width="600" height="400"></canvas>
+
+  <script>
+    // Initialize fabric canvas
+    const canvas = new fabric.Canvas('canvas');
+
+    // Define SVG path string
+    const svgPath = 'M 100 100 L 300 100 L 200 300 z';
+
+    // Create a path object
+    const path = new fabric.Path(svgPath, {
+      fill: 'blue',
+      stroke: 'black',
+      strokeWidth: 2,
+      left: 100,
+      top: 100
+    });
+
+    // Add path to canvas
+    canvas.add(path);
+  </script>
+</body>
+</html>
