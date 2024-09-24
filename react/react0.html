@@ -10,5 +10,17 @@
   <button>click me </button>
   <button>click me </button>
   <button>click me </button>
-  
+
+<div id="buttonarray"></div>
+  <script>
+
+for(i = 0; i < 100; i++) {
+    var button = document.createElement("button");
+    button.innerHTML = "Test me: " + i; 
+    button.className = "btn btn-outline-success";
+    var buttonDiv = document.getElementById("buttonarray");
+    buttonDiv.appendChild(button);
+  }
+    
+  </script>  
 </body>
