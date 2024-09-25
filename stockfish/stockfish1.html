@@ -26,95 +26,112 @@
 <script src="stockfish.js"></script> <!-- Include the Stockfish JavaScript file -->
 
 <script>
-    var board = null;
-    var $board = $('#myBoard');
-    var game = new Chess();
-    var squareToHighlight = null;
-    var squareClass = 'square-55d63';
-    var stockfish;
+    import { Chess } from 'https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.13.4/chess.js';
 
-    function removeHighlights(color) {
-        $board.find('.' + squareClass).removeClass('highlight-' + color);
+var game = new Chess()
+
+var board = null
+var $status = $('#status')
+var $fen = $('#fen')
+var $pgn = $('#pgn')
+
+var wasmSupported = typeof WebAssembly === 'object' && WebAssembly.validate(Uint8Array.of(0x0, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00));
+var stockfish = new Worker(wasmSupported ? 'stockfish.wasm.js' : 'stockfish.js');
+
+document.getElementById('board').addEventListener('touchmove', function(e) {
+  e.preventDefault(); // Prevent the default scrolling behavior
+}, { passive: false });
+
+
+stockfish.addEventListener('message', function(e) {
+  if (e.data.startsWith('bestmove')) {
+    var bestMove = e.data.split(' ')[1];
+    game.move({ from: bestMove.slice(0, 2), to: bestMove.slice(2, 4), promotion: 'q' });
+    board.position(game.fen());
+    updateStatus();
+  }
+});
+
+
+function onDragStart (source, piece, position, orientation) {
+  // do not pick up pieces if the game is over
+  if (game.game_over()) return false
+
+  // only pick up pieces for the side to move
+  if ((game.turn() === 'w' && piece.search(/^b/) !== -1) ||
+      (game.turn() === 'b' && piece.search(/^w/) !== -1)) {
+    return false
+  }
+}
+
+function onDrop (source, target) {
+  // see if the move is legal
+  var move = game.move({
+    from: source,
+    to: target,
+    promotion: 'q' // NOTE: always promote to a queen for example simplicity
+  })
+
+  // illegal move
+  if (move === null) return 'snapback'
+
+  updateStatus()
+
+  stockfish.postMessage('position fen ' + game.fen());
+  stockfish.postMessage('go depth 15');
+
+}
+
+// update the board position after the piece snap
+// for castling, en passant, pawn promotion
+function onSnapEnd () {
+  board.position(game.fen())
+}
+
+function updateStatus () {
+  var status = ''
+
+  var moveColor = 'White'
+  if (game.turn() === 'b') {
+    moveColor = 'Black'
+  }
+
+  // checkmate?
+  if (game.in_checkmate()) {
+    status = 'Game over, ' + moveColor + ' is in checkmate.'
+  }
+
+  // draw?
+  else if (game.in_draw()) {
+    status = 'Game over, drawn position'
+  }
+
+  // game still on
+  else {
+    status = moveColor + ' to move'
+
+    // check?
+    if (game.in_check()) {
+      status += ', ' + moveColor + ' is in check'
     }
+  }
 
-    function onDragStart(source, piece, position, orientation) {
-        // do not pick up pieces if the game is over
-        if (game.game_over()) return false;
+  $status.html(status)
+  $fen.html(game.fen())
+  $pgn.html(game.pgn())
+}
 
-        // only pick up pieces for White
-        if (piece.search(/^b/) !== -1) return false;
-    }
+var config = {
+  draggable: true,
+  position: 'start',
+  onDragStart: onDragStart,
+  onDrop: onDrop,
+  onSnapEnd: onSnapEnd,
+  pieceTheme: 'img/chesspieces/wikipedia/{piece}.png'
 
-    // Initialize Stockfish
-    stockfish = new Worker('stockfish.js');
-    stockfish.postMessage('uci');
-    stockfish.postMessage('isready');
-    stockfish.postMessage('ucinewgame');
+}
+board = Chessboard('board', config)
 
-    function makeStockfishMove() {
-        stockfish.postMessage('position fen ' + game.fen());
-        stockfish.postMessage('go depth 5');
-    }
-
-    // Handle Stockfish's response
-    stockfish.onmessage = function (event) {
-        var line = event.data;
-        if (line.startsWith('bestmove')) {
-            var move = line.match(/bestmove (.+)/)[1];
-            game.ugly_move(move);
-            board.position(game.fen());
-
-            // Highlight the opponent's move
-            removeHighlights('black');
-            squareToHighlight = move.substring(0, 2);
-            $board.find('.square-' + squareToHighlight).addClass('highlight-black');
-
-            // Check if the game is over
-            if (game.game_over()) {
-                alert('Game over');
-            }
-        }
-    };
-
-    function onDrop(source, target) {
-        // see if the move is legal
-        var move = game.move({
-            from: source,
-            to: target,
-            promotion: 'q' // NOTE: always promote to a queen for example simplicity
-        });
-
-        // illegal move
-        if (move === null) return 'snapback';
-
-        // highlight white's move
-        removeHighlights('white');
-        $board.find('.square-' + source).addClass('highlight-white');
-        $board.find('.square-' + target).addClass('highlight-white');
-
-        // Make Stockfish move after a short delay
-        window.setTimeout(makeStockfishMove, 250);
-    }
-
-    function onMoveEnd() {
-        $board.find('.square-' + squareToHighlight).addClass('highlight-black');
-    }
-
-    // update the board position after the piece snap
-    // for castling, en passant, pawn promotion
-    function onSnapEnd() {
-        board.position(game.fen());
-    }
-
-    var config = {
-        draggable: true,
-        position: 'start',
-        onDragStart: onDragStart,
-        onDrop: onDrop,
-        onMoveEnd: onMoveEnd,
-        onSnapEnd: onSnapEnd
-    };
-    board = Chessboard('myBoard', config);
-</script>
+updateStatus()</script>
 </body>
 </html>
