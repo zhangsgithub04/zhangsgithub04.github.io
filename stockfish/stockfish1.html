@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    <title>Chessboard.js Example - Stockfish vs Human</title>
+
+    <link rel="stylesheet" href="chessboard.css">
+</head>
+<body>
+
+<style type="text/css">
+    .highlight-white {
+        box-shadow: inset 0 0 3px 3px rgb(181, 243, 181);
+    }
+
+    .highlight-black {
+        box-shadow: inset 0 0 3px 3px rgb(62, 177, 192);
+    }
+</style>
+<div id="myBoard" style="width: 400px"></div>
+
+<script src="../jquery.js"></script>
+<script src="chessboard.js"></script>
+<script src="chess.js"></script>
+<script src="stockfish.js"></script> <!-- Include the Stockfish JavaScript file -->
+
+<script>
+    var board = null;
+    var $board = $('#myBoard');
+    var game = new Chess();
+    var squareToHighlight = null;
+    var squareClass = 'square-55d63';
+    var stockfish;
+
+    function removeHighlights(color) {
+        $board.find('.' + squareClass).removeClass('highlight-' + color);
+    }
+
+    function onDragStart(source, piece, position, orientation) {
+        // do not pick up pieces if the game is over
+        if (game.game_over()) return false;
+
+        // only pick up pieces for White
+        if (piece.search(/^b/) !== -1) return false;
+    }
+
+    // Initialize Stockfish
+    stockfish = new Worker('stockfish.js');
+    stockfish.postMessage('uci');
+    stockfish.postMessage('isready');
+    stockfish.postMessage('ucinewgame');
+
+    function makeStockfishMove() {
+        stockfish.postMessage('position fen ' + game.fen());
+        stockfish.postMessage('go depth 5');
+    }
+
+    // Handle Stockfish's response
+    stockfish.onmessage = function (event) {
+        var line = event.data;
+        if (line.startsWith('bestmove')) {
+            var move = line.match(/bestmove (.+)/)[1];
+            game.ugly_move(move);
+            board.position(game.fen());
+
+            // Highlight the opponent's move
+            removeHighlights('black');
+            squareToHighlight = move.substring(0, 2);
+            $board.find('.square-' + squareToHighlight).addClass('highlight-black');
+
+            // Check if the game is over
+            if (game.game_over()) {
+                alert('Game over');
+            }
+        }
+    };
+
+    function onDrop(source, target) {
+        // see if the move is legal
+        var move = game.move({
+            from: source,
+            to: target,
+            promotion: 'q' // NOTE: always promote to a queen for example simplicity
+        });
+
+        // illegal move
+        if (move === null) return 'snapback';
+
+        // highlight white's move
+        removeHighlights('white');
+        $board.find('.square-' + source).addClass('highlight-white');
+        $board.find('.square-' + target).addClass('highlight-white');
+
+        // Make Stockfish move after a short delay
+        window.setTimeout(makeStockfishMove, 250);
+    }
+
+    function onMoveEnd() {
+        $board.find('.square-' + squareToHighlight).addClass('highlight-black');
+    }
+
+    // update the board position after the piece snap
+    // for castling, en passant, pawn promotion
+    function onSnapEnd() {
+        board.position(game.fen());
+    }
+
+    var config = {
+        draggable: true,
+        position: 'start',
+        onDragStart: onDragStart,
+        onDrop: onDrop,
+        onMoveEnd: onMoveEnd,
+        onSnapEnd: onSnapEnd
+    };
+    board = Chessboard('myBoard', config);
+</script>
+</body>
+</html>
