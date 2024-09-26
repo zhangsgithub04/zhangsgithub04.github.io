@@ -70,17 +70,17 @@
 
       return (
         <div>
-          <Board game={game} onSquareClick={handleClick} selectedSquare={selectedSquare} />
+          <Board game={game} onSquareClick={handleClick} selectedSquare={selectedSquare} stepl={step}/>
         </div>
       );
     }
 
     // View: Board and buttons reflecting the game state
-    function Board({ game, onSquareClick, selectedSquare }) {
+    function Board({ game, onSquareClick, selectedSquare, stepl }) {
       return (
         <div>
           
-          <button> {step}  </button>
+          <button> {stepl}  </button>
           
           {game.map((row, rowIndex) => (
             <div key={rowIndex} style={{ display: 'flex' }}>
