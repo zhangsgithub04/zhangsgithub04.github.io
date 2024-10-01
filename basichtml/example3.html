@@ -1,0 +1,75 @@
+<p id="demo">??????  </p>
+
+<table>
+
+  <tr id="table1"> 
+    <td> 1 </td>
+    <td> 1 </td>
+    <td> 1 </td>
+    <td> 1 </td>
+    <td> 1 </td>
+    <td> 1 </td>
+    <td> 1 </td>
+    <td> 1 </td>
+    
+  </tr>
+
+    <tr> 
+    <td> 1 </td>
+    <td> 1 </td>
+    <td> 1 </td>
+    <td> 1 </td>
+    <td> 1 </td>
+    <td> 1 </td>
+    <td> 1 </td>
+    <td> 1 </td>
+    
+  </tr>
+</table>
+
+<my-custom-element></my-custom-element> <!-- Use your custom element here -->
+
+<script >
+  document.getElementById("demo").innerHTML = "Hello Oneonta!";
+
+  tableref=document.getElementById("table1");
+ var row = tableref.insertRow(0);
+
+  for(col=0; col<16; col++)
+    {
+      var cellref=row.insertCell(col)
+      cellref.innerHTML=col
+    }
+
+class MyCustomElement extends HTMLElement {
+    constructor() {
+        super(); // Always call super first in constructor
+        // Create a shadow root
+        const shadow = this.attachShadow({ mode: 'open' });
+        // Add some styles and content
+        shadow.innerHTML = `
+            <style>
+                /* Your custom styles here */
+                p {
+                    color: blue;
+                    font-size: 20px;
+                }
+            </style>
+            <p>Hello, I am a custom element!</p>
+        `;
+    }
+
+    // You can add lifecycle methods if needed
+    connectedCallback() {
+        console.log('Custom element added to the page.');
+    }
+
+    disconnectedCallback() {
+        console.log('Custom element removed from the page.');
+    }
+}
+
+  customElements.define('my-custom-element', MyCustomElement);
+
+  
+</script>
