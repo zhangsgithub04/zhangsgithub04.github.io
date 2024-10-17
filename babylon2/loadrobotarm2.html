@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Babylon.js Robot Arm Animation</title>
+    <script src="https://cdn.babylonjs.com/babylon.js"></script>
+</head>
+<body>
+    <canvas id="renderCanvas" style="width: 100%; height: 100%;"></canvas>
+
+    <script>
+        var canvas = document.getElementById("renderCanvas");
+        var engine = new BABYLON.Engine(canvas, true);
+
+        var createScene = function () {
+            var scene = new BABYLON.Scene(engine);
+
+            // Create a camera and light
+            var camera = new BABYLON.ArcRotateCamera("camera", Math.PI / 2, Math.PI / 4, 10, new BABYLON.Vector3(0, 1, 0), scene);
+            camera.attachControl(canvas, true);
+            var light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
+
+            // Load the robot arm model (glb, gltf, or babylon)
+            BABYLON.SceneLoader.Append("./", "robotic_arm.glb", scene, function (scene) {
+                var robotArmBase = scene.getMeshByName("Base"); // Replace with the actual mesh name for the base
+                var robotArmJoint1 = scene.getMeshByName("Joint1"); // Replace with the mesh name for joint 1
+                var robotArmJoint2 = scene.getMeshByName("Joint2"); // Replace with the mesh name for joint 2
+
+                // Animate the base rotation (rotate around Y axis)
+                var baseRotationAnimation = new BABYLON.Animation("baseRotation", "rotation.y", 30, BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);
+
+                var baseRotationKeys = [];
+                baseRotationKeys.push({ frame: 0, value: 0 });
+                baseRotationKeys.push({ frame: 50, value: Math.PI / 2 }); // 90 degrees
+                baseRotationKeys.push({ frame: 100, value: Math.PI }); // 180 degrees
+                baseRotationAnimation.setKeys(baseRotationKeys);
+
+                // Attach the animation to the base
+                robotArmBase.animations = [baseRotationAnimation];
+
+                // Animate joint1 (rotate around X axis)
+                var joint1RotationAnimation = new BABYLON.Animation("joint1Rotation", "rotation.x", 30, BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);
+
+                var joint1RotationKeys = [];
+                joint1RotationKeys.push({ frame: 0, value: 0 });
+                joint1RotationKeys.push({ frame: 50, value: Math.PI / 4 }); // 45 degrees
+                joint1RotationKeys.push({ frame: 100, value: -Math.PI / 4 }); // -45 degrees
+                joint1RotationAnimation.setKeys(joint1RotationKeys);
+
+                // Attach the animation to joint1
+                robotArmJoint1.animations = [joint1RotationAnimation];
+
+                // Animate joint2 (rotate around Z axis)
+                var joint2RotationAnimation = new BABYLON.Animation("joint2Rotation", "rotation.z", 30, BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);
+
+                var joint2RotationKeys = [];
+                joint2RotationKeys.push({ frame: 0, value: 0 });
+                joint2RotationKeys.push({ frame: 50, value: Math.PI / 6 }); // 30 degrees
+                joint2RotationKeys.push({ frame: 100, value: -Math.PI / 6 }); // -30 degrees
+                joint2RotationAnimation.setKeys(joint2RotationKeys);
+
+                // Attach the animation to joint2
+                robotArmJoint2.animations = [joint2RotationAnimation];
+
+                // Start all animations
+                scene.beginAnimation(robotArmBase, 0, 100, true);
+                scene.beginAnimation(robotArmJoint1, 0, 100, true);
+                scene.beginAnimation(robotArmJoint2, 0, 100, true);
+            });
+
+            return scene;
+        };
+
+        var scene = createScene();
+
+        engine.runRenderLoop(function () {
+            scene.render();
+        });
+
+        window.addEventListener("resize", function () {
+            engine.resize();
+        });
+    </script>
+</body>
+</html>
