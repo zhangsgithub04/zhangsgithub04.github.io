@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Babylon.js Load Dude.babylon</title>
+    <script src="https://cdn.babylonjs.com/babylon.js"></script>
+</head>
+<body>
+    <canvas id="renderCanvas" style="width: 100%; height: 100%;"></canvas>
+
+    <script>
+        // Get the canvas element where the scene will be rendered
+        var canvas = document.getElementById("renderCanvas");
+
+        // Initialize Babylon.js engine
+        var engine = new BABYLON.Engine(canvas, true);
+
+        // Create the scene
+        var createScene = function () {
+            var scene = new BABYLON.Scene(engine);
+
+            // Add a camera and light
+            var camera = new BABYLON.ArcRotateCamera("camera", Math.PI / 2, Math.PI / 4, 10, new BABYLON.Vector3(0, 1, 0), scene);
+            camera.attachControl(canvas, true);
+            var light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
+
+            // Load the dude.babylon file
+            BABYLON.SceneLoader.Append("./", "dude.babylon", scene, function (scene) {
+                // Model loaded successfully
+                console.log("Dude model loaded");
+
+                // If there are animations, start them
+                scene.animationGroups.forEach(function (animationGroup) {
+                    animationGroup.start(true); // Play animations in loop
+                });
+            });
+
+            return scene;
+        };
+
+        // Create the scene
+        var scene = createScene();
+
+        // Render loop for rendering the scene continuously
+        engine.runRenderLoop(function () {
+            scene.render();
+        });
+
+        // Resize the engine on window resize
+        window.addEventListener("resize", function () {
+            engine.resize();
+        });
+    </script>
+</body>
+</html>
