@@ -23,7 +23,7 @@
         const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(1, 1, 0), scene);
 
         // Load the robot arm GLB model
-        BABYLON.SceneLoader.Append("", "robot_arm.glb", scene, function () {
+        BABYLON.SceneLoader.Append("", "robotic_arm.glb", scene, function () {
             scene.createDefaultCameraOrLight(true, true, true);
         });
 
