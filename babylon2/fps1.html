@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Babylon.js FPS</title>
+    <script src="https://cdn.babylonjs.com/babylon.js"></script>
+    <script src="https://cdn.babylonjs.com/gui/babylon.gui.min.js"></script>
+</head>
+<body>
+    <canvas id="renderCanvas" touch-action="none" style="width: 100%; height: 100%;"></canvas>
+    
+    <script>
+        // Get the canvas element 
+        const canvas = document.getElementById("renderCanvas");
+
+        // Initialize Babylon scene and engine
+        const engine = new BABYLON.Engine(canvas, true);
+        const createScene = function () {
+            const scene = new BABYLON.Scene(engine);
+
+            // Add a camera and attach it to the canvas
+            const camera = new BABYLON.UniversalCamera("FPSCamera", new BABYLON.Vector3(0, 1.8, 0), scene);
+            camera.attachControl(canvas, true);
+            camera.speed = 0.5; // Camera movement speed
+            camera.inertia = 0.1; // Smooth stopping effect
+            camera.applyGravity = true; // Enable gravity for camera
+
+            // Add a light to the scene
+            const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
+
+            // Add basic ground
+            const ground = BABYLON.MeshBuilder.CreateGround("ground", {width: 100, height: 100}, scene);
+            const groundMaterial = new BABYLON.StandardMaterial("groundMaterial", scene);
+            groundMaterial.diffuseColor = new BABYLON.Color3(0.3, 0.6, 0.3); // Ground color
+            ground.material = groundMaterial;
+
+            // Add some boxes (enemies or targets)
+            for (let i = 0; i < 10; i++) {
+                const box = BABYLON.MeshBuilder.CreateBox("box" + i, {size: 1}, scene);
+                box.position = new BABYLON.Vector3(Math.random() * 20 - 10, 0.5, Math.random() * 20 - 10);
+                const boxMaterial = new BABYLON.StandardMaterial("boxMaterial", scene);
+                boxMaterial.diffuseColor = new BABYLON.Color3(Math.random(), Math.random(), Math.random()); // Random colors
+                box.material = boxMaterial;
+            }
+
+            // Enable collisions and gravity
+            scene.collisionsEnabled = true;
+            camera.checkCollisions = true;
+            ground.checkCollisions = true;
+            ground.position.y = 0;
+
+            // Add keyboard controls for movement (WASD)
+            scene.onKeyboardObservable.add((kbInfo) => {
+                switch (kbInfo.type) {
+                    case BABYLON.KeyboardEventTypes.KEYDOWN:
+                        switch (kbInfo.event.key) {
+                            case "w":
+                                camera.position.z += camera.speed;
+                                break;
+                            case "s":
+                                camera.position.z -= camera.speed;
+                                break;
+                            case "a":
+                                camera.position.x -= camera.speed;
+                                break;
+                            case "d":
+                                camera.position.x += camera.speed;
+                                break;
+                        }
+                        break;
+                }
+            });
+
+            // Shooting mechanics: Left-click to shoot
+            const bullets = [];
+            const shootBullet = () => {
+                const bullet = BABYLON.MeshBuilder.CreateSphere("bullet", {diameter: 0.1}, scene);
+                bullet.position = camera.position.clone();
+                bullet.direction = camera.getForwardRay().direction;
+                bullets.push(bullet);
+            };
+
+            scene.onPointerObservable.add((pointerInfo) => {
+                if (pointerInfo.type === BABYLON.PointerEventTypes.POINTERDOWN && pointerInfo.event.button === 0) {
+                    shootBullet();
+                }
+            });
+
+            // Update bullets movement
+            scene.registerBeforeRender(() => {
+                bullets.forEach(bullet => {
+                    bullet.position.addInPlace(bullet.direction.scale(0.5)); // Move the bullet
+                    if (bullet.position.length() > 100) {
+                        bullet.dispose(); // Remove bullet when too far
+                    }
+                });
+            });
+
+            return scene;
+        };
+
+        const scene = createScene();
+
+        engine.runRenderLoop(() => {
+            scene.render();
+        });
+
+        window.addEventListener("resize", () => {
+            engine.resize();
+        });
+    </script>
+</body>
+</html>
