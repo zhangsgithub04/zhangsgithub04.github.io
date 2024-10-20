@@ -20,8 +20,8 @@
             // FPS Camera
             const camera = new BABYLON.UniversalCamera("FPSCamera", new BABYLON.Vector3(0, 1.8, 0), scene);
             camera.attachControl(canvas, true);
-            camera.speed = 0.2; // Adjust for smoother movement
-            camera.inertia = 0.05; // Reduce inertia for more precise movement
+            camera.speed = 0.5; // Adjust for smoother movement
+            camera.inertia = 0.1; // Reduce inertia for more precise movement
             camera.applyGravity = true;
             camera.checkCollisions = true;
             scene.collisionsEnabled = true;
@@ -76,13 +76,13 @@
             const enemies = [];
             const spawnEnemy = () => {
                 const enemy = BABYLON.MeshBuilder.CreateBox("enemy", {size: 1}, scene);
-                enemy.position = new BABYLON.Vector3(Math.random() * 40 - 20, 0.5, Math.random() * 40 - 20); // Random spawn
+                enemy.position = new BABYLON.Vector3(Math.random() * 20 - 10, 0.5, Math.random() * 20 - 10); // Random spawn
                 enemy.isAlive = true;
                 enemies.push(enemy);
             };
 
-            // Continuously spawn enemies every 5 seconds
-            setInterval(spawnEnemy, 5000);
+            // Continuously spawn enemies every 3 seconds
+            setInterval(spawnEnemy, 3000);
 
             // Function to move enemies towards the player
             const moveEnemies = () => {
@@ -114,10 +114,10 @@
                 switch (kbInfo.type) {
                     case BABYLON.KeyboardEventTypes.KEYDOWN:
                         switch (kbInfo.event.key) {
-                            case "w": camera.position.addInPlace(camera.getForwardRay().direction.scale(camera.speed)); break;
-                            case "s": camera.position.addInPlace(camera.getForwardRay().direction.scale(-camera.speed)); break;
-                            case "a": camera.position.addInPlace(camera.getDirection(BABYLON.Axis.X).scale(-camera.speed)); break;
-                            case "d": camera.position.addInPlace(camera.getDirection(BABYLON.Axis.X).scale(camera.speed)); break;
+                            case "w": camera.position.addInPlace(camera.getForwardRay().direction.scale(camera.speed)); break; // Move forward
+                            case "s": camera.position.addInPlace(camera.getForwardRay().direction.scale(-camera.speed)); break; // Move backward
+                            case "a": camera.position.addInPlace(camera.getDirection(BABYLON.Axis.X).scale(-camera.speed)); break; // Move left
+                            case "d": camera.position.addInPlace(camera.getDirection(BABYLON.Axis.X).scale(camera.speed)); break; // Move right
                         }
                         break;
                 }
