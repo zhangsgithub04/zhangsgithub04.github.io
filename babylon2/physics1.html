@@ -1,0 +1,109 @@
+<!doctype html>
+<html>
+   <head>
+      <meta charset = "utf-8">
+      <title>BabylonJs - Ball/Ground Demo</title>
+      <script type = "text/javascript" src="https://cdn.babylonjs.com/Oimo.js"></script>
+      <script src = "babylon.js"></script>	
+      <style>
+         canvas {width: 100%; height: 100%;}
+      </style>
+   </head>
+
+   <body>
+      <canvas id = "renderCanvas"></canvas>
+      <script type = "text/javascript">
+         var canvas = document.getElementById("renderCanvas");
+         var engine = new BABYLON.Engine(canvas, true);
+         var v3 = BABYLON.Vector3;
+         
+         var createScene = function () {	
+            // This creates a basic Babylon Scene object (non-mesh)
+            var scene = new BABYLON.Scene(engine);
+
+            var camera = new BABYLON.ArcRotateCamera("Camera", 0.86, 1.37, 250, BABYLON.Vector3.Zero(), scene);
+            
+            camera.attachControl(canvas);
+            camera.maxZ = 5000;
+            camera.lowerRadiusLimit = 120;
+            camera.upperRadiusLimit = 430;
+            camera.lowerBetaLimit =0.75;
+            camera.upperBetaLimit =1.58 ;
+
+            new BABYLON.HemisphericLight("hemi", new BABYLON.Vector3(0, 1, 0), scene);
+
+            var randomNumber = function (min, max) {
+               if (min == max) {
+                  return (min);
+               }
+               var random = Math.random();
+               return ((random * (max - min)) + min);
+            };
+
+            var mat = new BABYLON.StandardMaterial("ground", scene);
+            var t = new BABYLON.Texture("images/gr1.jpg", scene);
+            t.uScale = t.vScale = 10;
+            mat.diffuseTexture = t;
+            mat.specularColor = BABYLON.Color3.Black();
+            
+            var g = BABYLON.Mesh.CreateBox("ground", 200, scene);
+            
+            g.position.y = -20;
+            g.position.x = 0
+            g.scaling.y = 0.01;
+            g.material = mat;	
+            
+            scene.enablePhysics(new BABYLON.Vector3(0, -10, 0), new BABYLON.OimoJSPlugin());
+            
+            g.physicsImpostor = new BABYLON.PhysicsImpostor(g, BABYLON.PhysicsImpostor.BoxImpostor, { 
+               mass: 0, 
+               restitution: 0.9 
+            }, scene);
+            
+            var getPosition = function(y) {
+               return new v3(randomNumber(-100, 100), y, randomNumber(-100, 100));
+            };
+            
+            var allspheres = [];
+            var y = 50;
+            var max = 50;
+            
+            for (var index = 0; index < max; index++) {
+               var redSphere = BABYLON.Mesh.CreateSphere("s" + index, 32, 8, scene);
+               redSphere.position = getPosition(y);
+               redSphere.physicsImpostor = new BABYLON.PhysicsImpostor(redSphere, BABYLON.PhysicsImpostor.SphereImpostor,{
+                  mass: 1, restitution:0.9
+               }, scene);
+               
+               redSphere.physicsImpostor.applyImpulse(new BABYLON.Vector3(1, 2, -1), new BABYLON.Vector3(1, 2, 0));
+               
+               var redMat = new BABYLON.StandardMaterial("ground", scene);
+               redMat.diffuseColor = new BABYLON.Color3(0.4, 0.4, 0.4);
+               redMat.specularColor = new BABYLON.Color3(0.4, 0.4, 0.4);
+               redMat.emissiveColor = BABYLON.Color3.Red();
+               redSphere.material = redMat;
+               
+               // push all spheres in the allspheres variable
+               allspheres.push(redSphere);			
+               y += 10; // increment height
+            }
+            scene.registerBeforeRender(function() {
+               allspheres.forEach(function(obj) { 
+                  // if the sphers falls down its updated again over here
+                  // If object falls
+                  if (obj.position.y < -100) {
+                     obj.position = getPosition(200);				
+                  }
+               });
+            })
+            return scene;
+         };
+         var scene = createScene();
+         engine.runRenderLoop(function() {
+            scene.render();
+         });
+      </script>
+   </body>
+</html>
+
+Ezoic
