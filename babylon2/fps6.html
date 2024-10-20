@@ -1,80 +1,65 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Babylon.js Complete FPS Game</title>
+    <title>Babylon.js FPS with Enemies and Score</title>
     <script src="https://cdn.babylonjs.com/babylon.js"></script>
     <script src="https://cdn.babylonjs.com/gui/babylon.gui.min.js"></script>
-    <style>
-        body { margin: 0; overflow: hidden; }
-        canvas { width: 100%; height: 100%; }
-    </style>
+    <script src="https://cdn.babylonjs.com/loader/babylonjs.loaders.min.js"></script>
 </head>
 <body>
-    <canvas id="renderCanvas" touch-action="none"></canvas>
+    <canvas id="renderCanvas" touch-action="none" style="width: 100%; height: 100%;"></canvas>
     
     <script>
         const canvas = document.getElementById("renderCanvas");
         const engine = new BABYLON.Engine(canvas, true);
 
-        let score = 0; // Player's score
-        let health = 100; // Player's health
-        const enemySpeed = 0.02; // Speed at which enemies move towards the player
+        let score = 0; // Initialize score
+        let playerHealth = 100; // Initialize player health
 
+        // Load sound effects
+        const hitSound = new BABYLON.Sound("hitSound", "https://www.soundjay.com/button/sounds/button-16.mp3", null, null, { volume: 0.5 });
+        const enemyHitSound = new BABYLON.Sound("enemyHitSound", "https://www.soundjay.com/button/sounds/button-3.mp3", null, null, { volume: 0.5 });
+        const damageSound = new BABYLON.Sound("damageSound", "https://www.soundjay.com/button/sounds/button-18.mp3", null, null, { volume: 0.5 });
+
+        // Create the scene
         const createScene = function () {
             const scene = new BABYLON.Scene(engine);
 
-            // FPS Camera
+            // Camera setup (first-person camera)
             const camera = new BABYLON.UniversalCamera("FPSCamera", new BABYLON.Vector3(0, 1.8, 0), scene);
             camera.attachControl(canvas, true);
             camera.speed = 0.5;
             camera.inertia = 0.1;
             camera.applyGravity = true;
-            camera.checkCollisions = true;
-            scene.collisionsEnabled = true;
 
-            // Add lighting
+            // Enable collisions
+            scene.collisionsEnabled = true;
+            camera.checkCollisions = true;
+
+            // Lighting
             const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
 
-            // Add ground
+            // Ground setup
             const ground = BABYLON.MeshBuilder.CreateGround("ground", {width: 100, height: 100}, scene);
             const groundMaterial = new BABYLON.StandardMaterial("groundMaterial", scene);
             groundMaterial.diffuseColor = new BABYLON.Color3(0.3, 0.6, 0.3);
             ground.material = groundMaterial;
             ground.checkCollisions = true;
 
-            // Player's gun
-            const gun = BABYLON.MeshBuilder.CreateBox("gun", {size: 0.2}, scene);
-            gun.parent = camera;
-            gun.position = new BABYLON.Vector3(0.3, -0.3, 1);
-
-            // Score and Health HUD
-            const advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
-            const scoreText = new BABYLON.GUI.TextBlock();
-            scoreText.text = "Score: 0";
-            scoreText.color = "white";
-            scoreText.fontSize = 24;
-            scoreText.top = "-45%";
-            advancedTexture.addControl(scoreText);
-
-            const healthText = new BABYLON.GUI.TextBlock();
-            healthText.text = "Health: 100";
-            healthText.color = "white";
-            healthText.fontSize = 24;
-            healthText.top = "-40%";
-            advancedTexture.addControl(healthText);
-
-            const gameOverText = new BABYLON.GUI.TextBlock();
-            gameOverText.text = "Game Over";
-            gameOverText.color = "red";
-            gameOverText.fontSize = 48;
-            gameOverText.isVisible = false;
-            advancedTexture.addControl(gameOverText);
-
-            // Function to update score
-            const updateScore = () => {
-                score += 10;
-                scoreText.text = "Score: " + score;
+            // Enemy array
+            const enemies = [];
+            const createEnemy = (position) => {
+                const enemy = BABYLON.MeshBuilder.CreateBox("enemy", {size: 1}, scene);
+                enemy.position = position;
+                enemy.isAlive = true; // Add alive state for enemies
+                enemies.push(enemy);
+                return enemy;
             };
+
+            // Add 10 enemies at closer positions
+            for (let i = 0; i < 10; i++) {
+                createEnemy(new BABYLON.Vector3(Math.random() * 5 - 2.5, 0.5, Math.random() * 5 - 2.5));
+            }
 
             // Bullets array
             const bullets = [];
@@ -85,51 +70,45 @@
                 bullets.push(bullet);
             };
 
-            // Shooting with the space key
-            scene.onKeyboardObservable.add((kbInfo) => {
-                if (kbInfo.type === BABYLON.KeyboardEventTypes.KEYDOWN) {
-                    if (kbInfo.event.key === " ") {
-                        shootBullet();
-                    }
+            // On left-click, shoot a bullet
+            scene.onPointerObservable.add((pointerInfo) => {
+                if (pointerInfo.type === BABYLON.PointerEventTypes.POINTERDOWN && pointerInfo.event.button === 0) {
+                    shootBullet();
                 }
             });
 
-            // Enemies array and spawn function
-            const enemies = [];
-            const spawnEnemy = () => {
-                const enemy = BABYLON.MeshBuilder.CreateBox("enemy", {size: 1}, scene);
-                enemy.position = new BABYLON.Vector3(Math.random() * 20 - 10, 0.5, Math.random() * 20 - 10);
-                enemy.isAlive = true;
-                enemies.push(enemy);
+            // HUD: Add a score display using Babylon.js GUI
+            const advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
+            const scoreText = new BABYLON.GUI.TextBlock();
+            scoreText.text = "Score: 0";
+            scoreText.color = "white";
+            scoreText.fontSize = 24;
+            scoreText.top = "-45%";
+            advancedTexture.addControl(scoreText);
+
+            const healthText = new BABYLON.GUI.TextBlock();
+            healthText.text = "Health: " + playerHealth;
+            healthText.color = "red";
+            healthText.fontSize = 24;
+            healthText.top = "-20%";
+            advancedTexture.addControl(healthText);
+
+            // Function to update score
+            const updateScore = () => {
+                score += 10; // Increment score by 10 for each enemy hit
+                scoreText.text = "Score: " + score;
+                hitSound.play(); // Play hit sound
             };
 
-            // Continuously spawn enemies every 3 seconds
-            setInterval(spawnEnemy, 3000);
-
-            // Move enemies towards the player
-            const moveEnemies = () => {
-                enemies.forEach(enemy => {
-                    if (enemy.isAlive) {
-                        const direction = camera.position.subtract(enemy.position).normalize();
-                        enemy.position.addInPlace(direction.scale(enemySpeed));
-                        // Check if the enemy has reached the player
-                        if (BABYLON.Vector3.Distance(camera.position, enemy.position) < 1) {
-                            enemy.isAlive = false; // Mark enemy as not alive
-                            health -= 10; // Decrease health
-                            healthText.text = "Health: " + health; // Update health HUD
-                        }
-                    }
-                });
-            };
-
-            // Detect collisions between bullets and enemies
+            // Function to detect collisions between bullets and enemies
             const detectCollisions = () => {
                 bullets.forEach((bullet, bulletIndex) => {
                     enemies.forEach((enemy, enemyIndex) => {
                         if (enemy.isAlive && bullet.intersectsMesh(enemy, false)) {
+                            // Enemy is hit, remove enemy and bullet
                             enemy.isAlive = false;
-                            enemy.dispose(); // Remove enemy
-                            bullet.dispose(); // Remove bullet
+                            enemy.dispose();
+                            bullet.dispose();
                             bullets.splice(bulletIndex, 1);
                             updateScore(); // Increase score
                         }
@@ -137,41 +116,48 @@
                 });
             };
 
-            // Handle player movement (WASD for movement)
-            scene.onKeyboardObservable.add((kbInfo) => {
-                switch (kbInfo.type) {
-                    case BABYLON.KeyboardEventTypes.KEYDOWN:
-                        switch (kbInfo.event.key) {
-                            case "w": camera.position.addInPlace(camera.getForwardRay().direction.scale(camera.speed)); break; // Move forward
-                            case "s": camera.position.addInPlace(camera.getForwardRay().direction.scale(-camera.speed)); break; // Move backward
-                            case "a": camera.position.addInPlace(camera.getDirection(BABYLON.Axis.X).scale(-camera.speed)); break; // Move left
-                            case "d": camera.position.addInPlace(camera.getDirection(BABYLON.Axis.X).scale(camera.speed)); break; // Move right
+            // Function to check for enemy collisions with the player
+            const checkEnemyCollisions = () => {
+                enemies.forEach((enemy) => {
+                    if (enemy.isAlive && enemy.intersectsMesh(camera, false)) {
+                        // Player is hit by the enemy
+                        playerHealth -= 10; // Reduce health
+                        damageSound.play(); // Play damage sound
+                        if (playerHealth <= 0) {
+                            alert("Game Over! Final Score: " + score);
+                            window.location.reload(); // Restart the game
                         }
-                        break;
-                }
-            });
+                        healthText.text = "Health: " + playerHealth; // Update health display
+                    }
+                });
+            };
 
-            // Game loop: Move bullets, enemies, and check collisions
+            // Update function: move bullets, check for collisions
             scene.registerBeforeRender(() => {
                 bullets.forEach(bullet => {
-                    bullet.position.addInPlace(bullet.direction.scale(0.5)); // Move bullet
+                    bullet.position.addInPlace(bullet.direction.scale(0.5)); // Move bullet forward
                     if (bullet.position.length() > 100) {
-                        bullet.dispose(); // Remove bullet if out of bounds
+                        bullet.dispose(); // Dispose bullet if too far
                     }
                 });
 
-                moveEnemies();  // Move enemies toward player
-                detectCollisions(); // Check for bullet-enemy collisions
+                // Call detectCollisions function every frame
+                detectCollisions();
+                checkEnemyCollisions();
 
-                // Check if health is below or equal to zero
-                if (health <= 0) {
-                    gameOverText.isVisible = true; // Show game over message
-                    scene.activeCamera.detachControl(canvas); // Stop camera movement
-                    bullets.forEach(bullet => bullet.dispose()); // Remove all bullets
-                    enemies.forEach(enemy => enemy.dispose()); // Remove all enemies
-                    enemies.length = 0; // Clear enemies array
-                }
+                // Enemies move towards the player
+                enemies.forEach(enemy => {
+                    if (enemy.isAlive) {
+                        const direction = camera.position.subtract(enemy.position).normalize();
+                        enemy.position.addInPlace(direction.scale(0.02)); // Enemies move towards the player slowly
+                    }
+                });
             });
+
+            // Create a simple gun model (box as a placeholder)
+            const gun = BABYLON.MeshBuilder.CreateBox("gun", {height: 0.5, width: 0.1, depth: 0.3}, scene);
+            gun.position = new BABYLON.Vector3(0, 1.5, -1); // Position it in front of the camera
+            gun.parent = camera; // Attach gun to camera
 
             return scene;
         };
