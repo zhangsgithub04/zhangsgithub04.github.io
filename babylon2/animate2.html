@@ -25,7 +25,7 @@
             camera.attachControl(canvas, false);
 
             BABYLON.SceneLoader.ImportMesh(
-               "him", "scenes/Dude/", "Dude.babylon", scene, function (newMeshes, particleSystems, skeletons) {
+               "him", "./", "Dude.babylon", scene, function (newMeshes, particleSystems, skeletons) {
                var dude = newMeshes[0];
                console.log(dude);
                dude.rotation.y = Math.PI;
