@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Babylon.js Procedural Sound Example</title>
+    <script src="https://cdn.babylonjs.com/babylon.js"></script>
+    <style>
+        canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="renderCanvas"></canvas>
+    <script>
+        const canvas = document.getElementById("renderCanvas");
+        const engine = new BABYLON.Engine(canvas, true);
+        
+        // Create the scene
+        const createScene = function() {
+            const scene = new BABYLON.Scene(engine);
+            const camera = new BABYLON.ArcRotateCamera("camera", Math.PI / 2, Math.PI / 4, 10, BABYLON.Vector3.Zero(), scene);
+            camera.attachControl(canvas, true);
+            const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
+            const ground = BABYLON.MeshBuilder.CreateGround("ground", { width: 10, height: 10 }, scene);
+
+            return scene;
+        };
+
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+        // Function to generate sound
+        function createSound(frequency, duration) {
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            oscillator.type = "sine"; // Sound wave type
+            oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime); // Frequency in hertz
+            gainNode.gain.setValueAtTime(1, audioContext.currentTime); // Volume
+
+            // Play the sound
+            oscillator.start();
+            oscillator.stop(audioContext.currentTime + duration); // Stop after the specified duration
+        }
+
+        // Shooting sound function
+        function onShoot() {
+            createSound(440, 0.1); // A4 note, 0.1 seconds duration
+        }
+
+        // Hitting sound function
+        function onHit() {
+            createSound(220, 0.1); // A3 note, 0.1 seconds duration
+        }
+
+        // Event listener for shooting
+        window.addEventListener("keydown", (event) => {
+            if (event.code === "Space") { // Spacebar for shooting
+                onShoot();
+                // Simulate hit for demonstration
+                onHit(); // You can trigger this based on actual hit detection logic
+            }
+        });
+
+        const scene = createScene();
+        engine.runRenderLoop(() => {
+            scene.render();
+        });
+
+        window.addEventListener("resize", () => {
+            engine.resize();
+        });
+    </script>
+</body>
+</html>
