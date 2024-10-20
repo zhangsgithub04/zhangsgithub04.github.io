@@ -34,6 +34,7 @@
                scene.beginAnimation(skeletons[0], 0, 100, true, 1.0);
                   scene.onReadyObservable.add(() => {
     const dude2 = scene.getMeshByName("dude"); // Replace with your mesh name
+                     console.log(dude2)
     if (dude2 && dude2.skeleton) {
         console.log(dude2.skeleton.getAnimationRangeNames());
     }
