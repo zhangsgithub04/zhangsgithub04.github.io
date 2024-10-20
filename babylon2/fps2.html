@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Babylon.js FPS with Enemies and Score</title>
+    <script src="https://cdn.babylonjs.com/babylon.js"></script>
+    <script src="https://cdn.babylonjs.com/gui/babylon.gui.min.js"></script>
+</head>
+<body>
+    <canvas id="renderCanvas" touch-action="none" style="width: 100%; height: 100%;"></canvas>
+    
+    <script>
+        const canvas = document.getElementById("renderCanvas");
+        const engine = new BABYLON.Engine(canvas, true);
+
+        let score = 0; // Initialize score
+
+        // Create the scene
+        const createScene = function () {
+            const scene = new BABYLON.Scene(engine);
+
+            // Camera setup (first-person camera)
+            const camera = new BABYLON.UniversalCamera("FPSCamera", new BABYLON.Vector3(0, 1.8, 0), scene);
+            camera.attachControl(canvas, true);
+            camera.speed = 0.5;
+            camera.inertia = 0.1;
+            camera.applyGravity = true;
+
+            // Enable collisions
+            scene.collisionsEnabled = true;
+            camera.checkCollisions = true;
+
+            // Lighting
+            const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
+
+            // Ground setup
+            const ground = BABYLON.MeshBuilder.CreateGround("ground", {width: 100, height: 100}, scene);
+            const groundMaterial = new BABYLON.StandardMaterial("groundMaterial", scene);
+            groundMaterial.diffuseColor = new BABYLON.Color3(0.3, 0.6, 0.3);
+            ground.material = groundMaterial;
+            ground.checkCollisions = true;
+
+            // Enemy array
+            const enemies = [];
+            const createEnemy = (position) => {
+                const enemy = BABYLON.MeshBuilder.CreateBox("enemy", {size: 1}, scene);
+                enemy.position = position;
+                enemy.isAlive = true; // Add alive state for enemies
+                enemies.push(enemy);
+                return enemy;
+            };
+
+            // Add 10 enemies at random positions
+            for (let i = 0; i < 10; i++) {
+                createEnemy(new BABYLON.Vector3(Math.random() * 20 - 10, 0.5, Math.random() * 20 - 10));
+            }
+
+            // Bullets array
+            const bullets = [];
+            const shootBullet = () => {
+                const bullet = BABYLON.MeshBuilder.CreateSphere("bullet", {diameter: 0.1}, scene);
+                bullet.position = camera.position.clone();
+                bullet.direction = camera.getForwardRay().direction;
+                bullets.push(bullet);
+            };
+
+            // On left-click, shoot a bullet
+            scene.onPointerObservable.add((pointerInfo) => {
+                if (pointerInfo.type === BABYLON.PointerEventTypes.POINTERDOWN && pointerInfo.event.button === 0) {
+                    shootBullet();
+                }
+            });
+
+            // HUD: Add a score display using Babylon.js GUI
+            const advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
+            const scoreText = new BABYLON.GUI.TextBlock();
+            scoreText.text = "Score: 0";
+            scoreText.color = "white";
+            scoreText.fontSize = 24;
+            scoreText.top = "-45%";
+            advancedTexture.addControl(scoreText);
+
+            // Function to update score
+            const updateScore = () => {
+                score += 10; // Increment score by 10 for each enemy hit
+                scoreText.text = "Score: " + score;
+            };
+
+            // Function to detect collisions between bullets and enemies
+            const detectCollisions = () => {
+                bullets.forEach((bullet, bulletIndex) => {
+                    enemies.forEach((enemy, enemyIndex) => {
+                        if (enemy.isAlive && bullet.intersectsMesh(enemy, false)) {
+                            // Enemy is hit, remove enemy and bullet
+                            enemy.isAlive = false;
+                            enemy.dispose();
+                            bullet.dispose();
+                            bullets.splice(bulletIndex, 1);
+                            updateScore(); // Increase score
+                        }
+                    });
+                });
+            };
+
+            // Update function: move bullets and check for collisions
+            scene.registerBeforeRender(() => {
+                bullets.forEach(bullet => {
+                    bullet.position.addInPlace(bullet.direction.scale(0.5)); // Move bullet forward
+                    if (bullet.position.length() > 100) {
+                        bullet.dispose(); // Dispose bullet if too far
+                    }
+                });
+
+                // Call detectCollisions function every frame
+                detectCollisions();
+
+                // Enemies move towards the player
+                enemies.forEach(enemy => {
+                    if (enemy.isAlive) {
+                        const direction = camera.position.subtract(enemy.position).normalize();
+                        enemy.position.addInPlace(direction.scale(0.02)); // Enemies move towards the player slowly
+                    }
+                });
+            });
+
+            return scene;
+        };
+
+        const scene = createScene();
+
+        engine.runRenderLoop(() => {
+            scene.render();
+        });
+
+        window.addEventListener("resize", () => {
+            engine.resize();
+        });
+    </script>
+</body>
+</html>
