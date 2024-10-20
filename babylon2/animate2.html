@@ -33,9 +33,9 @@
                dude.position = new BABYLON.Vector3(0, 0, -80);
                scene.beginAnimation(skeletons[0], 0, 100, true, 1.0);
                   scene.onReadyObservable.add(() => {
-    const dude = scene.getMeshByName("Dude"); // Replace with your mesh name
-    if (dude && dude.skeleton) {
-        console.log(dude.skeleton.getAnimationRangeNames());
+    const dude2 = scene.getMeshByName("dude"); // Replace with your mesh name
+    if (dude2 && dude2.skeleton) {
+        console.log(dude2.skeleton.getAnimationRangeNames());
     }
 });
 
