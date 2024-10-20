@@ -1,0 +1,43 @@
+<!doctype html>
+<html>
+   <head>
+      <meta charset = "utf-8">
+      <title>BabylonJs - Basic Element-Creating Scene</title>
+      <script src = "babylon.js"></script>
+      <style>
+         canvas {width: 100%; height: 100%;}
+      </style>
+   </head>
+
+   <body>
+      <canvas id = "renderCanvas"></canvas>
+      <script type = "text/javascript">
+         var canvas = document.getElementById("renderCanvas");
+         var engine = new BABYLON.Engine(canvas, true);
+         var createScene  = function() {
+            var scene = new BABYLON.Scene(engine);
+
+            //Adding a light
+            var light = new BABYLON.PointLight("Omni", new BABYLON.Vector3(20, 20, 100), scene);
+
+            //Adding an Arc Rotate Camera
+            var camera = new BABYLON.ArcRotateCamera("Camera", 0, 0.8, 100, BABYLON.Vector3.Zero(), scene);
+            camera.attachControl(canvas, false);
+
+            BABYLON.SceneLoader.ImportMesh(
+               "him", "scenes/Dude/", "Dude.babylon", scene, function (newMeshes, particleSystems, skeletons) {
+               var dude = newMeshes[0];
+               console.log(dude);
+               dude.rotation.y = Math.PI;
+               dude.position = new BABYLON.Vector3(0, 0, -80);
+               scene.beginAnimation(skeletons[0], 0, 100, true, 1.0);
+            })
+            return scene;
+         };
+         var scene = createScene();
+         engine.runRenderLoop(function() {
+            scene.render();
+         });
+      </script>
+   </body>
+</html>
