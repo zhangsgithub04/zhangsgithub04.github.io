@@ -58,6 +58,11 @@
                 shootSound.play();
             };
 
+            // Function to play enemy hit sound
+            const playEnemyHitSound = () => {
+                enemyHitSound.play();
+            };
+
             // Score and Health HUD
             const advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
             const scoreText = new BABYLON.GUI.TextBlock();
@@ -154,7 +159,7 @@
                             enemy.dispose(); // Remove enemy
                             bullet.dispose(); // Remove bullet
                             bullets.splice(bulletIndex, 1);
-                            enemyHitSound.play(); // Play enemy hit sound
+                            playEnemyHitSound(); // Play enemy hit sound
                             updateScore(); // Increase score
                         }
                     });
