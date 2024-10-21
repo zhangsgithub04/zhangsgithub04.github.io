@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sorting Algorithm Visualization</title>
+    <script src="https://cdn.jsdelivr.net/npm/konva@8.3.5/konva.min.js"></script>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+        }
+        canvas {
+            border: 1px solid black;
+        }
+        #controls {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+    </style>
+</head>
+<body>
+    <div id="controls">
+        <button id="startBtn">Start Sorting</button>
+    </div>
+    <div id="container"></div>
+
+    <script>
+        const width = 800;
+        const height = 400;
+        const numBars = 50;
+        const maxBarHeight = height - 50;
+        const barWidth = width / numBars;
+
+        // Create stage
+        const stage = new Konva.Stage({
+            container: 'container',
+            width: width,
+            height: height,
+        });
+
+        const layer = new Konva.Layer();
+        stage.add(layer);
+
+        // Generate random array of heights
+        const heights = Array.from({ length: numBars }, () => Math.floor(Math.random() * maxBarHeight));
+
+        // Draw the bars
+        const bars = [];
+        heights.forEach((height, index) => {
+            const bar = new Konva.Rect({
+                x: index * barWidth,
+                y: maxBarHeight - height,
+                width: barWidth - 2,
+                height: height,
+                fill: 'blue',
+                stroke: 'black',
+                strokeWidth: 1,
+            });
+            layer.add(bar);
+            bars.push(bar);
+        });
+        layer.draw();
+
+        // Bubble sort visualization
+        async function bubbleSort() {
+            for (let i = 0; i < heights.length; i++) {
+                for (let j = 0; j < heights.length - i - 1; j++) {
+                    if (heights[j] > heights[j + 1]) {
+                        // Swap heights
+                        [heights[j], heights[j + 1]] = [heights[j + 1], heights[j]];
+
+                        // Update bar heights in the visualization
+                        bars[j].y(maxBarHeight - heights[j]);
+                        bars[j + 1].y(maxBarHeight - heights[j + 1]);
+                        layer.batchDraw();
+
+                        // Delay for visualization
+                        await new Promise(resolve => setTimeout(resolve, 50));
+                    }
+                }
+            }
+        }
+
+        // Event listener for the start button
+        document.getElementById('startBtn').addEventListener('click', () => {
+            bubbleSort();
+        });
+    </script>
+</body>
+</html>
