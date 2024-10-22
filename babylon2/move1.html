@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Babylon.js Model Control</title>
+    <script src="https://cdn.babylonjs.com/babylon.js"></script>
+    <style>
+        canvas { width: 100%; height: 100%; display: block; }
+    </style>
+</head>
+<body>
+    <canvas id="renderCanvas"></canvas>
+    <script>
+        // Create the canvas and the engine
+        const canvas = document.getElementById('renderCanvas');
+        const engine = new BABYLON.Engine(canvas, true);
+
+        // CreateScene function
+        const createScene = function () {
+            const scene = new BABYLON.Scene(engine);
+
+            // Create a camera
+            const camera = new BABYLON.ArcRotateCamera("camera", Math.PI / 2, Math.PI / 4, 5, new BABYLON.Vector3(0, 0, 0), scene);
+            camera.attachControl(canvas, true);
+
+            // Add a light
+            const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
+
+            // Create a simple box as the model (replace with your model)
+            const model = BABYLON.MeshBuilder.CreateBox("box", { size: 1 }, scene);
+            model.position.y = 0.5;
+
+            // Create ground
+            const ground = BABYLON.MeshBuilder.CreateGround("ground", { width: 6, height: 6 }, scene);
+
+            // Keyboard controls
+            const inputMap = {};
+            window.addEventListener("keydown", function (evt) {
+                inputMap[evt.key] = true;
+            });
+
+            window.addEventListener("keyup", function (evt) {
+                inputMap[evt.key] = false;
+            });
+
+            scene.onBeforeRenderObservable.add(() => {
+                if (inputMap["w"]) {
+                    model.position.z -= 0.1; // Move forward
+                }
+                if (inputMap["s"]) {
+                    model.position.z += 0.1; // Move backward
+                }
+                if (inputMap["a"]) {
+                    model.position.x -= 0.1; // Move left
+                }
+                if (inputMap["d"]) {
+                    model.position.x += 0.1; // Move right
+                }
+            });
+
+            return scene;
+        };
+
+        const scene = createScene();
+
+        // Render loop
+        engine.runRenderLoop(function () {
+            scene.render();
+        });
+
+        // Resize
+        window.addEventListener("resize", function () {
+            engine.resize();
+        });
+    </script>
+</body>
+</html>
