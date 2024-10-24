@@ -1,0 +1,71 @@
+// Create BabylonJS scene with camera, light, and ground
+const canvas = document.getElementById("renderCanvas"); 
+const engine = new BABYLON.Engine(canvas, true); 
+const createScene = function () {
+    const scene = new BABYLON.Scene(engine);
+    
+    // Camera
+    const camera = new BABYLON.FreeCamera("camera1", new BABYLON.Vector3(0, 5, -10), scene);
+    camera.setTarget(BABYLON.Vector3.Zero());
+    camera.attachControl(canvas, true);
+    
+    // Light
+    const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
+    light.intensity = 0.7;
+
+    // Ground
+    const ground = BABYLON.MeshBuilder.CreateGround("ground", {width: 10, height: 10}, scene);
+
+    // Create some boxes (targets)
+    const box1 = BABYLON.MeshBuilder.CreateBox("box1", {size: 1}, scene);
+    box1.position = new BABYLON.Vector3(2, 1, 0);
+
+    const box2 = BABYLON.MeshBuilder.CreateBox("box2", {size: 1}, scene);
+    box2.position = new BABYLON.Vector3(-2, 1, 2);
+
+    // Array to store bullets
+    const bullets = [];
+
+    // Function to create bullets
+    const shootBullet = () => {
+        const bullet = BABYLON.MeshBuilder.CreateSphere("bullet", {diameter: 0.2}, scene);
+        bullet.position = camera.position.clone();
+        bullet.direction = camera.getForwardRay().direction.clone(); // Shoot forward from camera's direction
+        bullets.push(bullet);
+    };
+
+    // Detect collision between bullets and boxes
+    scene.onBeforeRenderObservable.add(() => {
+        for (let i = bullets.length - 1; i >= 0; i--) {
+            const bullet = bullets[i];
+            bullet.position.addInPlace(bullet.direction.scale(0.2)); // Move bullet
+
+            // Check collision with boxes
+            if (bullet.intersectsMesh(box1, false) || bullet.intersectsMesh(box2, false)) {
+                bullet.dispose(); // Remove bullet
+                bullets.splice(i, 1); // Remove from array
+                console.log("Hit a box!"); // For debugging
+            }
+        }
+    });
+
+    // Shoot bullet when spacebar is pressed
+    window.addEventListener("keydown", (event) => {
+        if (event.key === " ") {
+            shootBullet();
+        }
+    });
+
+    return scene;
+};
+
+const scene = createScene();
+
+engine.runRenderLoop(function () {
+    scene.render();
+});
+
+// Resize the engine on window resize
+window.addEventListener("resize", function () {
+    engine.resize();
+});
