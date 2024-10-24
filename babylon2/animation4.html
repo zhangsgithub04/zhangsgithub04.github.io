@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Babylon.js WASD Controlled Character</title>
+    <script src="https://cdn.babylonjs.com/babylon.js"></script>
+</head>
+<body>
+    <canvas id="renderCanvas" style="width: 100%; height: 100%;"></canvas>
+    <script>
+        var canvas = document.getElementById("renderCanvas");
+        var engine = new BABYLON.Engine(canvas, true);
+
+        var createScene = function () {
+            var scene = new BABYLON.Scene(engine);
+            
+            // Create a camera
+            var camera = new BABYLON.ArcRotateCamera("camera1", BABYLON.Tools.ToRadians(45), BABYLON.Tools.ToRadians(45), 10, BABYLON.Vector3.Zero(), scene);
+            camera.attachControl(canvas, true);
+            
+            // Create a basic light
+            var light = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(0, 1, 0), scene);
+
+            // Load the 3D model (using .babylon file in this case)
+            BABYLON.SceneLoader.ImportMesh("", "path/to/your/model/", "model.babylon", scene, function (meshes, particleSystems, skeletons) {
+                var character = meshes[0]; // Assuming the first mesh is the character
+                var skeleton = skeletons[0]; // The skeleton with animations
+                
+                character.scaling = new BABYLON.Vector3(0.2, 0.2, 0.2); // Resize if necessary
+                character.position = new BABYLON.Vector3(0, 0, 0); // Set initial position
+
+                // Start the first animation
+                scene.beginAnimation(skeleton, 0, 100, true);
+
+                // Character movement controls
+                var inputMap = {};
+                scene.actionManager = new BABYLON.ActionManager(scene);
+
+                // Detect key press
+                scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyDownTrigger, function (evt) {
+                    inputMap[evt.sourceEvent.key] = evt.sourceEvent.type === "keydown";
+                }));
+                
+                // Detect key release
+                scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyUpTrigger, function (evt) {
+                    inputMap[evt.sourceEvent.key] = evt.sourceEvent.type === "keyup";
+                }));
+
+                // Handle movement using WASD
+                scene.onBeforeRenderObservable.add(function () {
+                    if (inputMap["w"] || inputMap["W"]) {
+                        character.position.z += 0.1; // Move forward
+                    }
+                    if (inputMap["s"] || inputMap["S"]) {
+                        character.position.z -= 0.1; // Move backward
+                    }
+                    if (inputMap["a"] || inputMap["A"]) {
+                        character.position.x -= 0.1; // Move left
+                    }
+                    if (inputMap["d"] || inputMap["D"]) {
+                        character.position.x += 0.1; // Move right
+                    }
+                });
+            });
+
+            return scene;
+        };
+
+        var scene = createScene();
+
+        engine.runRenderLoop(function () {
+            scene.render();
+        });
+
+        window.addEventListener("resize", function () {
+            engine.resize();
+        });
+    </script>
+</body>
+</html>
