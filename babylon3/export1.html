@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Babylon.js Rigged Stickman</title>
+    <script src="https://cdn.babylonjs.com/babylon.js"></script>
+    <script src="https://cdn.babylonjs.com/loaders/babylon.glTF2FileLoader.js"></script>
+    <script src="https://cdn.babylonjs.com/serializers/babylon.glTFSerializer.js"></script>
+</head>
+<body>
+    <canvas id="renderCanvas" style="width: 100%; height: 100%;"></canvas>
+    <script>
+        var canvas = document.getElementById("renderCanvas");
+        var engine = new BABYLON.Engine(canvas, true);
+
+        var createScene = function () {
+            var scene = new BABYLON.Scene(engine);
+
+            // Create a basic camera and light
+            var camera = new BABYLON.ArcRotateCamera("camera", BABYLON.Tools.ToRadians(45), BABYLON.Tools.ToRadians(45), 10, BABYLON.Vector3.Zero(), scene);
+            camera.attachControl(canvas, true);
+
+            var light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
+
+            // Create the stickman body parts (spheres for joints, cylinders for limbs)
+            var bodyHeight = 2;
+            var limbRadius = 0.1;
+
+            // Head
+            var head = BABYLON.MeshBuilder.CreateSphere("head", { diameter: 0.5 }, scene);
+            head.position.y = bodyHeight + 0.5;
+
+            // Torso
+            var torso = BABYLON.MeshBuilder.CreateCylinder("torso", { height: bodyHeight, diameter: 0.4 }, scene);
+            torso.position.y = bodyHeight / 2;
+
+            // Limbs
+            var limbOptions = { height: 1.5, diameter: limbRadius };
+            var upperArmL = BABYLON.MeshBuilder.CreateCylinder("upperArmL", limbOptions, scene);
+            upperArmL.position = new BABYLON.Vector3(-0.8, bodyHeight, 0);
+
+            var upperArmR = BABYLON.MeshBuilder.CreateCylinder("upperArmR", limbOptions, scene);
+            upperArmR.position = new BABYLON.Vector3(0.8, bodyHeight, 0);
+
+            var lowerArmL = BABYLON.MeshBuilder.CreateCylinder("lowerArmL", limbOptions, scene);
+            lowerArmL.position = new BABYLON.Vector3(-1.2, bodyHeight - 0.7, 0);
+
+            var lowerArmR = BABYLON.MeshBuilder.CreateCylinder("lowerArmR", limbOptions, scene);
+            lowerArmR.position = new BABYLON.Vector3(1.2, bodyHeight - 0.7, 0);
+
+            var upperLegL = BABYLON.MeshBuilder.CreateCylinder("upperLegL", limbOptions, scene);
+            upperLegL.position = new BABYLON.Vector3(-0.4, bodyHeight / 4, 0);
+
+            var upperLegR = BABYLON.MeshBuilder.CreateCylinder("upperLegR", limbOptions, scene);
+            upperLegR.position = new BABYLON.Vector3(0.4, bodyHeight / 4, 0);
+
+            var lowerLegL = BABYLON.MeshBuilder.CreateCylinder("lowerLegL", limbOptions, scene);
+            lowerLegL.position = new BABYLON.Vector3(-0.4, -0.7, 0);
+
+            var lowerLegR = BABYLON.MeshBuilder.CreateCylinder("lowerLegR", limbOptions, scene);
+            lowerLegR.position = new BABYLON.Vector3(0.4, -0.7, 0);
+
+            // Group all parts into a single mesh using parenting
+            torso.addChild(head);
+            torso.addChild(upperArmL);
+            torso.addChild(upperArmR);
+            torso.addChild(lowerArmL);
+            torso.addChild(lowerArmR);
+            torso.addChild(upperLegL);
+            torso.addChild(upperLegR);
+            torso.addChild(lowerLegL);
+            torso.addChild(lowerLegR);
+
+            // Skeleton and bones setup for rigging (you can also add animations here)
+            var skeleton = new BABYLON.Skeleton("stickmanSkeleton", "skeleton", scene);
+
+            // Add bones (for simplicity, one bone per limb)
+            var rootBone = new BABYLON.Bone("root", skeleton, null, BABYLON.Matrix.Identity());
+            var headBone = new BABYLON.Bone("headBone", skeleton, rootBone);
+            var torsoBone = new BABYLON.Bone("torsoBone", skeleton, rootBone);
+            var upperArmLBone = new BABYLON.Bone("upperArmLBone", skeleton, torsoBone);
+            var upperArmRBone = new BABYLON.Bone("upperArmRBone", skeleton, torsoBone);
+            var lowerArmLBone = new BABYLON.Bone("lowerArmLBone", skeleton, upperArmLBone);
+            var lowerArmRBone = new BABYLON.Bone("lowerArmRBone", skeleton, upperArmRBone);
+            var upperLegLBone = new BABYLON.Bone("upperLegLBone", skeleton, torsoBone);
+            var upperLegRBone = new BABYLON.Bone("upperLegRBone", skeleton, torsoBone);
+            var lowerLegLBone = new BABYLON.Bone("lowerLegLBone", skeleton, upperLegLBone);
+            var lowerLegRBone = new BABYLON.Bone("lowerLegRBone", skeleton, upperLegRBone);
+
+            // Assign skeleton to the stickman
+            torso.skeleton = skeleton;
+
+            // Add some basic animation (e.g., rotation for the upper arms)
+            scene.beginAnimation(skeleton, 0, 100, true);
+
+            return scene;
+        };
+
+        var scene = createScene();
+
+        engine.runRenderLoop(function () {
+            scene.render();
+        });
+
+        window.addEventListener("resize", function () {
+            engine.resize();
+        });
+
+        // Function to export as GLB
+        function exportToGLB() {
+            BABYLON.GLTF2Export.GLBAsync(scene, "stickman.glb").then((glb) => {
+                glb.downloadFiles();
+            });
+        }
+
+        // Call export when ready (you can trigger this with a button or automatically after the scene loads)
+        window.setTimeout(exportToGLB, 3000);
+    </script>
+</body>
+</html>
