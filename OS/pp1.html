@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dining Philosophers Illustration</title>
+    <script src="https://cdn.jsdelivr.net/npm/konva@8.3.9/konva.min.js"></script>
+    <style>
+        body { margin: 0; padding: 0; }
+        canvas { border: 1px solid black; display: block; margin: auto; }
+    </style>
+</head>
+<body>
+
+<div id="container"></div>
+
+<script>
+    var width = window.innerWidth;
+    var height = window.innerHeight;
+
+    // Stage creation
+    var stage = new Konva.Stage({
+        container: 'container',
+        width: width,
+        height: height
+    });
+
+    // Layer for shapes
+    var layer = new Konva.Layer();
+    stage.add(layer);
+
+    // Table (circle in the center)
+    var table = new Konva.Circle({
+        x: width / 2,
+        y: height / 2,
+        radius: 150,
+        fill: 'brown',
+        stroke: 'black',
+        strokeWidth: 4
+    });
+    layer.add(table);
+
+    // Philosophers (represented as circles around the table)
+    var philosophers = [];
+    var philosopherNames = ['A', 'B', 'C', 'D', 'E'];
+    var radius = 200;
+    
+    for (var i = 0; i < 5; i++) {
+        var angle = (i * 2 * Math.PI) / 5;
+        var x = width / 2 + radius * Math.cos(angle);
+        var y = height / 2 + radius * Math.sin(angle);
+
+        // Philosopher
+        var philosopher = new Konva.Circle({
+            x: x,
+            y: y,
+            radius: 30,
+            fill: 'lightblue',
+            stroke: 'black',
+            strokeWidth: 2
+        });
+
+        // Label for each philosopher
+        var text = new Konva.Text({
+            x: x - 10,
+            y: y - 10,
+            text: philosopherNames[i],
+            fontSize: 18,
+            fontFamily: 'Calibri',
+            fill: 'black'
+        });
+
+        philosophers.push(philosopher);
+        layer.add(philosopher);
+        layer.add(text);
+    }
+
+    // Chopsticks (represented as rectangles)
+    var chopsticks = [];
+    for (var i = 0; i < 5; i++) {
+        var angle = (i * 2 * Math.PI) / 5 - Math.PI / 5;
+        var x = width / 2 + (radius - 60) * Math.cos(angle);
+        var y = height / 2 + (radius - 60) * Math.sin(angle);
+
+        var chopstick = new Konva.Rect({
+            x: x,
+            y: y,
+            width: 10,
+            height: 100,
+            fill: 'yellow',
+            stroke: 'black',
+            strokeWidth: 2,
+            offsetX: 5,
+            offsetY: 50,
+            rotation: (angle * 180 / Math.PI) + 90,
+        });
+
+        chopsticks.push(chopstick);
+        layer.add(chopstick);
+    }
+
+    // Simulating philosopher actions
+    function pickUpChopsticks(philosopherIndex) {
+        var left = chopsticks[philosopherIndex];
+        var right = chopsticks[(philosopherIndex + 1) % 5];
+
+        left.fill('green');
+        right.fill('green');
+        layer.draw();
+    }
+
+    function putDownChopsticks(philosopherIndex) {
+        var left = chopsticks[philosopherIndex];
+        var right = chopsticks[(philosopherIndex + 1) % 5];
+
+        left.fill('yellow');
+        right.fill('yellow');
+        layer.draw();
+    }
+
+    function simulate() {
+        var philosopherIndex = Math.floor(Math.random() * 5);
+
+        pickUpChopsticks(philosopherIndex);
+        setTimeout(() => putDownChopsticks(philosopherIndex), 1000);
+    }
+
+    // Run simulation every 2 seconds
+    setInterval(simulate, 2000);
+
+    // Render initial state
+    layer.draw();
+</script>
+
+</body>
+</html>
