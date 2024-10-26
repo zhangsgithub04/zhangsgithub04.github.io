@@ -21,7 +21,7 @@
             var light = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(0, 1, 0), scene);
 
             // Load the 3D model (using .babylon file in this case)
-            BABYLON.SceneLoader.ImportMesh("", "path/to/your/model/", "model.babylon", scene, function (meshes, particleSystems, skeletons) {
+            BABYLON.SceneLoader.ImportMesh("", "./", "fighter.babylon", scene, function (meshes, particleSystems, skeletons) {
                 var character = meshes[0]; // Assuming the first mesh is the character
                 var skeleton = skeletons[0]; // The skeleton with animations
                 
