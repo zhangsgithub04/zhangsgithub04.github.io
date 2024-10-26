@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Moving Arrow on Canvas</title>
+    <style>
+        canvas {
+            border: 1px solid black;
+            background-color: #f0f0f0; /* Light background for better visibility */
+        }
+    </style>
+</head>
+<body>
+    <canvas id="myCanvas" width="800" height="600"></canvas>
+    <script>
+        const canvas = document.getElementById('myCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let startX = 100;
+        let startY = 100;
+        let endX = 300;
+        let endY = 300;
+
+        // Function to draw an arrow
+        function drawArrow(startX, startY, endX, endY) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
+
+            // Draw the line (shaft of the arrow)
+            ctx.beginPath();
+            ctx.moveTo(startX, startY);
+            ctx.lineTo(endX, endY);
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = 'black';
+            ctx.stroke();
+
+            // Calculate angle for the arrowhead
+            const angle = Math.atan2(endY - startY, endX - startX);
+            const arrowLength = 10;
+            const arrowWidth = 5;
+
+            // Draw the arrowhead
+            ctx.beginPath();
+            ctx.moveTo(endX, endY);
+            ctx.lineTo(endX - arrowLength * Math.cos(angle - Math.PI / 6), endY - arrowLength * Math.sin(angle - Math.PI / 6));
+            ctx.moveTo(endX, endY);
+            ctx.lineTo(endX - arrowLength * Math.cos(angle + Math.PI / 6), endY - arrowLength * Math.sin(angle + Math.PI / 6));
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = 'black';
+            ctx.stroke();
+        }
+
+        // Function to update the arrow's end position
+        function update() {
+            endX += 2; // Move right
+            endY += 1; // Move down
+
+            // Draw the arrow at the new position
+            drawArrow(startX, startY, endX, endY);
+
+            // Request the next animation frame
+            requestAnimationFrame(update);
+        }
+
+        // Start the animation
+        update();
+    </script>
+</body>
+</html>
