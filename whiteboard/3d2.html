@@ -1,0 +1,69 @@
+Here's the combined HTML file with the JavaScript code included:
+HTML
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>3D WebAR FP Shooter Game</title>
+  <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
+  <script src="https://jeromeetienne.github.io/AR.js/aframe/build/aframe-ar.js"></script>
+  <script src="https://playcanvas.com/playcanvas-stable.min.js"></script>
+</head>
+<body>
+  <a-scene embedded arjs renderer playsinline>
+    <!-- Your 3D scene goes here -->
+    <a-entity id="gun" geometry="primitive: box; width: 0.1; height: 0.1; depth: 0.5" material="color: #666" position="0 0 -0.5"></a-entity>
+    <a-entity id="enemies" geometry="primitive: box; width: 0.1; height: 0.1; depth: 0.5" material="color: #f00" position="0 0 -1"></a-entity>
+  </a-scene>
+
+  <script>
+    AFRAME.registerComponent('game-logic', {
+      init: function () {
+        // Initialize game state
+        this.score = 0;
+        this.enemies = [];
+      },
+      tick: function () {
+        // Update game state
+        this.updateEnemies();
+        this.checkCollisions();
+      },
+      shoot: function () {
+        // Handle shooting mechanic
+        var bullet = document.createElement('a-entity');
+        bullet.setAttribute('geometry', 'primitive: sphere; radius: 0.05');
+        bullet.setAttribute('material', 'color: #0f0');
+        bullet.setAttribute('position', '0 0 -0.5');
+        this.el.appendChild(bullet);
+      },
+      updateEnemies: function () {
+        // Update enemy positions
+        this.enemies.forEach(function (enemy) {
+          enemy.setAttribute('position', '0 0 ' + (Math.random() * 2 - 1));
+        });
+      },
+      checkCollisions: function () {
+        // Check for collisions between bullets and enemies
+        var bullets = this.el.querySelectorAll('a-entity[geometry="primitive: sphere"]');
+        var enemies = this.el.querySelectorAll('a-entity#enemies');
+        bullets.forEach(function (bullet) {
+          enemies.forEach(function (enemy) {
+            if (bullet.getAttribute('position').distanceTo(enemy.getAttribute('position')) < 0.1) {
+              // Collision detected, update score and remove enemy
+              this.score++;
+              enemy.parentNode.removeChild(enemy);
+            }
+          });
+        });
+      }
+    });
+
+    // Initialize game logic
+    document.querySelector('a-scene').addEventListener('loaded', function () {
+      this.components['game-logic'].init();
+    });
+  </script>
+</body>
+</html>
+Just copy and paste this code into a new HTML file, and you're good to go!
