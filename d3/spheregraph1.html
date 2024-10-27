@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sphere Graph Visualization</title>
+    <script src="https://d3js.org/d3.v6.min.js"></script>
+    <style>
+        svg {
+            background-color: #333;
+        }
+        .node {
+            fill: steelblue;
+            stroke: #fff;
+            stroke-width: 1.5px;
+        }
+    </style>
+</head>
+<body>
+    <svg width="600" height="600"></svg>
+
+    <script>
+        // Set up SVG and dimensions
+        const width = 600;
+        const height = 600;
+        const svg = d3.select("svg")
+                      .attr("width", width)
+                      .attr("height", height);
+
+        // Parameters for the sphere
+        const numNodes = 100;
+        const radius = 250;
+
+        // Create nodes with spherical coordinates
+        const nodes = d3.range(numNodes).map((i) => {
+            const theta = Math.acos(1 - 2 * (i + 0.5) / numNodes); // Longitude
+            const phi = Math.PI * (1 + Math.sqrt(5)) * i;           // Latitude
+
+            return {
+                x: radius * Math.sin(theta) * Math.cos(phi) + width / 2,
+                y: radius * Math.sin(theta) * Math.sin(phi) + height / 2
+            };
+        });
+
+        // Create and append nodes
+        svg.selectAll("circle")
+            .data(nodes)
+            .enter().append("circle")
+            .attr("class", "node")
+            .attr("r", 5)
+            .attr("cx", d => d.x)
+            .attr("cy", d => d.y);
+
+    </script>
+</body>
+</html>
