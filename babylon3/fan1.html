@@ -1,0 +1,312 @@
+var createScene = function () {
+
+    // This creates a basic Babylon Scene object (non-mesh)
+    var scene = new BABYLON.Scene(engine);
+    scene.createDefaultEnvironment({
+        createGround: false,
+        createSkybox: false,
+    });
+    // This creates and positions a free camera (non-mesh)
+    var camera = new BABYLON.FreeCamera("camera1", new BABYLON.Vector3(0, 10, -15), scene);
+    //Controls  wasd
+    camera.keysUp.push(87);
+    camera.keysDown.push(83);
+    camera.keysRight.push(68);
+    camera.keysLeft.push(65);
+    // This targets the camera to scene origin
+    camera.setTarget(new BABYLON.Vector3(0, 6, 0));
+w
+    camera.speed = 1;
+
+    // This attaches the camera to the canvas
+    camera.attachControl(canvas, true);
+
+    // This creates a light, aiming 0,1,0 - to the sky (non-mesh)
+    var light0 = new BABYLON.HemisphericLight("HemisphericLight", new BABYLON.Vector3(0, 1, 0), scene);
+
+    // Default intensity is 1. Let's dim the light a small amount
+    light0.intensity = 0.2;
+
+    var light = new BABYLON.DirectionalLight("DirectionalLight", new BABYLON.Vector3(0.9, -0.8, 0.4), scene);
+    light.position = new BABYLON.Vector3(-22, 22, 10);
+    light.shadowMaxZ = 100;
+    light.shadowMinZ = 10;
+    //  var hdrTexture = new BABYLON.CubeTexture("textures/Runyon_Canyon_A_2k_cube_specular.env", scene);
+    //scene.hdrTexture =  hdrTexture ;
+    light.specular = new BABYLON.Color3(0.7, .2, 0.1);
+    scene.createDefaultEnvironment({
+        createGround: false,
+        createSkybox: false,
+    });
+
+
+    var lightSphere = BABYLON.Mesh.CreateSphere("sphere", 10, 2, scene);
+    lightSphere.position = light.position;
+    lightSphere.material = new BABYLON.StandardMaterial("light", scene);
+    lightSphere.material.emissiveColor = new BABYLON.Color3(1, 0.5, 0);
+
+    // Shadows
+    var shadowGenerator = new BABYLON.ShadowGenerator(1024, light);
+
+    shadowGenerator.useBlurExponentialShadowMap = true;
+    shadowGenerator.useKernelBlur = true;
+    shadowGenerator.blurKernel = 16;
+    shadowGenerator.depthScale = 1;
+    shadowGenerator.bias = 0.0034;
+    shadowGenerator.normalBias = 0.01;
+    contactHardeningLightSizeUVRatio = 0.08;
+
+    // Our built-in 'ground' shape.
+    var ground = BABYLON.Mesh.CreateGroundFromHeightMap("ground",
+        "textures/heightMap.png", 30, 30, 30, 0, 2, scene, false);
+    ground.position.y = 0.01;
+    var groundMaterial = new BABYLON.StandardMaterial("texture1", scene);
+    //   groundMaterial.diffuseColor = new BABYLON.Color3(0.3, 0.3, 0.5);
+    groundMaterial.diffuseTexture = new BABYLON.Texture("textures/sand.jpg", scene);
+    groundMaterial.diffuseTexture.uScale = 3;
+    groundMaterial.diffuseTexture.vScale = 3;
+    ground.material = groundMaterial;
+    ground.receiveShadows = true;
+
+    /*
+        // Fire material
+        var fireMaterial = new BABYLON.FireMaterial("fire", scene);
+        fireMaterial.diffuseTexture = new BABYLON.Texture("https://www.babylonjs.com/assets/fire/diffuse.png", scene);
+        fireMaterial.distortionTexture = new BABYLON.Texture("https://www.babylonjs.com/assets/fire/distortion.png", scene);
+        fireMaterial.opacityTexture = new BABYLON.Texture("https://www.babylonjs.com/assets/fire/opacity.png", scene);
+        fireMaterial.opacityTexture.level = 0.5;
+        fireMaterial.speed = 5.0;
+    
+        // Create the fire plane (billboarded on Y)
+        plane = BABYLON.Mesh.CreatePlane("firePlane", 1.5, scene);
+        plane.position = new BABYLON.Vector3(-5, 1, -2.5);
+        plane.scaling.x = 0.45;
+        plane.scaling.y = 0.3;
+        plane.billboardMode = BABYLON.Mesh.BILLBOARDMODE_Y;
+        plane.material = fireMaterial;
+    
+    */
+
+    BABYLON.SceneLoader.ImportMesh("", "https://raw.githubusercontent.com/eldinor/ForBJS/master/", "watchtower.glb", scene, function (tower) {
+        var myTower = scene.getMeshByID("watchtowerHigh");
+        shadowGenerator.getShadowMap().renderList.push(myTower);
+        myTower.receiveShadows = true;
+        scene.getMeshByID("watchtowerHigh").receiveShadows = true;
+        scene.getMeshByID("watchtowerHigh").visibility = 1;
+        this.notshowInside = function () { scene.getMeshByID("watchtowerHigh").visibility = 1; }
+        this.showInside = function () { scene.getMeshByID("watchtowerHigh").visibility = 0.65; }
+
+        // DUDE Import
+        var Dude;
+        var skeleton;
+        BABYLON.SceneLoader.ImportMesh("", "scenes/Dude/", "Dude.babylon", scene, function (dudes, particleSystems, skeletons) {
+            Dude = dudes[0];
+            //Dude.rotation.y = Math.PI;
+            Dude.scaling = new BABYLON.Vector3(0.01, 0.01, 0.01)
+            Dude.position.y = 6;
+            Dude.position.z = -0.9;
+            Dude.position.x = -0.3;
+
+
+            scene.beginAnimation(skeletons[0], 0, 100, true, 1.0);
+            var counterDude = 0;
+            scene.registerBeforeRender(function () {
+                Dude.rotation.y += 0.01;
+                Dude.position.x += Math.sin(counterDude) / 500;
+                //   plane.scaling.y += Math.sin(counterDude) / 300;
+                //    plane.scaling.x += Math.sin(counterDude) / 500;
+                counterDude += 0.005;
+            });
+
+
+            //setInterval(function(){ scene.beginAnimation(skeletons[0], 90, 10, true, 1.0);},6000);
+
+
+            var fan;
+            BABYLON.SceneLoader.ImportMesh("","https://models.babylonjs.com/vintageDeskFan/","vintageFan_animated.gltf", scene, function (vintagefan) {
+                // fan = scene.getMeshByID("__root__");
+                fan = vintagefan[0];
+                console.log(fan);
+                fan.position = new BABYLON.Vector3(0.5, 7.7, 0.2);
+                fan.scaling = new BABYLON.Vector3(0.05, 0.05, 0.05);
+                scene.getMeshByID("fanHead_low").rotation.z = Math.PI / 2;
+                fanRunning = scene.getAnimationGroupByName("startFan");
+                fanRunning.speedRatio = 1;
+                this.goFan = function () {
+                    var rt;
+                    setTimeout(function (rt) { fanRunning.speedRatio = 1; }, 2000);
+                    fanRunning.speedRatio = 3;
+                }
+                //scene.getMaterialByID("vintageFanMat").diffuseTexture.uScale = -1;
+                //  TODO: MAKE CYCLE LATER
+                shadowGenerator.getShadowMap().renderList.push(scene.getMeshByID("fanBase_low"));
+                shadowGenerator.getShadowMap().renderList.push(scene.getMeshByID("fanBlade_low"));
+                shadowGenerator.getShadowMap().renderList.push(scene.getMeshByID("fanHead_low"));
+
+
+                BABYLON.SceneLoader.ImportMesh("", "scenes/", "babylonJS_logo_v3.babylon", scene, function (meshes) {
+                    scene.getMeshByID("BJS-3D-logo_light.000").position = new BABYLON.Vector3(0, 1.5, 0);
+                    scene.getMeshByID("BJS-3D-logo_light.000").scaling = new BABYLON.Vector3(1.1, 1.1, 1.1);
+
+                    shadowGenerator.getShadowMap().renderList.push(scene.getMeshByID("BJS-3D-logo_light.000"));
+                    // Animations
+                    var alpha = 0;
+                    scene.registerBeforeRender(function () {
+
+                        scene.getMeshByID("BJS-3D-logo_light.000").position.y += Math.sin(alpha) / 40;
+                        scene.getMeshByID("BJS-3D-logo_light.000").rotation.y = alpha;
+                        scene.getMeshByID("BJS-3D-logo_light.000").rotation.z = alpha * 1.2;
+                        scene.getMeshByID("BJS-3D-logo_light.000").rotation.x = alpha * 0.5;
+                        alpha += 0.01;
+
+                        light.position.z += Math.sin(alpha) / 9;
+                        light.position.x -= Math.cos(alpha) / 9;
+                    });
+/*
+var rabbit;
+BABYLON.SceneLoader.ImportMesh("", "/scenes/", "Rabbit.babylon", scene, function (meshes, particleSystems, skeletons) {
+rabbit = meshes[0];
+rabbit.scaling = new BABYLON.Vector3(0.02, 0.02, 0.02);
+rabbit.position = new BABYLON.Vector3(-5, 1, -2);
+rabbit.rotation.y = Math.PI;
+
+shadowGenerator.getShadowMap().renderList.push(scene.getMeshByID("af1fbb3e-b9f6-4386-b057-f27ef14d9a29"));
+scene.beginAnimation(skeletons[0], 0, 72, true, 0.8);
+});
+*/
+
+
+                    createDustDevil = function (stopper) {
+                        // Fountain object
+                        var fountain = BABYLON.Mesh.CreateBox("foutain", 0.1, scene);
+                        fountain.position = new BABYLON.Vector3(0.33, 9.18, -0.2);
+
+                        // Create a particle system
+                        var particleSystem = new BABYLON.ParticleSystem("particles", 2000, scene);
+
+                        //Texture of each particle
+                        // particleSystem.particleTexture = new BABYLON.Texture("textures/flare.png", scene);
+
+                        particleSystem.particleTexture = new BABYLON.Texture("textures/fire.jpg", scene);
+
+
+                        // Where the particles come from
+                        particleSystem.emitter = fountain; // the starting object, the emitter
+                        particleSystem.minEmitBox = new BABYLON.Vector3(0, 0, 0); // Starting all from
+                        particleSystem.maxEmitBox = new BABYLON.Vector3(1, 0, 0); // To...
+
+                        // Colors of all particles
+                        particleSystem.color1 = new BABYLON.Color4(0.7, 0.8, 1.0, 1.0);
+                        particleSystem.color2 = new BABYLON.Color4(0.1, 0.1, 1.0, 1.0);
+                        particleSystem.colorDead = new BABYLON.Color4(0, 0, 0.2, 0.0);
+
+                        // Size of each particle (random between...
+                        particleSystem.minSize = 0.05;
+                        particleSystem.maxSize = 0.3;
+
+                        // Life time of each particle (random between...
+                        particleSystem.minLifeTime = 0.5;
+                        particleSystem.maxLifeTime = 5.5;
+
+                        // Emission rate
+                        particleSystem.emitRate = 1150;
+
+                        // Blend mode : BLENDMODE_ONEONE, or BLENDMODE_STANDARD
+                        particleSystem.blendMode = BABYLON.ParticleSystem.BLENDMODE_ONEONE;
+
+                        // Set the gravity of all particles
+                        particleSystem.gravity = new BABYLON.Vector3(0, -0.81, 0);
+
+                        // Direction of each particle after it has been emitted
+                        particleSystem.direction1 = new BABYLON.Vector3(2, -4, -12);
+                        particleSystem.direction2 = new BABYLON.Vector3(-2, -4, -16);
+
+                        // Angular speed, in radians
+                        particleSystem.minAngularSpeed = 0;
+                        particleSystem.maxAngularSpeed = Math.PI;
+
+                        // Speed
+                        particleSystem.minEmitPower = 1;
+                        particleSystem.maxEmitPower = .8;
+                        particleSystem.updateSpeed = 0.009;
+
+                        // Start the particle system
+                        particleSystem.start();
+                        setTimeout(function () { particleSystem.stop(); fountain.dispose(); }, 4000);
+
+
+                        /*
+                                // Fountain's animation
+                                var keys = [];
+                                var animation = new BABYLON.Animation("animation", "rotation.y", 30, BABYLON.Animation.ANIMATIONTYPE_FLOAT,
+                                    BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);
+                                // At the animation key 0, the value of scaling is "1"
+                                keys.push({
+                                    frame: 0,
+                                    value: 0
+                                });
+                        
+                                // At the animation key 50, the value of scaling is "0.2"
+                                keys.push({
+                                    frame: 50,
+                                    value: Math.PI * 1
+                                });
+                        
+                                // At the animation key 100, the value of scaling is "1"
+                                keys.push({
+                                    frame: 100,
+                                    value: 0
+                                });
+                        
+                                // Launch animation
+                                animation.setKeys(keys);
+                                fountain.animations.push(animation);
+                                // scene.beginAnimation(fountain, 0, 100, true);
+                        */
+                        var alpha = 0, beta = 0;
+                        scene.registerAfterRender(function () {
+                            alpha += 0.04;
+                            beta += 0.04;
+                            //    fountain.position = new BABYLON.Vector3(Math.cos(alpha) + Math.cos(beta) + 1, 1, Math.sin(alpha) + Math.sin(beta) + 1);
+                            fountain.rotation.z -= Math.sin(alpha);
+                        })
+
+                    }
+                    var spaceCounter = 0;
+                    function myalert() {
+                        alert("CONGRATULATIONS!!!\n " +
+                            "• You hit SPACE 25 times\n" +
+                            "You are real particle Jedi!\n"
+                                );
+                            
+                    }
+                    document.body.onkeyup = function (e) {
+
+                        if (e.keyCode == 32) {
+                            createDustDevil();
+                            goFan();
+                            spaceCounter = spaceCounter + 1;
+                            if (spaceCounter > 25) {
+                                myalert(); 
+                                spaceCounter = 0;
+
+                            }
+                        //   console.log(spaceCounter);
+                        }
+                        if (e.keyCode == 73) {
+                            notshowInside();
+                        }
+                    }
+
+                    document.body.onkeydown = function (e) {
+                        if (e.keyCode == 73) {
+                            showInside();
+                        }
+                    }
+                }); // logo loader
+            }); // fan loader
+        }); // dude loader
+    });  // tower loader
+
+    return scene;
+};
