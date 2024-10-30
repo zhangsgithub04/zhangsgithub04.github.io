@@ -34,7 +34,7 @@
           scene);
         light.intensity = 2;
         
-        BABYLON.SceneLoader.ImportMeshAsync(null, "path/to/rook.glb", scene).then((result) => {
+        BABYLON.SceneLoader.ImportMeshAsync(null, "rook.glb", scene).then((result) => {
             const mesh1 = result.meshes[0];
             mesh1.position = new BABYLON.Vector3(-2, 0, 0);
             mesh1.material = new BABYLON.StandardMaterial("material1", scene);
