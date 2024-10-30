@@ -45,7 +45,7 @@
         const scene = createScene();
 
         // Function to create and place a chess piece with correct pickability
-        const createPiece = (name, position) => {
+    /*    const createPiece = (name, position) => {
             BABYLON.SceneLoader.ImportMesh("", "./", `${name}.glb`, scene, (meshes) => {
                 const piece = meshes[0];
                 piece.position = position;
@@ -59,7 +59,29 @@
                 }));
             });
         };
+*/
 
+          // Function to create and place a chess piece with correct pickability
+        const createPiece = (name, position) => {
+            BABYLON.SceneLoader.ImportMesh("", "./", `${name}.glb`, scene, (meshes) => {
+                const piece = meshes[0];
+                piece.position = position;
+                piece.scaling = new BABYLON.Vector3(0.5, 0.5, 0.5);
+                piece.isPickable = true; 
+
+                piece.actionManager = new BABYLON.ActionManager(scene);
+                piece.actionManager.registerAction(
+                    new BABYLON.ExecuteCodeAction(
+                        BABYLON.ActionManager.OnPickTrigger,
+                        () => {
+                            selectedPiece = piece;
+                            console.log("Piece selected:", selectedPiece.name); 
+                        }
+                    )
+                );
+            });
+        };
+        
         // Place pieces with positions for each type
         const positions = {
             rook: [new BABYLON.Vector3(-3.5, 0.5, 3.5), new BABYLON.Vector3(3.5, 0.5, 3.5), new BABYLON.Vector3(-3.5, 0.5, -3.5), new BABYLON.Vector3(3.5, 0.5, -3.5)],
