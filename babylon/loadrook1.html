@@ -1,0 +1,81 @@
+Let's troubleshoot further:
+Additional Checks
+Verify GLB file existence and path.
+Check browser console for errors.
+Ensure canvas size is sufficient.
+Validate model scalability.
+Code Modifications
+Canvas Size
+HTML
+<canvas id="canvas" width="800" height="600"></canvas>
+Model Scaling
+JavaScript
+mesh1.scaling = new BABYLON.Vector3(0.5, 0.5, 0.5); // adjust scale
+mesh2.scaling = new BABYLON.Vector3(0.5, 0.5, 0.5); // adjust scale
+Camera Zoom
+JavaScript
+camera.radius = 5; // adjust zoom
+Lighting Intensity
+JavaScript
+light.intensity = 2; // adjust intensity
+Updated Code
+HTML
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Babylon.js GLB Import</title>
+    <style>
+        #canvas {
+            width: 800px;
+            height: 600px;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas" width="800" height="600"></canvas>
+    <script src="https://cdn.babylonjs.com/babylon.max.js"></script>
+    <script>
+        const canvas = document.getElementById("canvas");
+        const engine = new BABYLON.Engine(canvas);
+        const scene = new BABYLON.Scene(engine);
+        
+        const camera = new BABYLON.ArcRotateCamera("camera", 
+          Math.PI / 2, 
+          Math.PI / 4, 
+          5, 
+          BABYLON.Vector3.Zero(), 
+          scene);
+        camera.attachControl(canvas, true);
+        
+        const light = new BABYLON.HemisphericLight("light", 
+          new BABYLON.Vector3(0, 1, 0), 
+          scene);
+        light.intensity = 2;
+        
+        BABYLON.SceneLoader.ImportMeshAsync(null, "path/to/rook.glb", scene).then((result) => {
+            const mesh1 = result.meshes[0];
+            mesh1.position = new BABYLON.Vector3(-2, 0, 0);
+            mesh1.material = new BABYLON.StandardMaterial("material1", scene);
+            mesh1.material.diffuseColor = new BABYLON.Color3(1, 0, 0);
+            mesh1.scaling = new BABYLON.Vector3(0.5, 0.5, 0.5);
+            
+            const mesh2 = mesh1.clone("rook2");
+            mesh2.position = new BABYLON.Vector3(2, 0, 0);
+            mesh2.material = new BABYLON.StandardMaterial("material2", scene);
+            mesh2.material.diffuseColor = new BABYLON.Color3(1, 1, 0);
+            mesh2.scaling = new BABYLON.Vector3(0.5, 0.5, 0.5);
+        });
+        
+        engine.runRenderLoop(() => {
+            scene.render();
+        });
+    </script>
+</body>
+</html>
+If issues persist, please:
+Share your GLB file.
+Provide browser console errors (if any).
+Describe your environment (OS, browser).
