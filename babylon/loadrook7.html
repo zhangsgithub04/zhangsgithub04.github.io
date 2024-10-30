@@ -24,7 +24,7 @@
         var scene = new BABYLON.Scene(engine);
 
         // Load glb model
-        BABYLON.SceneLoader.ImportMeshAsync(null, "models/", "rook.glb", scene).then((result) => {
+        BABYLON.SceneLoader.ImportMeshAsync(null, "./", "rookb.glb", scene).then((result) => {
             var rook = result.meshes[0];
             rook.position = new BABYLON.Vector3(0, 0, 0);
             rook.scaling = new BABYLON.Vector3(1, 1, 1);
