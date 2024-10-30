@@ -26,6 +26,7 @@
             const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(1, 1, 0));
 
             BABYLON.SceneLoader.ImportMeshAsync("", "https://assets.babylonjs.com/meshes/", "village.glb");
+            alert("passing import...");
             
             const walk = function (turn, dist) {
                 this.turn = turn;
