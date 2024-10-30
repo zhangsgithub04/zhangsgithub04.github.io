@@ -1,25 +1,4 @@
-Let's troubleshoot further:
-Additional Checks
-Verify GLB file existence and path.
-Check browser console for errors.
-Ensure canvas size is sufficient.
-Validate model scalability.
-Code Modifications
-Canvas Size
-HTML
-<canvas id="canvas" width="800" height="600"></canvas>
-Model Scaling
-JavaScript
-mesh1.scaling = new BABYLON.Vector3(0.5, 0.5, 0.5); // adjust scale
-mesh2.scaling = new BABYLON.Vector3(0.5, 0.5, 0.5); // adjust scale
-Camera Zoom
-JavaScript
-camera.radius = 5; // adjust zoom
-Lighting Intensity
-JavaScript
-light.intensity = 2; // adjust intensity
-Updated Code
-HTML
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -75,7 +54,3 @@ HTML
     </script>
 </body>
 </html>
-If issues persist, please:
-Share your GLB file.
-Provide browser console errors (if any).
-Describe your environment (OS, browser).
