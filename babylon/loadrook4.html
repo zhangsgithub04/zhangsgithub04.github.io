@@ -1,0 +1,85 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Babylon.js GLB Import</title>
+    <style>
+        #canvas {
+            width: 800px;
+            height: 600px;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas" width="800" height="600"></canvas>
+    <script src="https://cdn.babylonjs.com/babylon.max.js"></script>
+    <script>
+        const canvas = document.getElementById("canvas");
+        const engine = new BABYLON.Engine(canvas);
+        const scene = new BABYLON.Scene(engine);
+        
+        const camera = new BABYLON.ArcRotateCamera("camera", 
+          Math.PI / 2, 
+          Math.PI / 4, 
+          5, 
+          BABYLON.Vector3.Zero(), 
+          scene);
+        camera.attachControl(canvas, true);
+        
+        const light = new BABYLON.HemisphericLight("light", 
+          new BABYLON.Vector3(0, 1, 0), 
+          scene);
+        light.intensity = 2;
+        
+        BABYLON.SceneLoader.ImportMeshAsync(null, "./rook.glb", scene).then((result) => {
+            const mesh1 = result.meshes[0];
+            mesh1.position = new BABYLON.Vector3(-2, 0, 0);
+            mesh1.material = new BABYLON.StandardMaterial("material1", scene);
+            mesh1.material.diffuseColor = new BABYLON.Color3(1, 0, 0); // Red color
+            
+            const mesh2 = mesh1.clone("rook2");
+            mesh2.position = new BABYLON.Vector3(2, 0, 0);
+            mesh2.material = new BABYLON.StandardMaterial("material2", scene);
+            mesh2.material.diffuseColor = new BABYLON.Color3(0, 0, 1); // Blue color
+            
+            // Create a new material for the backface
+            const backfaceMaterial = new BABYLON.StandardMaterial("backfaceMaterial", scene);
+            backfaceMaterial.diffuseColor = new BABYLON.Color3(0, 1, 0); // Green color
+            
+            // Assign the backface material to the mesh2
+            mesh2.renderingGroupId = 1;
+            scene.customRenderTargets.push(
+              new BABYLON.CustomRenderTargets(
+                {
+                  name: "backface",
+                  renderTarget: new BABYLON.RenderTargetTexture(
+                    "backfaceRTT",
+                    { width: canvas.width, height: canvas.height },
+                    scene,
+                    false
+                  ),
+                  cameras: [camera],
+                  clear: true,
+                  ignoreCameraViewport: false,
+                },
+                () => {
+                  scene.render();
+                  backfaceMaterial.render(
+                    mesh2,
+                    camera,
+                    scene.getEngine().getRenderingCanvas()
+                  );
+                }
+              )
+            );
+        });
+        
+        engine.runRenderLoop(() => {
+            scene.render();
+        });
+    </script>
+</body>
+</html>
