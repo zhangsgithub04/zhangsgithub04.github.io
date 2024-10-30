@@ -1,0 +1,65 @@
+Here's the updated code with camera positioning, lighting, and model scaling adjustments:
+HTML
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Babylon.js GLB Import</title>
+    <style>
+        #canvas {
+            width: 100%;
+            height: 100vh;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    <script src="https://cdn.babylonjs.com/babylon.max.js"></script>
+    <script>
+        const canvas = document.getElementById("canvas");
+        const engine = new BABYLON.Engine(canvas);
+        const scene = new BABYLON.Scene(engine);
+        
+        // Camera positioning
+        const camera = new BABYLON.ArcRotateCamera("camera", 
+          Math.PI / 2, // alpha 
+          Math.PI / 4, // beta 
+          10, // radius 
+          BABYLON.Vector3.Zero(), 
+          scene);
+        camera.attachControl(canvas, true);
+        
+        // Lighting
+        const light = new BABYLON.HemisphericLight("light", 
+          new BABYLON.Vector3(0, 1, 0), // direction 
+          scene);
+        light.intensity = 1; // adjust intensity
+        
+        BABYLON.SceneLoader.ImportMeshAsync(null, "path/to/rook.glb", scene).then((result) => {
+            const mesh1 = result.meshes[0];
+            mesh1.position = new BABYLON.Vector3(-2, 0, 0); // Move left
+            mesh1.material = new BABYLON.StandardMaterial("material1", scene);
+            mesh1.material.diffuseColor = new BABYLON.Color3(1, 0, 0); // Red color
+            mesh1.scaling = new BABYLON.Vector3(1, 1, 1); // adjust scale
+            
+            const mesh2 = mesh1.clone("rook2"); // Clone mesh
+            mesh2.position = new BABYLON.Vector3(2, 0, 0); // Move right
+            mesh2.material = new BABYLON.StandardMaterial("material2", scene);
+            mesh2.material.diffuseColor = new BABYLON.Color3(1, 1, 0); // Yellow color
+            mesh2.scaling = new BABYLON.Vector3(1, 1, 1); // adjust scale
+        });
+        
+        engine.runRenderLoop(() => {
+            scene.render();
+        });
+    </script>
+</body>
+</html>
+Important Notes:
+Replace "path/to/rook.glb" with the actual path to your GLB file.
+Ensure Babylon.js scripts are loaded from the official CDN or your local files.
+Additional Features:
+Experiment with different camera controls and lighting setups.
+Explore Babylon.js's extensive features for advanced 3D scenarios.
