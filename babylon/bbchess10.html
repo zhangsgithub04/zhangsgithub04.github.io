@@ -86,7 +86,7 @@
         // Load pieces with material based on side
         for (const piece in positions) {
             positions[piece].forEach((pos, index) => {
-                const isLightSide = pos.z > 0; // Light side for pieces on positive z positions
+                const isLightSide = pos.z < 0; // Light side for pieces on positive z positions
                 createPiece(piece, pos, isLightSide);
             });
         }
