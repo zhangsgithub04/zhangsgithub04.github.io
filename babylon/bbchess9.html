@@ -44,13 +44,21 @@
 
         const scene = createScene();
 
-        // Function to create and place a chess piece with correct pickability
-    /*    const createPiece = (name, position) => {
+        // Define materials for light and dark pieces
+        const lightMaterial = new BABYLON.StandardMaterial("lightMaterial", scene);
+        lightMaterial.diffuseColor = new BABYLON.Color3(1, 0.8, 0.6); // Light color for one side
+
+        const darkMaterial = new BABYLON.StandardMaterial("darkMaterial", scene);
+        darkMaterial.diffuseColor = new BABYLON.Color3(0.3, 0.3, 0.3); // Dark color for the other side
+
+        // Function to create and place a chess piece with correct pickability and material
+        const createPiece = (name, position, isLightSide) => {
             BABYLON.SceneLoader.ImportMesh("", "./", `${name}.glb`, scene, (meshes) => {
                 const piece = meshes[0];
                 piece.position = position;
                 piece.scaling = new BABYLON.Vector3(0.5, 0.5, 0.5);
                 piece.isPickable = true; // Ensure piece is pickable
+                piece.material = isLightSide ? lightMaterial : darkMaterial; // Set material based on side
 
                 piece.actionManager = new BABYLON.ActionManager(scene);
                 piece.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnPickTrigger, () => {
@@ -59,30 +67,8 @@
                 }));
             });
         };
-*/
 
-          // Function to create and place a chess piece with correct pickability
-        const createPiece = (name, position) => {
-            BABYLON.SceneLoader.ImportMesh("", "./", `${name}.glb`, scene, (meshes) => {
-                const piece = meshes[0];
-                piece.position = position;
-                piece.scaling = new BABYLON.Vector3(0.5, 0.5, 0.5);
-                piece.isPickable = true; 
-
-                piece.actionManager = new BABYLON.ActionManager(scene);
-                piece.actionManager.registerAction(
-                    new BABYLON.ExecuteCodeAction(
-                        BABYLON.ActionManager.OnPickTrigger,
-                        () => {
-                            selectedPiece = piece;
-                            console.log("Piece selected:", selectedPiece.name); 
-                        }
-                    )
-                );
-            });
-        };
-        
-        // Place pieces with positions for each type
+        // Define positions and sides for pieces
         const positions = {
             rook: [new BABYLON.Vector3(-3.5, 0.5, 3.5), new BABYLON.Vector3(3.5, 0.5, 3.5), new BABYLON.Vector3(-3.5, 0.5, -3.5), new BABYLON.Vector3(3.5, 0.5, -3.5)],
             knight: [new BABYLON.Vector3(-2.5, 0.5, 3.5), new BABYLON.Vector3(2.5, 0.5, 3.5), new BABYLON.Vector3(-2.5, 0.5, -3.5), new BABYLON.Vector3(2.5, 0.5, -3.5)],
@@ -97,10 +83,11 @@
             ]
         };
 
-        // Load pieces
+        // Load pieces with material based on side
         for (const piece in positions) {
-            positions[piece].forEach((pos) => {
-                createPiece(piece, pos);
+            positions[piece].forEach((pos, index) => {
+                const isLightSide = pos.z > 0; // Light side for pieces on positive z positions
+                createPiece(piece, pos, isLightSide);
             });
         }
 
