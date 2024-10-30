@@ -23,7 +23,7 @@
         camera.attachControl(canvas, true);
         const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
 
-        BABYLON.SceneLoader.ImportMeshAsync(null, "./rook.glb", scene).then((result) => {
+        BABYLON.SceneLoader.ImportMeshAsync(null, "rook.glb", scene).then((result) => {
             const mesh1 = result.meshes[0];
             mesh1.position = new BABYLON.Vector3(-2, 0, 0); // Move left
             mesh1.material = new BABYLON.StandardMaterial("material1", scene);
