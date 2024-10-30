@@ -1,0 +1,48 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Babylon.js Rook GLB Loader</title>
+    <style>
+        #canvas {
+            width: 800px;
+            height: 600px;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas" width="800" height="600"></canvas>
+    <script src="https://cdn.babylonjs.com/babylon.max.js"></script>
+    <script>
+        const canvas = document.getElementById("canvas");
+        const engine = new BABYLON.Engine(canvas);
+        const scene = new BABYLON.Scene(engine);
+        
+        const camera = new BABYLON.ArcRotateCamera("camera", 
+          Math.PI / 2, 
+          Math.PI / 4, 
+          5, 
+          BABYLON.Vector3.Zero(), 
+          scene);
+        camera.attachControl(canvas, true);
+        
+        const light = new BABYLON.HemisphericLight("light", 
+          new BABYLON.Vector3(0, 1, 0), 
+          scene);
+        light.intensity = 1;
+        
+        BABYLON.SceneLoader.ImportMeshAsync(null, "./rook.glb", scene).then((result) => {
+            const mesh = result.meshes[0];
+            mesh.position = new BABYLON.Vector3(0, 0, 0);
+            mesh.rotation = new BABYLON.Vector3(0, Math.PI / 2, 0);
+            mesh.scaling = new BABYLON.Vector3(1, 1, 1);
+        });
+        
+        engine.runRenderLoop(() => {
+            scene.render();
+        });
+    </script>
+</body>
