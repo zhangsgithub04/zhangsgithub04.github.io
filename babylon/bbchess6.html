@@ -38,6 +38,7 @@
                 }
             }
 
+            scene.pickWithRay() ; // enable a more accurate picking approach for more precise raycasting.
             return scene;
         };
 
@@ -55,6 +56,7 @@
                 }));
             });
         };
+        
 
         const lightColor = new BABYLON.Color3(1, 1, 1);
         const darkColor = new BABYLON.Color3(0, 0, 0);
