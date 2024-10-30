@@ -1,0 +1,54 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Chess Rook</title>
+    <script src="https://cdn.babylonjs.com/babylon.max.js"></script>
+    <style>
+        #canvas {
+            width: 100%;
+            height: 100vh;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    <script>
+        // Create engine and canvas
+        var canvas = document.getElementById("canvas");
+        var engine = new BABYLON.Engine(canvas, true);
+
+        // Create scene
+        var scene = new BABYLON.Scene(engine);
+
+        // Load glb model
+        BABYLON.SceneLoader.ImportMeshAsync(null, "models/", "rook.glb", scene).then((result) => {
+            var rook = result.meshes[0];
+            rook.position = new BABYLON.Vector3(0, 0, 0);
+            rook.scaling = new BABYLON.Vector3(1, 1, 1);
+
+            // Create yellow material
+            var yellowMaterial = new BABYLON.StandardMaterial("yellowMaterial", scene);
+            yellowMaterial.diffuseColor = new BABYLON.Color3(1, 1, 0); // Yellow
+
+            // Apply material to rook
+            rook.material = yellowMaterial;
+        });
+
+        // Create light
+        var light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
+        light.intensity = 0.7;
+
+        // Create camera
+        var camera = new BABYLON.ArcRotateCamera("camera", 1, 0.8, 5, new BABYLON.Vector3(0, 0, 0), scene);
+        camera.attachControl(canvas, true);
+
+        // Render scene
+        engine.runRenderLoop(() => {
+            scene.render();
+        });
+    </script>
+</body>
+</html>
