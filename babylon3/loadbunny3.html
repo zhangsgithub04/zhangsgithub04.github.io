@@ -41,8 +41,8 @@
             colors.forEach((color, index) => {
                 BABYLON.SceneLoader.ImportMesh(
                     "",                        // No name filter; load all meshes
-                    "path/to/your/model/",     // Path to the folder with .obj and .mtl
-                    "bunny.obj",               // OBJ file name
+                    "./",     // Path to the folder with .obj and .mtl
+                    "StandfordBunny.obj",               // OBJ file name
                     scene,                     // The scene to import into
                     function (meshes) {        // Callback once loaded
                         // Position and color each bunny
