@@ -26,7 +26,7 @@
 
             // Add a simple light
             const light = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(0, 1, 0), scene);
-            light.intensity = 0.7;
+            light.intensity = 0.8;
 
             // Load the OBJ model twice with different positions and materials
             const loadModel = (position, color) => {
@@ -54,8 +54,8 @@
             };
 
             // Load the model twice at different positions with different colors
-            loadModel(new BABYLON.Vector3(-5, 0, 0), new BABYLON.Color3(1, 0, 0));  // Red model
-            loadModel(new BABYLON.Vector3(5, 0, 0), new BABYLON.Color3(0, 0, 1));   // Blue model
+            loadModel(new BABYLON.Vector3(-1, 0, 0), new BABYLON.Color3(1, 0, 0));  // Red model
+            loadModel(new BABYLON.Vector3(1, 0, 0), new BABYLON.Color3(0, 0, 1));   // Blue model
 
             return scene;
         };
