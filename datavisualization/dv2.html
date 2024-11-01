@@ -1,0 +1,85 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>3D Graph</title>
+    <script src="https://cdn.plotly.com/plotly-latest.min.js"></script>
+</head>
+<body>
+    <div id="graph" style="width:800px; height:600px;"></div>
+    <script>
+        // Define nodes (spheres)
+        var nodes = [
+            {name: 'A', x: 0, y: 0, z: 0},
+            {name: 'B', x: 1, y: 1, z: 1},
+            {name: 'C', x: 2, y: 2, z: 2},
+            {name: 'D', x: 3, y: 3, z: 3},
+        ];
+
+        // Define edges (lines)
+        var edges = [
+            {source: 0, target: 1},
+            {source: 1, target: 2},
+            {source: 2, target: 3},
+            {source: 3, target: 0},
+        ];
+
+        // Create node positions
+        var node_x = nodes.map(node => node.x);
+        var node_y = nodes.map(node => node.y);
+        var node_z = nodes.map(node => node.z);
+
+        // Create edge positions
+        var edge_x = [];
+        var edge_y = [];
+        var edge_z = [];
+        edges.forEach(edge => {
+            var source = nodes[edge.source];
+            var target = nodes[edge.target];
+            edge_x.push(source.x, target.x, null);
+            edge_y.push(source.y, target.y, null);
+            edge_z.push(source.z, target.z, null);
+        });
+
+        // Create Plotly figure
+        var data = [
+            {
+                x: edge_x,
+                y: edge_y,
+                z: edge_z,
+                type: 'scatter3d',
+                mode: 'lines',
+                line: {color: 'black', width: 2},
+                hoverinfo: 'none',
+            },
+            {
+                x: node_x,
+                y: node_y,
+                z: node_z,
+                type: 'scatter3d',
+                mode: 'markers',
+                marker: {
+                    size: 10,
+                    color: 'red',
+                    opacity: 0.8,
+                    symbol: 'circle',
+                },
+                hoverinfo: 'text',
+                hovertext: nodes.map(node => node.name),
+            },
+        ];
+
+        var layout = {
+            title: '3D Graph',
+            scene: {
+                xaxis: {showgrid: false},
+                yaxis: {showgrid: false},
+                zaxis: {showgrid: false},
+            },
+        };
+
+        // Render Plotly figure
+        Plotly.newPlot('graph', data, layout);
+    </script>
+</body>
+</html>
