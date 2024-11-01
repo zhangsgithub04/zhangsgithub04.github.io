@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lexical Editor Example</title>
+    <style>
+        #editor {
+            width: 800px;
+            height: 600px;
+            border: 1px solid #ddd;
+            padding: 10px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div id="editor"></div>
+    <script src="https://cdn.jsdelivr.net/npm/lexical@0.19.0/Lexical.min.js"></script>
+    <script>
+        const editor = lexical.createEditor();
+        const editorContainer = document.getElementById('editor');
+
+        editorContainer.addEventListener('DOMContentLoaded', () => {
+            editor.setRootElement(editorContainer);
+        });
+
+        // Example: Add a button to trigger bold formatting
+        const boldButton = document.createElement('button');
+        boldButton.textContent = 'Bold';
+        boldButton.addEventListener('click', () => {
+            editor.update(() => {
+                const selection = $getSelection();
+                if (selection) {
+                    const textNode = $createTextNode('');
+                    const boldNode = $createBoldTextNode(selection.getTextContent());
+                    selection.insertText(boldNode.__text);
+                    selection.insertText(textNode.__text);
+                    selection.extendTo(textNode.__text).collapseAtEnd();
+                }
+            });
+        });
+        document.body.appendChild(boldButton);
+    </script>
+</body>
+</html>
