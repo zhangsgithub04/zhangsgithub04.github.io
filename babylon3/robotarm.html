@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Babylon.js GLB Loader with Animation</title>
+    <!-- Babylon.js CDN -->
+    <script src="https://cdn.babylonjs.com/babylon.js"></script>
+    <script src="https://cdn.babylonjs.com/loaders/babylon.glTF2FileLoader.js"></script>
+</head>
+<body>
+    <!-- Canvas for Babylon.js -->
+    <canvas id="renderCanvas" style="width: 100vw; height: 100vh;"></canvas>
+
+    <script>
+        // Get the canvas element
+        const canvas = document.getElementById("renderCanvas");
+
+        // Initialize Babylon.js engine and scene
+        const engine = new BABYLON.Engine(canvas, true);
+        const scene = new BABYLON.Scene(engine);
+
+        // Create a simple environment
+        const createEnvironment = () => {
+            scene.clearColor = new BABYLON.Color3(0.2, 0.2, 0.3); // Background color
+            const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(1, 1, 0), scene);
+            light.intensity = 0.8;
+            scene.createDefaultCameraOrLight(true, true, true);
+            scene.activeCamera.alpha += Math.PI / 4; // Adjusts the initial camera view
+        };
+
+        // Load the GLB model and animations
+        BABYLON.SceneLoader.ImportMesh("", "", "robotarm-animations.glb", scene, function (meshes, particleSystems, skeletons, animationGroups) {
+            createEnvironment();
+
+            // Start all animations in the model
+            animationGroups.forEach((animationGroup) => {
+                animationGroup.start(true); // Set to 'true' to loop the animations
+            });
+
+            // Alternatively, start a specific animation group if needed
+            // animationGroups[0].start(true); // Starts the first animation group
+        });
+
+        // Render loop
+        engine.runRenderLoop(() => {
+            scene.render();
+        });
+
+        // Resize the engine when the window is resized
+        window.addEventListener("resize", () => {
+            engine.resize();
+        });
+    </script>
+</body>
+</html>
