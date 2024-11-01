@@ -1,0 +1,45 @@
+// script importation
+var url = "https://cdn.rawgit.com/NasimiAsl/Extensions/master/ShaderBuilder/Babylonx.ShaderBuilder.js";
+var s = document.createElement("script");
+s.src = url;
+
+
+document.head.appendChild(s);
+
+time = 0;
+var camera;
+ 
+
+var createScene = function () {
+
+    // This creates a basic Babylon Scene object (non-mesh)
+    var scene = new BABYLON.Scene(engine);
+
+    // This creates and positions a free camera (non-mesh)
+      camera = new BABYLON.ArcRotateCamera("camera1",3.,3.,0., new BABYLON.Vector3(0, 5, -10), scene);
+
+    // This targets the camera to scene origin
+    camera.setTarget(BABYLON.Vector3.Zero());
+
+    // This attaches the camera to the canvas
+    camera.attachControl(canvas, true);
+
+    // This creates a light, aiming 0,1,0 - to the sky (non-mesh)
+    var light = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(0, 1, 0), scene);
+
+    // Default intensity is 1. Let's dim the light a small amount
+    light.intensity = 0.7;
+	
+	s.onload = function (params) {
+		  BABYLONX.ShaderBuilder.InitializeEngine();
+      
+		  var sphere = BABYLON.MeshBuilder.CreateSphere("sphere", {diameter:5}, scene);
+		 
+		  sphere.material = new BABYLONX.ShaderBuilder()
+			.Map({ path: 'https://playground.babylonjs.com/textures/amiga.jpg' })
+            .BuildMaterial(scene); 
+	      
+	}
+    
+    return scene;
+}
