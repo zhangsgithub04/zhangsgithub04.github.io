@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lexical Editor Example</title>
+    <script src="https://cdn.jsdelivr.net/npm/lexical@0.19.0/Lexical.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f9f9f9;
+        }
+        #editor-container {
+            width: 600px;
+            height: 400px;
+            border: 1px solid #ddd;
+            padding: 10px;
+            background-color: #fff;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+
+<div id="editor-container"></div>
+
+<script>
+    // Create a Lexical editor
+    const editor = Lexical.createEditor({
+        editorState: Lexical.EditorState.createEmpty(),
+        theme: {
+            paragraph: 'paragraph-style'
+        },
+        onError(error) {
+            console.error('Lexical error:', error);
+        },
+    });
+
+    // Initialize the editor within the specified container
+    editor.setRootElement(document.getElementById('editor-container'));
+
+    // Set initial content
+    editor.update(() => {
+        const root = editor.getRoot();
+        const paragraph = Lexical.$createParagraphNode();
+        paragraph.append(Lexical.$createTextNode('Welcome to the Lexical editor! Start typing here.'));
+        root.append(paragraph);
+    });
+</script>
+
+</body>
+</html>
