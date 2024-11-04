@@ -88,6 +88,10 @@ var sphere = BABYLON.MeshBuilder.CreateSphere("sphere", {
 
 // Position the sphere at (0, 0, 0)
 sphere.position = new BABYLON.Vector3(0, 0, 0);
+var material = new BABYLON.StandardMaterial("material", scene); 
+material.diffuseColor = new BABYLON.Color3(1, 0, 0); // red color // Create red material
+sphere.material = material;// Assign material to sphere
+            
             
             // Load the bunny OBJ model
             BABYLON.SceneLoader.ImportMesh(
