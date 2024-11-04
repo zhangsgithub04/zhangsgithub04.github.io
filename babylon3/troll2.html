@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Babylon.js Load GLB and Play Animations</title>
+    <script src="https://cdn.babylonjs.com/babylon.js"></script>
+</head>
+<body>
+    <canvas id="renderCanvas" style="width: 100%; height: 100vh;"></canvas>
+
+    <script>
+        // Initialize the Babylon.js engine and scene
+        const canvas = document.getElementById("renderCanvas");
+        const engine = new BABYLON.Engine(canvas, true);
+        const scene = new BABYLON.Scene(engine);
+
+        // Create a basic camera and attach it to the canvas
+        const camera = new BABYLON.ArcRotateCamera("camera", Math.PI / 2, Math.PI / 3, 5, BABYLON.Vector3.Zero(), scene);
+        camera.attachControl(canvas, true);
+
+        // Add a hemispheric light to the scene
+        const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
+
+        // Load the GLB file and play animations
+        BABYLON.SceneLoader.Append("./", "troll.glb", scene, function (scene) {
+            console.log("Model loaded!");
+
+            // Play all animations in the GLB model
+            const animationGroups = scene.animationGroups;
+            if (animationGroups.length > 0) {
+                animationGroups.forEach(animationGroup => animationGroup.start(true)); // true loops the animation
+            } else {
+                console.log("No animations found in the model.");
+            }
+        });
+
+        // Render loop
+        engine.runRenderLoop(function () {
+            scene.render();
+        });
+
+        // Resize the engine on window resize
+        window.addEventListener("resize", function () {
+            engine.resize();
+        });
+    </script>
+</body>
+</html>
