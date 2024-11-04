@@ -23,7 +23,7 @@
         const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
 
         // Load the GLB file and play animations
-        BABYLON.SceneLoader.Append("", "troll.glb", scene, function () {
+        BABYLON.SceneLoader.Append("./", "troll.glb", scene, function () {
             console.log("Model loaded!");
 
             // Play all animations in the GLB model
