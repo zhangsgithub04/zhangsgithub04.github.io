@@ -78,6 +78,23 @@
                 })
             });
 
+            // Load the bunny OBJ model
+            BABYLON.SceneLoader.ImportMesh(
+                "",                        // No name filter; load all meshes
+                "./",     // Path to the folder where .obj and .mtl are located
+                "StanfordBunny.obj",           // Name of the OBJ file
+                scene,                     // The scene to import into
+                function (meshes) {        // Callback once loaded
+                    // Position the loaded model (optional)
+                    meshes.forEach(mesh => {
+                        mesh.position = new BABYLON.Vector3(0, 0, 0);
+                    });
+                },
+                null,                      // Progress function (optional)
+                function (scene, message, exception) { // Error callback
+                    console.error("Error loading OBJ file:", message, exception);
+                }
+            );
                    alert("village and dude have been loaded with animation.");
             
             return scene;
