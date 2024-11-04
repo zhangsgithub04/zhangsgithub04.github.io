@@ -25,6 +25,8 @@
             camera.attachControl(canvas, true);
             const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(1, 1, 0));
 
+            
+
             BABYLON.SceneLoader.ImportMeshAsync("", "https://assets.babylonjs.com/meshes/", "village.glb");
      
             
@@ -78,6 +80,15 @@
                 })
             });
 
+            // Create the sphere
+var sphere = BABYLON.MeshBuilder.CreateSphere("sphere", {
+    diameter: 6, // diameter of the sphere
+    segments: 32, // number of segments
+}, scene);
+
+// Position the sphere at (0, 0, 0)
+sphere.position = new BABYLON.Vector3(0, 0, 0);
+            
             // Load the bunny OBJ model
             BABYLON.SceneLoader.ImportMesh(
                 "",                        // No name filter; load all meshes
