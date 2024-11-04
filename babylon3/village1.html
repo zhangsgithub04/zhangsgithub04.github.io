@@ -82,7 +82,7 @@
 
             // Create the sphere
 var sphere = BABYLON.MeshBuilder.CreateSphere("sphere", {
-    diameter: 1, // diameter of the sphere
+    diameter: 0.5, // diameter of the sphere
     segments: 32, // number of segments
 }, scene);
 
@@ -98,8 +98,8 @@ sphere.position = new BABYLON.Vector3(0, 0, 0);
                 function (meshes) {        // Callback once loaded
                     // Position the loaded model (optional)
                     meshes.forEach(mesh => {
-                        mesh.position = new BABYLON.Vector3(-7, 2, 0);
-                        meshes.scaling = new BABYLON.Vector3(2, 2, 2); // Scale by factor of 2
+                        mesh.position = new BABYLON.Vector3(-2, 2, 0);
+                        meshes.scaling = new BABYLON.Vector3(20, 20, 20); // Scale by factor of 2
                     });
                 },
                 null,                      // Progress function (optional)
