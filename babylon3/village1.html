@@ -100,6 +100,7 @@ sphere.material = material;// Assign material to sphere
                 "StanfordBunny.obj",           // Name of the OBJ file
                 scene,                     // The scene to import into
                 function (meshes) {        // Callback once loaded
+                    alert("How many meshes?", mesh.length)
                     // Position the loaded model (optional)
                     meshes.forEach(mesh => {
                         mesh.position = new BABYLON.Vector3(-2, 2, 0);
