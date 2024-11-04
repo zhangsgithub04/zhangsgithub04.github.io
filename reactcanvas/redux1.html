@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Redux CDN Example</title>
+</head>
+<body>
+    <h1 id="counter"></h1>
+    <button id="increment">+</button>
+    <button id="decrement">-</button>
+
+    <script src="https://unpkg.com/redux@latest/dist/redux.min.js"></script>
+    <script>
+        // Define the reducer
+        function counterReducer(state = { count: 0 }, action) {
+            switch (action.type) {
+                case 'INCREMENT':
+                    return { count: state.count + 1 };
+                case 'DECREMENT':
+                    return { count: state.count - 1 };
+                default:
+                    return state;
+            }
+        }
+
+        // Create the store
+        const store = Redux.createStore(counterReducer);
+
+        // Update the UI
+        function updateCounter() {
+            document.getElementById('counter').innerText = store.getState().count;
+        }
+
+        // Dispatch actions on button clicks
+        document.getElementById('increment').addEventListener('click', () => {
+            store.dispatch({ type: 'INCREMENT' });
+            updateCounter();
+        });
+
+        document.getElementById('decrement').addEventListener('click', () => {
+            store.dispatch({ type: 'DECREMENT' });
+            updateCounter();
+        });
+
+        // Initial update
+        updateCounter();
+    </script>
+</body>
+</html>
