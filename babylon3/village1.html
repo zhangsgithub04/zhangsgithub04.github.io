@@ -86,7 +86,7 @@ var sphere = BABYLON.MeshBuilder.CreateSphere("sphere", {
     segments: 32, // number of segments
 }, scene);
 
-// Position the sphere at (0, 0, 0)
+// Position the sphere at (0, 2, 0)
 sphere.position = new BABYLON.Vector3(0, 0, 0);
 var material = new BABYLON.StandardMaterial("material", scene); 
 material.diffuseColor = new BABYLON.Color3(1, 0, 0); // red color // Create red material
@@ -103,8 +103,8 @@ sphere.material = material;// Assign material to sphere
                     alert("How many meshes?", mesh.length)
                     // Position the loaded model (optional)
                     meshes.forEach(mesh => {
-                        mesh.position = new BABYLON.Vector3(-2, 2, 0);
-                        meshes.scaling = new BABYLON.Vector3(20, 20, 20); // Scale by factor of 2
+                        mesh.position = new BABYLON.Vector3(0, 0, 0);
+                        meshes.scaling = new BABYLON.Vector3(2, 2, 2); // Scale by factor of 2
                     });
                 },
                 null,                      // Progress function (optional)
