@@ -1,0 +1,34 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canvas Example</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+</head>
+<body>
+    <div id="root">
+        <canvas id="myCanvas" width="400" height="400"></canvas>
+    </div>
+    <script>
+        function CanvasComponent() {
+            const canvasRef = React.createRef(document.getElementById('myCanvas'));
+
+            React.useEffect(() => {
+                const canvas = canvasRef.current;
+                const ctx = canvas.getContext('2d');
+
+                // Draw something
+                ctx.fillStyle = 'rgb(200, 0, 0)';
+                ctx.fillRect(10, 10, 50, 50);
+            }, []);
+
+            return null; // Return null to avoid rendering extra elements
+        }
+
+        ReactDOM.render(React.createElement(CanvasComponent), document.getElementById('root'));
+    </script>
+</body>
+</html>
