@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Babylon.js Viewer</title>
+    <script src="https://cdn.babylonjs.com/viewer/babylon.viewer.min.js"></script>
+    <style>
+        #renderCanvas {
+            width: 100%;
+            height: 600px;
+            border: 1px solid black;
+        }
+    </style>
+</head>
+<body>
+    <div id="renderCanvas"></div>
+    <script>
+        var canvas = document.getElementById("renderCanvas");
+        var viewer = new BABYLON.Viewer(canvas, {
+            // Options
+        });
+        
+        // Load Dude.babylon model
+        viewer.loadModel("https://models.babylonjs.com/Dude.babylon", function () {
+            viewer.runRenderLoop();
+        });
+    </script>
+</body>
+</html>
