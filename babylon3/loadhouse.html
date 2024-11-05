@@ -49,6 +49,33 @@
         
         // Position sphere at origin (0, 0, 0)
         sphere.position = new BABYLON.Vector3(0, 0, 0);
+
+
+        // Create three spheres with different colors
+        var sphere1 = BABYLON.MeshBuilder.CreateSphere("sphere1", {
+            diameter: 1,
+            segments: 32,
+        }, scene);
+        sphere1.position = new BABYLON.Vector3(0, -5, 0);
+        sphere1.material = new BABYLON.StandardMaterial("redMaterial", scene);
+        sphere1.material.diffuseColor = new BABYLON.Color3(1, 0, 0); // Red
+        
+        var sphere2 = BABYLON.MeshBuilder.CreateSphere("sphere2", {
+            diameter: 1,
+            segments: 32,
+        }, scene);
+        sphere2.position = new BABYLON.Vector3(0, 5, 0);
+        sphere2.material = new BABYLON.StandardMaterial("greenMaterial", scene);
+        sphere2.material.diffuseColor = new BABYLON.Color3(0, 1, 0); // Green
+        
+        var sphere3 = BABYLON.MeshBuilder.CreateSphere("sphere3", {
+            diameter: 1,
+            segments: 32,
+        }, scene);
+        sphere3.position = new BABYLON.Vector3(2, -5, -5);
+        sphere3.material = new BABYLON.StandardMaterial("blueMaterial", scene);
+        sphere3.material.diffuseColor = new BABYLON.Color3(0, 0, 1); // Blue
+
         
     return scene;
 };
