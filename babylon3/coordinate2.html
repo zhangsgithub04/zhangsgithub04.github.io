@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Babylon.js Coordinate System Visualization</title>
+    <!-- Babylon.js CDN -->
+    <script src="https://cdn.babylonjs.com/babylon.js"></script>
+    <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
+</head>
+<body>
+    <!-- Canvas for Babylon.js -->
+    <canvas id="renderCanvas" style="width: 100vw; height: 100vh;"></canvas>
+
+    <script>
+        // Initialize Babylon.js scene
+        const canvas = document.getElementById("renderCanvas");
+        const engine = new BABYLON.Engine(canvas, true);
+
+        const createScene = () => {
+            const scene = new BABYLON.Scene(engine);
+
+            // Create a basic camera and light
+            const camera = new BABYLON.ArcRotateCamera("camera", Math.PI / 2, Math.PI / 4, 10, BABYLON.Vector3.Zero(), scene);
+            camera.attachControl(canvas, true);
+
+            const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(1, 1, 0), scene);
+
+            // Create function to add axes
+            function createAxes(scene, size = 3) {
+                // X axis (Red)
+                const xAxis = BABYLON.MeshBuilder.CreateCylinder("xAxis", { height: size, diameter: 0.05 }, scene);
+                xAxis.material = new BABYLON.StandardMaterial("xMaterial", scene);
+                xAxis.material.diffuseColor = new BABYLON.Color3(1, 0, 0);
+                xAxis.rotation.z = Math.PI / 2;
+                xAxis.position.x = size / 2;
+
+                const xCone = BABYLON.MeshBuilder.CreateCylinder("xCone", { diameterTop: 0, diameterBottom: 0.1, height: 0.3 }, scene);
+                xCone.material = xAxis.material;
+                xCone.rotation.z = Math.PI / 2;
+                xCone.position.x = size + 0.15;
+
+                // Y axis (Green)
+                const yAxis = BABYLON.MeshBuilder.CreateCylinder("yAxis", { height: size, diameter: 0.05 }, scene);
+                yAxis.material = new BABYLON.StandardMaterial("yMaterial", scene);
+                yAxis.material.diffuseColor = new BABYLON.Color3(0, 1, 0);
+                yAxis.position.y = size / 2;
+
+                const yCone = BABYLON.MeshBuilder.CreateCylinder("yCone", { diameterTop: 0, diameterBottom: 0.1, height: 0.3 }, scene);
+                yCone.material = yAxis.material;
+                yCone.position.y = size + 0.15;
+
+                // Z axis (Blue)
+                const zAxis = BABYLON.MeshBuilder.CreateCylinder("zAxis", { height: size, diameter: 0.05 }, scene);
+                zAxis.material = new BABYLON.StandardMaterial("zMaterial", scene);
+                zAxis.material.diffuseColor = new BABYLON.Color3(0, 0, 1);
+                zAxis.rotation.x = Math.PI / 2;
+                zAxis.position.z = size / 2;
+
+                const zCone = BABYLON.MeshBuilder.CreateCylinder("zCone", { diameterTop: 0, diameterBottom: 0.1, height: 0.3 }, scene);
+                zCone.material = zAxis.material;
+                zCone.rotation.x = Math.PI / 2;
+                zCone.position.z = size + 0.15;
+            }
+
+            // Create the axes in the scene
+            createAxes(scene, 5);
+
+            return scene;
+        };
+
+        const scene = createScene();
+
+        // Render loop
+        engine.runRenderLoop(() => {
+            scene.render();
+        });
+
+        // Resize the canvas if the window is resized
+        window.addEventListener("resize", () => {
+            engine.resize();
+        });
+    </script>
+</body>
+</html>
