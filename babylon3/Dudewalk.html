@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control Dude Walking</title>
+    <script src="https://cdn.babylonjs.com/babylon.js"></script>
+    <style>
+        #renderCanvas {
+            width: 100%;
+            height: 100vh;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="renderCanvas"></canvas>
+    <script>
+        const canvas = document.getElementById("renderCanvas");
+        const engine = new BABYLON.Engine(canvas, true);
+        const scene = new BABYLON.Scene(engine);
+        const camera = new BABYLON.ArcRotateCamera("camera", Math.PI / 2, Math.PI / 3, 5, BABYLON.Vector3.Zero(), scene);
+        camera.attachControl(canvas, true);
+        const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
+
+        let dudeMesh;
+
+        // Load dude.babylon
+        BABYLON.SceneLoader.ImportMesh("", "./Dude.babylon", scene, function (meshes) {
+            dudeMesh = meshes[0];
+        });
+
+        // Walking animation
+        let walkingAnimation;
+
+        // Load walking animation
+        BABYLON.SceneLoader.ImportMesh("", "./dude.babylon", scene, function (meshes, particleSystems, skeletons) {
+            walkingAnimation = skeletons[0];
+        });
+
+        // Keyboard controls
+        const keys = {};
+        document.addEventListener("keydown", (e) => {
+            keys[e.key] = true;
+        });
+        document.addEventListener("keyup", (e) => {
+            keys[e.key] = false;
+        });
+
+        // Animation control
+        let walking = false;
+
+        scene.registerBeforeRender(() => {
+            if (keys["w"] || keys["ArrowUp"]) {
+                dudeMesh.position.z -= 0.1;
+                walking = true;
+            }
+            if (keys["s"] || keys["ArrowDown"]) {
+                dudeMesh.position.z += 0.1;
+                walking = true;
+            }
+            if (keys["a"] || keys["ArrowLeft"]) {
+                dudeMesh.position.x -= 0.1;
+                walking = true;
+            }
+            if (keys["d"] || keys["ArrowRight"]) {
+                dudeMesh.position.x += 0.1;
+                walking = true;
+            }
+
+            if (walking) {
+                walkingAnimation.start(true);
+            } else {
+                walkingAnimation.stop();
+            }
+        });
+
+        engine.runRenderLoop(() => {
+            scene.render();
+        });
+
+        window.addEventListener("resize", () => {
+            engine.resize();
+        });
+    </script>
+</body>
+</html>
