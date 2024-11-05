@@ -81,11 +81,11 @@
             });
 
           BABYLON.SceneLoader.Append("./", "troll.glb", scene, function (newMeshes) {
-    newMeshes[0].position = new BABYLON.Vector3(0, 0, 5);
-                  newMeshes[0].scaling = new BABYLON.Vector3(0.01, 0.01, 0.01);
+    newMeshes[0].position = new BABYLON.Vector3(6, 0, 0);
+                  newMeshes[0].scaling = new BABYLON.Vector3(0.001, 0.001, 0.001);
 });
 
-            BABYLON.SceneLoader.Append("./", "StanfordBunny.obj.obj", scene, function (newMeshes) {
+            BABYLON.SceneLoader.Append("./", "StanfordBunny.obj", scene, function (newMeshes) {
     newMeshes[0].position = new BABYLON.Vector3(0, 5, 1);
                 newMeshes[0].scaling = new BABYLON.Vector3(2, 2, 2);
 });
