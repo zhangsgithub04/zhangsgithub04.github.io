@@ -81,9 +81,15 @@
             });
 
           BABYLON.SceneLoader.Append("./", "troll.glb", scene, function (newMeshes) {
-    newMeshes[0].position = new BABYLON.Vector3(0, 5, 5);
+    newMeshes[0].position = new BABYLON.Vector3(0, 0, 5);
+                  newMeshes[0].scaling = new BABYLON.Vector3(0.01, 0.01, 0.01);
 });
-          
+
+            BABYLON.SceneLoader.Append("./", "StanfordBunny.obj.obj", scene, function (newMeshes) {
+    newMeshes[0].position = new BABYLON.Vector3(0, 5, 1);
+                newMeshes[0].scaling = new BABYLON.Vector3(2, 2, 2);
+});
+            
             // Create the sphere
 var sphere = BABYLON.MeshBuilder.CreateSphere("sphere", {
     diameter: 0.5, // diameter of the sphere
@@ -127,7 +133,7 @@ for (var i = 0; i < 3; i++) {
     sphere.material = materials[i];
 }
             
-            
+            /*
             // Load the bunny OBJ model
             BABYLON.SceneLoader.ImportMesh(
                 "",                        // No name filter; load all meshes
@@ -147,6 +153,8 @@ for (var i = 0; i < 3; i++) {
                     console.error("Error loading OBJ file:", message, exception);
                 }
             );
+
+            */
                    alert("village, dude and bunny should have been loaded with animation.");
             
             return scene;
