@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Babylon.js Ball Rolling</title>
+    <script src="https://cdn.babylonjs.com/babylon.js"></script>
+    <script src="https://cdn.babylonjs.com/ammo.js"></script> <!-- Physics engine -->
+</head>
+<body>
+    <canvas id="renderCanvas" style="width: 100vw; height: 100vh;"></canvas>
+    <script>
+        const canvas = document.getElementById("renderCanvas");
+        const engine = new BABYLON.Engine(canvas, true);
+
+        const createScene = async () => {
+            const scene = new BABYLON.Scene(engine);
+            const camera = new BABYLON.ArcRotateCamera("camera", Math.PI / 2, Math.PI / 3, 15, BABYLON.Vector3.Zero(), scene);
+            camera.attachControl(canvas, true);
+
+            const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(1, 1, 0), scene);
+
+            // Enable physics
+            const gravityVector = new BABYLON.Vector3(0, -9.81, 0);
+            const physicsPlugin = new BABYLON.AmmoJSPlugin();
+            scene.enablePhysics(gravityVector, physicsPlugin);
+
+            // Create ground
+            const ground = BABYLON.MeshBuilder.CreateGround("ground", { width: 20, height: 20 }, scene);
+            ground.physicsImpostor = new BABYLON.PhysicsImpostor(ground, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0.5 }, scene);
+
+            // Create ball
+            const ball = BABYLON.MeshBuilder.CreateSphere("ball", { diameter: 1 }, scene);
+            ball.position.y = 1;
+            ball.physicsImpostor = new BABYLON.PhysicsImpostor(ball, BABYLON.PhysicsImpostor.SphereImpostor, { mass: 1, restitution: 0.5 }, scene);
+
+            // Input tracking for movement
+            const inputMap = {};
+            window.addEventListener("keydown", (event) => {
+                inputMap[event.key.toLowerCase()] = true;
+            });
+            window.addEventListener("keyup", (event) => {
+                inputMap[event.key.toLowerCase()] = false;
+            });
+
+            const forceMagnitude = 2;
+
+            // Update physics on each frame
+            scene.onBeforeRenderObservable.add(() => {
+                const forward = new BABYLON.Vector3(0, 0, 1); // Z-axis direction
+                const right = new BABYLON.Vector3(1, 0, 0);   // X-axis direction
+
+                // Apply force in the forward direction ("W")
+                if (inputMap["w"]) {
+                    const force = forward.scale(forceMagnitude);
+                    ball.physicsImpostor.applyImpulse(force, ball.getAbsolutePosition());
+                }
+                // Apply force in the backward direction ("S")
+                if (inputMap["s"]) {
+                    const force = forward.scale(-forceMagnitude);
+                    ball.physicsImpostor.applyImpulse(force, ball.getAbsolutePosition());
+                }
+                // Apply force to the left ("A")
+                if (inputMap["a"]) {
+                    const force = right.scale(-forceMagnitude);
+                    ball.physicsImpostor.applyImpulse(force, ball.getAbsolutePosition());
+                }
+                // Apply force to the right ("D")
+                if (inputMap["d"]) {
+                    const force = right.scale(forceMagnitude);
+                    ball.physicsImpostor.applyImpulse(force, ball.getAbsolutePosition());
+                }
+            });
+
+            return scene;
+        };
+
+        createScene().then(scene => {
+            engine.runRenderLoop(() => {
+                scene.render();
+            });
+        });
+
+        window.addEventListener("resize", () => {
+            engine.resize();
+        });
+    </script>
+</body>
+</html>
