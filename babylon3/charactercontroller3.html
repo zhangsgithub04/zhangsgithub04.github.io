@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Character Controller with W, A, S, D Controls</title>
+    <script src="https://cdn.babylonjs.com/babylon.js"></script>
+    <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
+</head>
+<body>
+    <canvas id="renderCanvas" style="width: 100vw; height: 100vh;"></canvas>
+    <script>
+        const canvas = document.getElementById("renderCanvas");
+        const engine = new BABYLON.Engine(canvas, true);
+
+        const createScene = async () => {
+            const scene = new BABYLON.Scene(engine);
+
+            // Set up camera and light
+            const camera = new BABYLON.ArcRotateCamera("camera", Math.PI / 2, Math.PI / 3, 10, BABYLON.Vector3.Zero(), scene);
+            camera.attachControl(canvas, true);
+            const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(1, 1, 0), scene);
+
+            // Load the character model
+            const result = await BABYLON.SceneLoader.ImportMeshAsync("", "./", "Dude3.babylon", scene);
+            const dude = result.meshes[0];
+            dude.scaling = new BABYLON.Vector3(0.1, 0.1, 0.1);
+
+            // Set up animations
+            const walkAnimation = scene.getAnimationGroupByName("Walking"); // replace with actual walk animation name
+            const idleAnimation = scene.getAnimationGroupByName("Idle");    // replace with actual idle animation name
+
+            // Initialize movement variables
+            const speed = 0.1;
+            let isWalking = false;
+
+            // Keyboard input handling
+            const inputMap = {};
+            scene.actionManager = new BABYLON.ActionManager(scene);
+            scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyDownTrigger, evt => {
+                inputMap[evt.sourceEvent.key] = evt.sourceEvent.type === "keydown";
+            }));
+            scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyUpTrigger, evt => {
+                inputMap[evt.sourceEvent.key] = evt.sourceEvent.type === "keydown";
+            }));
+
+            // Character movement and animation updates
+            scene.onBeforeRenderObservable.add(() => {
+                let moved = false;
+
+                // Move forward with "W"
+                if (inputMap["w"]) {
+                    dude.moveWithCollisions(dude.forward.scaleInPlace(speed));
+                    moved = true;
+                }
+                // Move backward with "S"
+                if (inputMap["s"]) {
+                    dude.moveWithCollisions(dude.forward.scaleInPlace(-speed));
+                    moved = true;
+                }
+                // Rotate left with "A"
+                if (inputMap["a"]) {
+                    dude.rotation.y -= 0.05;
+                }
+                // Rotate right with "D"
+                if (inputMap["d"]) {
+                    dude.rotation.y += 0.05;
+                }
+
+                // Trigger walk or idle animation based on movement
+                if (moved) {
+                    if (!isWalking) {
+                        walkAnimation.start(true, 1.0, walkAnimation.from, walkAnimation.to, true);
+                        idleAnimation.stop();
+                        isWalking = true;
+                    }
+                } else {
+                    if (isWalking) {
+                        walkAnimation.stop();
+                        idleAnimation.start(true, 1.0, idleAnimation.from, idleAnimation.to, true);
+                        isWalking = false;
+                    }
+                }
+            });
+
+            return scene;
+        };
+
+        createScene().then(scene => {
+            engine.runRenderLoop(() => {
+                scene.render();
+            });
+        });
+
+        window.addEventListener("resize", () => {
+            engine.resize();
+        });
+    </script>
+</body>
+</html>
