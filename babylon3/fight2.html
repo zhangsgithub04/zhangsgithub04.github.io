@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Babylon.js Character Controller with Fighting</title>
+    <script src="https://cdn.babylonjs.com/babylon.js"></script>
+    <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
+</head>
+<body>
+    <canvas id="renderCanvas" style="width: 100vw; height: 100vh;"></canvas>
+    <script>
+        const canvas = document.getElementById("renderCanvas");
+        const engine = new BABYLON.Engine(canvas, true);
+
+        const createScene = async () => {
+            const scene = new BABYLON.Scene(engine);
+            const camera = new BABYLON.ArcRotateCamera("camera", Math.PI / 2, Math.PI / 3, 10, BABYLON.Vector3.Zero(), scene);
+            camera.attachControl(canvas, true);
+            const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(1, 1, 0), scene);
+
+            // Load the character model
+            const result = await BABYLON.SceneLoader.ImportMeshAsync("", "https://models.babylonjs.com/Dude/", "Dude.babylon", scene);
+            const dude = result.meshes[0];
+            dude.scaling = new BABYLON.Vector3(0.1, 0.1, 0.1);
+
+            // Set up animations
+            const walkAnimation = scene.getAnimationGroupByName("Walking"); // Replace with your model's walk animation name
+            const idleAnimation = scene.getAnimationGroupByName("Idle");    // Replace with your model's idle animation name
+            const fightAnimation = scene.getAnimationGroupByName("Punch");  // Replace with your model's fight animation name
+
+            // Initialize character properties
+            const speed = 0.1;
+            let isWalking = false;
+            let isFighting = false;
+
+            // Keyboard event handling
+            const inputMap = {};
+            scene.actionManager = new BABYLON.ActionManager(scene);
+            scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyDownTrigger, evt => {
+                inputMap[evt.sourceEvent.key] = evt.sourceEvent.type === "keydown";
+            }));
+            scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyUpTrigger, evt => {
+                inputMap[evt.sourceEvent.key] = evt.sourceEvent.type === "keydown";
+            }));
+
+            // Character movement and animation update
+            scene.onBeforeRenderObservable.add(() => {
+                if (inputMap["f"]) {
+                    // Trigger fight animation when "F" key is pressed
+                    if (!isFighting) {
+                        fightAnimation.start(true, 1.0, fightAnimation.from, fightAnimation.to, false);
+                        isFighting = true;
+                        setTimeout(() => isFighting = false, fightAnimation.to - fightAnimation.from); // Reset after animation completes
+                    }
+                } else {
+                    let moveDirection = BABYLON.Vector3.Zero();
+
+                    // Walk forward/backward
+                    if (inputMap["w"]) {
+                        moveDirection = new BABYLON.Vector3(0, 0, 1);
+                        dude.moveWithCollisions(dude.forward.scaleInPlace(speed));
+                        if (!isWalking && !isFighting) {
+                            walkAnimation.start(true, 1.0, walkAnimation.from, walkAnimation.to, true);
+                            idleAnimation.stop();
+                            isWalking = true;
+                        }
+                    } else if (inputMap["s"]) {
+                        moveDirection = new BABYLON.Vector3(0, 0, -1);
+                        dude.moveWithCollisions(dude.forward.scaleInPlace(-speed));
+                        if (!isWalking && !isFighting) {
+                            walkAnimation.start(true, 1.0, walkAnimation.from, walkAnimation.to, true);
+                            idleAnimation.stop();
+                            isWalking = true;
+                        }
+                    } else {
+                        // Stop walking when no movement keys are pressed
+                        if (isWalking && !isFighting) {
+                            walkAnimation.stop();
+                            idleAnimation.start(true, 1.0, idleAnimation.from, idleAnimation.to, true);
+                            isWalking = false;
+                        }
+                    }
+
+                    // Rotate character with "A" and "D" keys
+                    if (inputMap["a"]) {
+                        dude.rotation.y -= 0.05;
+                    }
+                    if (inputMap["d"]) {
+                        dude.rotation.y += 0.05;
+                    }
+                }
+            });
+
+            return scene;
+        };
+
+        createScene().then(scene => {
+            engine.runRenderLoop(() => {
+                scene.render();
+            });
+        });
+
+        window.addEventListener("resize", () => {
+            engine.resize();
+        });
+    </script>
+</body>
+</html>
