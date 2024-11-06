@@ -20,7 +20,7 @@
             const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(1, 1, 0), scene);
 
             // Load character model
-            const result = await BABYLON.SceneLoader.ImportMeshAsync("", "./", "Dude.babylon", scene);
+            const result = await BABYLON.SceneLoader.ImportMeshAsync("", "./", "Dude3.babylon", scene);
             const dude = result.meshes[0];
             dude.scaling = new BABYLON.Vector3(0.1, 0.1, 0.1); // Scale down the character
 
