@@ -20,7 +20,7 @@
             const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(1, 1, 0), scene);
 
             // Load character model
-            const result = await BABYLON.SceneLoader.ImportMeshAsync("", "https://models.babylonjs.com/Dude/", "Dude.babylon", scene);
+            const result = await BABYLON.SceneLoader.ImportMeshAsync("", "./", "Dude.babylon", scene);
             const dude = result.meshes[0];
             dude.scaling = new BABYLON.Vector3(0.1, 0.1, 0.1); // Scale down the character
 
@@ -47,4 +47,50 @@
                 // Check inputs and move character
                 let moveDirection = BABYLON.Vector3.Zero();
                 if (inputMap["w"]) {
-                    moveDirection = new BABYL
+                    moveDirection = new BABYLON.Vector3(0, 0, 1);
+                    dude.moveWithCollisions(dude.forward.scaleInPlace(speed));
+                    if (!isWalking) {
+                        walkRange.start();
+                        idleRange.stop();
+                        isWalking = true;
+                    }
+                } else if (inputMap["s"]) {
+                    moveDirection = new BABYLON.Vector3(0, 0, -1);
+                    dude.moveWithCollisions(dude.forward.scaleInPlace(-speed));
+                    if (!isWalking) {
+                        walkRange.start();
+                        idleRange.stop();
+                        isWalking = true;
+                    }
+                } else {
+                    if (isWalking) {
+                        walkRange.stop();
+                        idleRange.start();
+                        isWalking = false;
+                    }
+                }
+
+                // Rotate left and right
+                if (inputMap["a"]) {
+                    dude.rotation.y -= 0.05;
+                }
+                if (inputMap["d"]) {
+                    dude.rotation.y += 0.05;
+                }
+            });
+
+            return scene;
+        };
+
+        createScene().then(scene => {
+            engine.runRenderLoop(() => {
+                scene.render();
+            });
+        });
+
+        window.addEventListener("resize", () => {
+            engine.resize();
+        });
+    </script>
+</body>
+</html>
