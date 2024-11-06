@@ -58,7 +58,7 @@
     track.push(new walk(0, 47))
 
     // Dude
-    BABYLON.SceneLoader.ImportMeshAsync("him", "./", "Dude.babylon", scene).then((result) => {
+    BABYLON.SceneLoader.ImportMeshAsync("him", "./", "Dude3.babylon", scene).then((result) => {
         var dude = result.meshes[0];
         dude.scaling = new BABYLON.Vector3(0.008, 0.008, 0.008);
             
@@ -92,7 +92,7 @@
         })
     });
 
-    const spriteManagerTrees = new BABYLON.SpriteManager("treesManager", "palm.png", 2000, {width: 512, height: 1024}, scene);
+    const spriteManagerTrees = new BABYLON.SpriteManager("treesManager", "https://assets.babylonjs.com/textures/palm.png", 2000, {width: 512, height: 1024}, scene);
 
     //We create trees at random positions
     for (let i = 0; i < 500; i++) {
@@ -113,7 +113,7 @@
     const skybox = BABYLON.MeshBuilder.CreateBox("skyBox", {size:100}, scene);
 	  const skyboxMaterial = new BABYLON.StandardMaterial("skyBox", scene);
 	  skyboxMaterial.backFaceCulling = false;
-	  skyboxMaterial.reflectionTexture = new BABYLON.CubeTexture("textures/skybox", scene);
+	  skyboxMaterial.reflectionTexture = new BABYLON.CubeTexture("https://assets.babylonjs.com/textures/skybox", scene);
 	  skyboxMaterial.reflectionTexture.coordinatesMode = BABYLON.Texture.SKYBOX_MODE;
 	  skyboxMaterial.diffuseColor = new BABYLON.Color3(0, 0, 0);
 	  skyboxMaterial.specularColor = new BABYLON.Color3(0, 0, 0);
