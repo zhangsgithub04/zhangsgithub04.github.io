@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Babylon.js Character Controller</title>
+    <script src="https://cdn.babylonjs.com/babylon.max.js"></script>
+    <style>
+        #renderCanvas {
+            width: 100%;
+            height: 600px;
+            border: 1px solid black;
+        }
+    </style>
+</head>
+<body>
+    <div id="renderCanvas"></div>
+    <script>
+        var engine = new BABYLON.Engine(document.getElementById("renderCanvas"));
+        var scene = new BABYLON.Scene(engine);
+        var camera = new BABYLON.ArcRotateCamera("camera", 1, 0.8, 10, new BABYLON.Vector3(0, 0, 0), scene);
+        camera.attachControl(canvas, true);
+        
+        // Create cube
+        var cube = BABYLON.MeshBuilder.CreateBox("cube", {
+            size: 1,
+        }, scene);
+        cube.position.y = 1;
+        
+        // Create character controller
+        var character = new BABYLON.Mesh("character", scene);
+        character.position.y = 1;
+        var capsule = BABYLON.MeshBuilder.CreateCapsule("capsule", {
+            radius: 0.5,
+            height: 2,
+            tessellation: 32,
+        }, scene);
+        capsule.parent = character;
+        capsule.position.y = 1;
+        
+        // Character controller properties
+        var speed = 5;
+        var jumpForce = 10;
+        var gravity = -0.5;
+        var isJumping = false;
+        
+        // Keyboard events
+        document.addEventListener("keydown", function (event) {
+            switch (event.key) {
+                case "w":
+                case "ArrowUp":
+                    character.position.z -= speed / 10;
+                    break;
+                case "s":
+                case "ArrowDown":
+                    character.position.z += speed / 10;
+                    break;
+                case "a":
+                case "ArrowLeft":
+                    character.position.x -= speed / 10;
+                    break;
+                case "d":
+                case "ArrowRight":
+                    character.position.x += speed / 10;
+                    break;
+                case " ":
+                    if (!isJumping) {
+                        character.position.y += jumpForce / 10;
+                        isJumping = true;
+                    }
+                    break;
+            }
+        });
+        
+        // Animation loop
+        engine.runRenderLoop(function () {
+            // Apply gravity
+            if (isJumping) {
+                character.position.y += gravity / 10;
+                if (character.position.y <= 1) {
+                    character.position.y = 1;
+                    isJumping = false;
+                }
+            }
+            
+            scene.render();
+        });
+    </script>
+</body>
+</html>
