@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Text in Babylon.js</title>
+    <!-- Babylon.js CDN -->
+    <script src="https://cdn.babylonjs.com/babylon.js"></script>
+    <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
+</head>
+<body>
+    <canvas id="renderCanvas" style="width: 100vw; height: 100vh;"></canvas>
+
+    <script>
+        const canvas = document.getElementById("renderCanvas");
+        const engine = new BABYLON.Engine(canvas, true);
+
+        const createScene = () => {
+            const scene = new BABYLON.Scene(engine);
+
+            // Basic camera and lighting
+            const camera = new BABYLON.ArcRotateCamera("camera", Math.PI / 2, Math.PI / 4, 20, BABYLON.Vector3.Zero(), scene);
+            camera.attachControl(canvas, true);
+            const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(1, 1, 0), scene);
+
+            // Create 3D text
+            create3DText(scene, "Hello 3D!", new BABYLON.Color3(0, 0.5, 1), 1, 2);
+
+            return scene;
+        };
+
+        function create3DText(scene, text, color, size, thickness) {
+            // Use a for loop to create each letter as an individual mesh
+            const font = "Bold 44px Arial"; // Font style for extrusion
+            let letterMeshes = [];
+            let offsetX = 0;
+
+            for (const letter of text) {
+                // Create each letter as a 2D path then extrude it to make it 3D
+                const path2D = BABYLON.Vector3.ProjectTo2D(BABYLON.Path2D.CreateFromFontPath(letter, font));
+
+                if (path2D) {
+                    const letterMesh = BABYLON.MeshBuilder.ExtrudePolygon(`letter_${letter}`, { shape: path2D, depth: thickness, sideOrientation: BABYLON.Mesh.DOUBLESIDE }, scene);
+                    letterMesh.position.x = offsetX;
+                    letterMesh.position.y = 0;
+                    letterMesh.position.z = 0;
+
+                    // Apply color to each letter
+                    const material = new BABYLON.StandardMaterial("material", scene);
+                    material.diffuseColor = color;
+                    letterMesh.material = material;
+
+                    offsetX += size;
+                    letterMeshes.push(letterMesh);
+                }
+            }
+
+            // Combine all letters into one mesh (optional)
+            return BABYLON.Mesh.MergeMeshes(letterMeshes, true, true, undefined, false, true);
+        }
+
+        const scene = createScene();
+        engine.runRenderLoop(() => {
+            scene.render();
+        });
+
+        window.addEventListener("resize", () => {
+            engine.resize();
+        });
+    </script>
+</body>
+</html>
