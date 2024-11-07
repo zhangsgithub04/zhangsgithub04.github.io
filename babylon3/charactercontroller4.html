@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>BabylonJS Sphere Control</title>
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+        #renderCanvas {
+            width: 100%;
+            height: 100%;
+            touch-action: none;
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babylonjs/6.32.1/babylon.js"></script>
+</head>
+<body>
+    <canvas id="renderCanvas"></canvas>
+    <script>
+        const canvas = document.getElementById("renderCanvas");
+        const engine = new BABYLON.Engine(canvas, true);
+
+        const createScene = function() {
+            // Create scene
+            const scene = new BABYLON.Scene(engine);
+            scene.enablePhysics(new BABYLON.Vector3(0, -9.81, 0));
+
+            // Camera
+            const camera = new BABYLON.FollowCamera("camera", new BABYLON.Vector3(0, 5, -10), scene);
+            camera.radius = 10;
+            camera.heightOffset = 4;
+            camera.rotationOffset = 0;
+            camera.cameraAcceleration = 0.05;
+            camera.maxCameraSpeed = 20;
+
+            // Light
+            const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
+            light.intensity = 0.7;
+
+            // Ground
+            const ground = BABYLON.MeshBuilder.CreateGround("ground", {width: 20, height: 20}, scene);
+            ground.physicsImpostor = new BABYLON.PhysicsImpostor(
+                ground, 
+                BABYLON.PhysicsImpostor.BoxImpostor, 
+                { mass: 0, restitution: 0.9 }, 
+                scene
+            );
+            ground.material = new BABYLON.StandardMaterial("groundMat", scene);
+            ground.material.diffuseColor = new BABYLON.Color3(0.5, 0.5, 0.5);
+
+            // Sphere (player)
+            const sphere = BABYLON.MeshBuilder.CreateSphere("sphere", {diameter: 1}, scene);
+            sphere.position.y = 2;
+            sphere.physicsImpostor = new BABYLON.PhysicsImpostor(
+                sphere, 
+                BABYLON.PhysicsImpostor.SphereImpostor, 
+                { mass: 1, restitution: 0.5, friction: 0.1 }, 
+                scene
+            );
+            sphere.material = new BABYLON.StandardMaterial("sphereMat", scene);
+            sphere.material.diffuseColor = new BABYLON.Color3(0, 0.5, 0.8);
+
+            // Set camera target
+            camera.lockedTarget = sphere;
+
+            // Movement variables
+            const moveSpeed = 1;
+            const jumpForce = 5;
+            let canJump = true;
+
+            // Input handling
+            const keyState = {};
+            
+            scene.onKeyboardObservable.add((kbInfo) => {
+                switch (kbInfo.type) {
+                    case BABYLON.KeyboardEventTypes.KEYDOWN:
+                        keyState[kbInfo.event.key.toLowerCase()] = true;
+                        if (kbInfo.event.key === " " && canJump) {
+                            sphere.physicsImpostor.applyImpulse(
+                                new BABYLON.Vector3(0, jumpForce, 0),
+                                sphere.getAbsolutePosition()
+                            );
+                            canJump = false;
+                            setTimeout(() => { canJump = true; }, 1000);
+                        }
+                        break;
+                    case BABYLON.KeyboardEventTypes.KEYUP:
+                        keyState[kbInfo.event.key.toLowerCase()] = false;
+                        break;
+                }
+            });
+
+            // Before render loop
+            scene.registerBeforeRender(() => {
+                const impulseDirection = new BABYLON.Vector3(0, 0, 0);
+                
+                if (keyState['w']) impulseDirection.z += moveSpeed;
+                if (keyState['s']) impulseDirection.z -= moveSpeed;
+                if (keyState['a']) impulseDirection.x -= moveSpeed;
+                if (keyState['d']) impulseDirection.x += moveSpeed;
+
+                if (impulseDirection.length() > 0) {
+                    sphere.physicsImpostor.applyImpulse(
+                        impulseDirection.normalize().scale(moveSpeed),
+                        sphere.getAbsolutePosition()
+                    );
+                }
+            });
+
+            return scene;
+        };
+
+        const scene = createScene();
+
+        engine.runRenderLoop(function() {
+            scene.render();
+        });
+
+        window.addEventListener("resize", function() {
+            engine.resize();
+        });
+    </script>
+</body>
+</html>
