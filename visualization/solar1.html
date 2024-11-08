@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Solar System Visualization in D3.js</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <style>
+    body { margin: 0; display: flex; justify-content: center; align-items: center; background: black; }
+    svg { width: 100vw; height: 100vh; }
+  </style>
+</head>
+<body>
+  <svg id="solarSystem"></svg>
+
+  <script>
+    const svg = d3.select("#solarSystem");
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+    const centerX = width / 2;
+    const centerY = height / 2;
+    
+    // Planet data
+    const planets = [
+      { name: "Mercury", radius: 5, orbitRadius: 60, color: "gray" },
+      { name: "Venus", radius: 8, orbitRadius: 90, color: "yellow" },
+      { name: "Earth", radius: 10, orbitRadius: 130, color: "blue" },
+      { name: "Mars", radius: 7, orbitRadius: 170, color: "red" },
+      { name: "Jupiter", radius: 20, orbitRadius: 230, color: "orange" },
+      { name: "Saturn", radius: 18, orbitRadius: 300, color: "gold" },
+      { name: "Uranus", radius: 15, orbitRadius: 370, color: "lightblue" },
+      { name: "Neptune", radius: 15, orbitRadius: 430, color: "darkblue" },
+    ];
+
+    // Create orbits
+    svg.selectAll("circle.orbit")
+      .data(planets)
+      .enter()
+      .append("circle")
+      .attr("class", "orbit")
+      .attr("cx", centerX)
+      .attr("cy", centerY)
+      .attr("r", d => d.orbitRadius)
+      .attr("fill", "none")
+      .attr("stroke", "white")
+      .attr("stroke-width", 0.5)
+      .attr("stroke-dasharray", "3,3");
+
+    // Create Sun
+    svg.append("circle")
+      .attr("cx", centerX)
+      .attr("cy", centerY)
+      .attr("r", 25)
+      .attr("fill", "yellow");
+
+   
