@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="https://cdn.yworks.com/yed-live/1.1.2/yed-live.js"></script>
+</head>
+<body>
+  <div id="graph-component" style="height:600px; width:800px; border:1px solid lightgray"></div>
+  <script>
+    // Create a new instance of the graph component.
+    var graphComponent = new yed.GraphComponent("graph-component");
+    
+    // Create a sample graph.
+    var graph = new yed.Graph();
+    graph.addNode(new yed.ShapeNode("A"));
+    graph.addNode(new yed.ShapeNode("B"));
+    graph.addEdge("A", "B");
+    
+    // Load the sample graph.
+    graphComponent.graph = graph;
+  </script>
+</body>
+</html>
