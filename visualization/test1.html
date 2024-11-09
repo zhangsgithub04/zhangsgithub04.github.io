@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>yFiles Example</title>
+    <style>
+        #graph-container {
+            width: 800px;
+            height: 600px;
+            border: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+    <div id="graph-container"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/yfiles@2.4.0.2/dist/yfiles.min.js"></script>
+    <script>
+        // Create graph component
+        const graphComponent = new yfiles.graph.GraphComponent();
+
+        // Set graph container
+        graphComponent.bindTo("#graph-container");
+
+        // Create graph
+        const graph = graphComponent.graph;
+
+        // Create nodes
+        const node1 = graph.createNode({ x: 100, y: 100 });
+        const node2 = graph.createNode({ x: 300, y: 300 });
+
+        // Create edge
+        graph.createEdge(node1, node2);
+
+        // Customize graph appearance
+        graph.styles.defaultNodeStyle = new yfiles.graph.DefaultNodeStyle({
+            fill: "#666",
+            stroke: "#333"
+        });
+        graph.styles.defaultEdgeStyle = new yfiles.graph.DefaultEdgeStyle({
+            stroke: "#333"
+        });
+    </script>
+</body>
+</html>
