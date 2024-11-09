@@ -2,21 +2,35 @@
 <html>
 <head>
   <script src="https://cdn.yworks.com/yed-live/1.1.2/yed-live.js"></script>
+  <style>
+    #graph-component {
+      height: 600px;
+      width: 800px;
+      border: 1px solid lightgray;
+    }
+  </style>
 </head>
 <body>
-  <div id="graph-component" style="height:600px; width:800px; border:1px solid lightgray"></div>
+  <div id="graph-component"></div>
   <script>
     // Create a new instance of the graph component.
-    var graphComponent = new yed.GraphComponent("graph-component");
+    const graphComponent = new GraphComponent("graph-component");
     
-    // Create a sample graph.
-    var graph = new yed.Graph();
-    graph.addNode(new yed.ShapeNode("A"));
-    graph.addNode(new yed.ShapeNode("B"));
-    graph.addEdge("A", "B");
+    // Create nodes
+    const node1 = new DefaultGraphDataProvider().createNode("Node 1");
+    const node2 = new DefaultGraphDataProvider().createNode("Node 2");
+    const node3 = new DefaultGraphDataProvider().createNode("Node 3");
     
-    // Load the sample graph.
-    graphComponent.graph = graph;
+    // Add nodes to graph
+    graphComponent.graph.addNodes([node1, node2, node3]);
+    
+    // Create edges
+    graphComponent.graph.addEdge(node1, node2);
+    graphComponent.graph.addEdge(node2, node3);
+    graphComponent.graph.addEdge(node3, node1);
+    
+    // Center graph
+    graphComponent.fitGraphContent();
   </script>
 </body>
 </html>
