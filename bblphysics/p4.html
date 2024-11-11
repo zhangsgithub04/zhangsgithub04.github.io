@@ -1,21 +1,43 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Babylon.js with Havok Physics</title>
-</head>
-<body>
-    <canvas id="renderCanvas"></canvas>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
-    <!-- Include Babylon.js Core Engine -->
+    <title>Babylon.js using Havok</title>
+
+    <!-- Babylon.js -->
+    <script src="https://cdn.babylonjs.com/havok/HavokPhysics_umd.js"></script>
     <script src="https://cdn.babylonjs.com/babylon.js"></script>
+    <script src="https://cdn.babylonjs.com/gui/babylon.gui.min.js"></script>
 
-    <!-- Load Havok Physics Plugin -->
-    <script type="module">
-        import * as BABYLON from 'https://cdn.jsdelivr.net/npm/@babylonjs/core@5.0.0';
-        import { HavokPlugin } from '@babylonjs/havok'; // Use this line only if using npm or local install
+    <style>
+      html,
+      body {
+        overflow: hidden;
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
 
+      #renderCanvas {
+        width: 100%;
+        height: 100%;
+        touch-action: none;
+      }
+
+      #canvasZone {
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="canvasZone"><canvas id="renderCanvas"></canvas></div>
+    <script>
+      const canvas = document.getElementById("renderCanvas");
+      const engine = new BABYLON.Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true, disableWebGL2Support: false });
+    
         const canvas = document.getElementById("renderCanvas");
         const engine = new BABYLON.Engine(canvas, true);
 
@@ -46,15 +68,18 @@
             return scene;
         };
 
-        createScene().then(scene => {
-            engine.runRenderLoop(() => {
-                scene.render();
-            });
+        
+        createScene().then((scene) => {
+        engine.runRenderLoop(function () {
+          if (scene) {
+            scene.render();
+          }
         });
-
-        window.addEventListener("resize", () => {
-            engine.resize();
-        });
+      });
+      // Resize
+      window.addEventListener("resize", function () {
+        engine.resize();
+      });
     </script>
-</body>
+  </body>
 </html>
