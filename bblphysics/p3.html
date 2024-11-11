@@ -42,49 +42,176 @@
       const canvas = document.getElementById("renderCanvas");
       const engine = new BABYLON.Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true, disableWebGL2Support: false });
   
-      const createScene = async function () {
-        // This creates a basic Babylon Scene object (non-mesh)
-        const scene = new BABYLON.Scene(engine);
+      var createScene = function () {
+    // This creates a basic Babylon Scene object (non-mesh)
+    var scene = new BABYLON.Scene(engine);
+    scene.useRightHandedSystem = true;
+    // This creates and positions a free camera (non-mesh)
+    var camera = new BABYLON.ArcRotateCamera("camera1", 1.1,1.4,5,new BABYLON.Vector3(0, 1, 0), scene);
 
-        // This creates and positions a free camera (non-mesh)
-        const camera = new BABYLON.FreeCamera("camera1", new BABYLON.Vector3(0, 5, -10), scene);
+    // This targets the camera to scene origin
+    //camera.setTarget(BABYLON.Vector3.Zero());
 
-        // This targets the camera to scene origin
-        camera.setTarget(BABYLON.Vector3.Zero());
+    // This attaches the camera to the canvas
+    camera.attachControl(canvas, true);
 
-        // This attaches the camera to the canvas
-        camera.attachControl(canvas, true);
+    // This creates a light, aiming 0,1,0 - to the sky (non-mesh)
+    var light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
 
-        // This creates a light, aiming 0,1,0 - to the sky (non-mesh)
-        const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
+    // Default intensity is 1. Let's dim the light a small amount
+    light.intensity = 0.7;
 
-        // Default intensity is 1. Let's dim the light a small amount
-        light.intensity = 0.7;
+    // Our built-in 'ground' shape.
+    var ground = BABYLON.MeshBuilder.CreateGround("ground", {width: 10, height: 10}, scene);
 
-        // Our built-in 'sphere' shape.
-        const sphere = BABYLON.MeshBuilder.CreateSphere("sphere", { diameter: 2, segments: 32 }, scene);
+    // initialize plugin
+    var hk = new BABYLON.HavokPlugin();
+    // enable physics in the scene with a gravity
+    scene.enablePhysics(new BABYLON.Vector3(0, -9.8, 0), hk);
+    //scene.enablePhysics(new BABYLON.Vector3(0, 0, 0), hk);
 
-        // Move the sphere upward at 4 units
-        sphere.position.y = 4;
+    // Create a static box shape.
+    var groundAggregate = new BABYLON.PhysicsAggregate(ground, BABYLON.PhysicsShapeType.BOX, { mass: 0 }, scene);
 
-        // Our built-in 'ground' shape.
-        const ground = BABYLON.MeshBuilder.CreateGround("ground", { width: 10, height: 10 }, scene);
+    var light2 = new BABYLON.DirectionalLight("dir01", new BABYLON.Vector3(-1, -0.5, -1.0), scene);
+    light2.position = new BABYLON.Vector3(3, 6, 4);
 
-        // initialize plugin
-        const havokInstance = await HavokPhysics();
-        // pass the engine to the plugin
-        const hk = new BABYLON.HavokPlugin(true, havokInstance);
-        // enable physics in the scene with a gravity
-        scene.enablePhysics(new BABYLON.Vector3(0, -9.8, 0), hk);
+    // Shadows
+    var shadowGenerator = new BABYLON.ShadowGenerator(1024, light2);
+    shadowGenerator.useBlurExponentialShadowMap = true;
+    shadowGenerator.blurKernel = 32;
 
-        // Create a sphere shape and the associated body. Size will be determined automatically.
-        const sphereAggregate = new BABYLON.PhysicsAggregate(sphere, BABYLON.PhysicsShapeType.SPHERE, { mass: 1, restitution: 0.75 }, scene);
+    // Buttons
+    var advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("button", true, scene);
+    function createButton(id, text, top) {
+        let button = BABYLON.GUI.Button.CreateSimpleButton(id, text);
+        button.width = 0.2;
+        button.height = "50px";
+        button.color = "white";
+        button.background = "green";
+        button.verticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_TOP;
+        button.top = top;
+        return button;
+    }
 
-        // Create a static box shape.
-        const groundAggregate = new BABYLON.PhysicsAggregate(ground, BABYLON.PhysicsShapeType.BOX, { mass: 0 }, scene);
+    var buttonRagdoll = createButton("buttonRagdoll", "Ragdoll on", "10px");
+    advancedTexture.addControl(buttonRagdoll);
+    var buttonImpulse = createButton("buttonImpulse", "Impulse", "80px");
+    advancedTexture.addControl(buttonImpulse);
 
-        return scene;
-      };
+	BABYLON.SceneLoader.ImportMesh("", "https://raw.githubusercontent.com/CedricGuillemet/dump/master/", "funnyGuy.glb", scene,
+        function (meshes, particleSystems, skeletons) {  
+        var skeleton = skeletons[0];
+        scene.beginAnimation(skeletons[0], 0, 10, true, 1.0);
+        const config = [
+                { bones: ["mixamorig:Hips"], size: 0.25, boxOffset: 0.01 },
+                {
+                    bones: ["mixamorig:Spine2"],
+                    size: 0.2,
+                    boxOffset: 0.05,
+                    boneOffsetAxis: BABYLON.Axis.Y,
+                    min: -1,
+                    max: 1,
+                    rotationAxis: BABYLON.Axis.Z
+                },
+                // Arms.
+                {
+                    bones: ["mixamorig:LeftArm", "mixamorig:RightArm"],
+                    depth: 0.1,
+                    size: 0.1,
+                    width: 0.2,
+                    rotationAxis: BABYLON.Axis.Y,
+                    //min: -1,
+                    //max: 1,
+                    boxOffset: 0.10,
+                    boneOffsetAxis: BABYLON.Axis.Y
+                },
+                {
+                    bones: ["mixamorig:LeftForeArm", "mixamorig:RightForeArm"],
+                    depth: 0.1,
+                    size: 0.1,
+                    width: 0.2,
+                    rotationAxis: BABYLON.Axis.Y,
+                    min: -1,
+                    max: 1,
+                    boxOffset: 0.12,
+                    boneOffsetAxis: BABYLON.Axis.Y
+                },
+                // Legs
+                {
+                    bones: ["mixamorig:LeftUpLeg", "mixamorig:RightUpLeg"],
+                    depth: 0.1,
+                    size: 0.2,
+                    width: 0.08,
+                    rotationAxis: BABYLON.Axis.Y,
+                    min: -1,
+                    max: 1,
+                    boxOffset: 0.2,
+                    boneOffsetAxis: BABYLON.Axis.Y
+                },
+                {
+                    bones: ["mixamorig:LeftLeg", "mixamorig:RightLeg"],
+                    depth: 0.08,
+                    size: 0.3,
+                    width: 0.1,
+                    rotationAxis: BABYLON.Axis.Y,
+                    min: -1,
+                    max: 1,
+                    boxOffset: 0.2,
+                    boneOffsetAxis: BABYLON.Axis.Y
+                },
+                                {
+                    bones: ["mixamorig:LeftHand", "mixamorig:RightHand"],
+                    depth: 0.2,
+                    size: 0.2,
+                    width: 0.2,
+                    rotationAxis: BABYLON.Axis.Y,
+                    min: -1,
+                    max: 1,
+                    boxOffset: 0.1,
+                    boneOffsetAxis: BABYLON.Axis.Y
+                },
+                //head
+                {
+                    bones: ["mixamorig:Head"],
+                    size: 0.7,
+                    boxOffset: 0.3,
+                    boneOffsetAxis: BABYLON.Axis.Y,
+                    min: -1,
+                    max: 1,
+                    rotationAxis: BABYLON.Axis.Z
+                }
+            ];
+
+            var rootNode = scene.getTransformNodeByName("Boy_01_Meshes");
+            const ragdoll = new BABYLON.Ragdoll(skeleton, rootNode, config);
+
+            for (var index = 0; index < meshes.length; index++) {
+                meshes[index].receiveShadows = true;
+                shadowGenerator.addShadowCaster(meshes[index], true);
+            }
+            
+            var helper = scene.createDefaultEnvironment({enableGroundShadow: true});
+            helper.setMainColor(BABYLON.Color3.Gray());
+            helper.ground.position.y += 0.01;
+
+            buttonRagdoll.onPointerClickObservable.add(() => {
+                ragdoll.ragdoll();
+            });
+
+            buttonImpulse.onPointerClickObservable.add(() => {
+                ragdoll.getAggregate(0)?.body.applyImpulse(new BABYLON.Vector3(200,200,200), BABYLON.Vector3.ZeroReadOnly);
+            });
+
+            var viewer = new BABYLON.PhysicsViewer();
+            scene.transformNodes.forEach((mesh) => {
+            if (mesh.physicsBody) {
+                viewer.showBody(mesh.physicsBody);
+            }
+        });
+    });
+    return scene;
+};
 
       createScene().then((scene) => {
         engine.runRenderLoop(function () {
