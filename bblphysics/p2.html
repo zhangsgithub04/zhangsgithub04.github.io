@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <title>Babylon Template</title>
+
+        <style>
+            html, body {
+                overflow: hidden;
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+            #renderCanvas {
+                width: 100%;
+                height: 100%;
+                touch-action: none;
+            }
+        </style>
+
+        <script src="https://cdn.babylonjs.com/babylon.js"></script>
+
+    </head>
+
+   <body>
+
+	<canvas id="renderCanvas"></canvas>
+
+	<script>
+        const canvas = document.getElementById("renderCanvas"); // Get the canvas element
+        const engine = new BABYLON.Engine(canvas, true); // Generate the BABYLON 3D engine
+        
+    //ben rigby, character controller and fight tests
+//adaptation of https://github.com/ssatguru/BabylonJS-CharacterController
+// script importation
+var url = "https://bjs-playground.s3.amazonaws.com/cc_playground.js";
+var s = document.createElement("script");
+s.type = "text/javascript";
+s.src = url;
+document.head.appendChild(s);
+
+var delayCreateScene = function() {
+	var scene = new BABYLON.Scene(engine);
+	// camera 1
+	var camera1 = new BABYLON.ArcRotateCamera("camera1",  3 * Math.PI / 8, 3 * Math.PI / 8, 15, new BABYLON.Vector3(0, 2, 0), scene);
+	camera1.attachControl(canvas, true);
+
+	// lights
+	var light1 = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(1, 0.5, 0), scene);
+	light1.intensity = 0.7;
+	var light2 = new BABYLON.HemisphericLight("light2", new BABYLON.Vector3(-1, -0.5, 0), scene);
+	light2.intensity = 0.2;
+
+    s.onload = function(scene, camera1) {
+
+    }
+    var box = BABYLON.MeshBuilder.CreateBox("Box", {size:1}, scene, true);
+    box.material = new BABYLON.StandardMaterial("", scene);
+    box.position.x+=5
+    
+    box.checkCollisions = true;
+
+    let myBabylon = new StartBabylon(scene, camera1);
+    myBabylon.loadPlayer(camera1)
+    myBabylon.initSkybox();
+    myBabylon.makeGround();
+    
+	return scene;
+}
+function delay(time) {
+  return new Promise(resolve => setTimeout(resolve, time));
+}
+
+  function StartBabylon(scene, camera1) {
+    this.debug = true;
+    this.mlog = {};
+    this.mlog.log = function (msg, data){
+            console.log(msg, data);
+    }
+    this.player_glb = 'baria.feb1.23.glb';
+    this.scene = scene;
+    this.engine;
+    this.canvas;
+    this.camera = camera1;
+    this.light_hemi;
+    this.light_dir;
+    this.player;
+    this.players = {};
+    this.agMaps = {};
+    this.cc;
+    this.playerCCs = {}; //for storing non-SELF player character controllers
+    this.mytest = 'hello world';
+    this.playerId = ''; //ID syncs to the ID generated in playerSync.js on firebase connection via event below
+    this.playerName = '';
+    this.playerAvatar = '';
+    this.actionMap; //stores animation group settings / info
+    this.charDropHeight = 13; //y pos where character enters scene, should be higher than max ground height
+    this.ground;
+    this.groundMaxHeight = 35; //defines the top height Y value of mountain peaks
+    this.groundWidth = 250; //defines the area of the ground
+    this.groundHeight = 250; //defines the area of the ground - not really the height 
+    this.subdivisions = 30; //subdivisions of the ground
+
+  }
+
+StartBabylon.prototype.loadPlayer = function() {
+    this.mlog.log('StartBabylon-loadPlayer', {'this.scene':this.scene}, 1);
+
+    BABYLON.SceneLoader.ImportMesh(
+      "",
+      "https://bjs-playground.s3.amazonaws.com/",
+      this.player_glb,
+      this.scene,
+      (meshes, particleSystems, skeletons, animationGroups) => {
+        this.mlog.log('StartBabylon-loadPlayer', {'meshes':meshes,'animationGroups':animationGroups}, 6);
+        var player = meshes[0];
+        this.player = player; //store reference in object
+        player.name = "player1";
+        player.id = "player1";
+        player.position = new BABYLON.Vector3(1, this.charDropHeight, 1);
+        player.checkCollisions = true;
+        player.ellipsoid = new BABYLON.Vector3(0.5, 1, 0.5);
+        player.ellipsoidOffset = new BABYLON.Vector3(0, 1, 0);
+        player.scaling.scaleInPlace(0.4);
+        player.rotation = player.rotationQuaternion.toEulerAngles();
+        player.rotationQuaternion = null;
+        //rotate the camera behind the player
+        //.glbs are RHS
+        player.rotation.y = Math.PI / 4;
+        var alpha = (3 * Math.PI) / 2 - player.rotation.y;
+        var beta = 1.25;
+        var target = new BABYLON.Vector3(player.position.x, player.position.y + 1.5, player.position.z);
+        //reset the camera pos and target 
+        //this.camera.setPosition(new Vector3(alpha, beta, -2));
+        this.camera.setPosition(new BABYLON.Vector3(-3, 1.2, -.02));
+        // this.camera.setTarget(target);
+        this.camera.fov = 1.3
+
+        //standard camera setting
+        this.camera.wheelPrecision = 15;
+        this.camera.checkCollisions = false;
+
+        //how close can the camera come to player
+        this.camera.lowerRadiusLimit = 2;
+        //how far can the camera go from the player
+        this.camera.upperRadiusLimit = 20;
+
+        //make sure the keyboard keys controlling camera are different from those controlling player
+        //here we will not use any keyboard keys to control camera
+        this.camera.keysLeft = [];
+        this.camera.keysRight = [];
+        this.camera.keysUp = [];
+        this.camera.keysDown = [];
+        // provide all your animation groups as a map to the character controller
+        // the map should have
+        // key = the name of the character controller  animation
+        // and
+        // value = the AnimationGroup corresponding to that animation.
+        // In our example the name of the AnimationGroup is the same as the name of name of the character controller  animation
+        // so the following will work.
+        var agMap = {};
+        var allAGs = animationGroups;
+        for (let i = 0; i < allAGs.length; i++) {
+          agMap[allAGs[i].name] = allAGs[i];
+        }
+
+        allAGs[0].stop();
+        let faceForward = true;
+        this.emitter = null;
+        let cc = new CharacterController(player, this.camera, this.scene, agMap, faceForward, this.emitter);
+                cc.setMode(0); //0 is the best mode - allows camera tunring beloe
+        cc.setTurningOff(true); //true, allows char to turn with the camera, but causes a problem with jump
+
+        // cc.setFaceForward(true);
+        cc.setTurnSpeed(45);
+        //below makes the controller point the camera at the player head which is approx
+        //1.5m above the player origin
+        cc.setCameraTarget(new BABYLON.Vector3(0, 1.5, 0));
+
+        //if the camera comes close to the player we want to enter first person mode.
+        cc.setNoFirstPerson(false);
+        //the height of steps which the player can climb
+        cc.setStepOffset(0.4);
+        //the minimum and maximum slope the player can go up
+        //between the two the player will start sliding down if it stops
+        cc.setSlopeLimit(30, 60);
+
+        //tell controller
+        // - which animation range/ animation group should be used for which player animation
+        // - rate at which to play that animation range
+        // - wether the animation range should be looped
+        //use this if name, rate or looping is different from default
+        //set a parm to null if you donot want to change that
+        cc.setIdleAnim(agMap["idle"], 1, true);
+        cc.setTurnLeftAnim(agMap["turnLeft"], 0.5, false);
+        cc.setTurnRightAnim(agMap["turnRight"], 0.5, false);
+        cc.setWalkAnim(agMap["walk"], 1, true);
+        cc.setWalkBackAnim(agMap["walk"], 0.5, true);
+        cc.setIdleJumpAnim(agMap["jump"], 0.5, false);
+        cc.setRunJumpAnim(agMap["runJump"], 0.6, false);
+        cc.setFallAnim(agMap["fall"], 2, true);
+        cc.setStrafeLeftAnim(agMap["walk"], 1, true);
+        cc.setStrafeRightAnim(agMap["walk"], 1, true);
+        cc.setRunAnim(agMap["run"], 1, true);
+        cc.setSlideBackAnim(agMap["slideDown"], 1, false);
+        cc.setDeathAnim(agMap["death"], 1, false);
+        cc.setSwingRightAnim(agMap["swingRight"], 1, false);
+        cc.setPointAnim(agMap["point"], 1, false);
+
+        cc.setJumpSpeed(6);
+        cc.setGravity(12);
+        cc.setName(player.name);
+        cc.setSwingRightKey("f");
+        cc.setPointKey("p");
+
+        //store this actionmap in an object property so that it can be accessed by other NON SELF characters
+        //assuming each character will have the same set of actions - no more
+        // this.actionMap = cc.getActionMap();
+        // this.mlog.log('StartBabylon-loadPlayer setting action map', {'this.actionMap':this.actionMap}, 6);
+
+        //set how smmothly should we transition from one animation to another
+        cc.enableBlending(0.05);
+        cc.setCameraElasticity(false);
+        cc.start();
+
+        this.cc = cc;
+
+      }
+    )
+  }
+
+ StartBabylon.prototype.initSkybox = function (){
+    let mainColorboxHelper = this.scene.createDefaultEnvironment({
+      enableGroundShadow: true,
+      groundSize: 100,
+      createSkybox: true
+    });   
+    mainColorboxHelper.setMainColor(BABYLON.Color3.Teal());
+    
+    let groundplane = mainColorboxHelper.ground;
+    groundplane.isPickable = false; //otherwise objects get stuck under it
+    groundplane.position.y = -.01;
+    let skybox = mainColorboxHelper.skybox;
+    skybox.scaling = new BABYLON.Vector3(20, 20, 20); //make it bigger so not clipping the ground
+    skybox.isPickable = false;
+    //skybox.position.y = 255; //move up so can show full image that is loaded if image is set
+    skybox.visibility = 0; //hide the skybox on load, may be shown later
+    return (skybox)
+  }
+
+  StartBabylon.prototype.makeGroundGridMaterial = function() {
+    //GRID
+    this.groundGridMaterial = new BABYLON.GridMaterial("groundMaterialGrid", this.scene);
+    this.groundGridMaterial.majorUnitFrequency = 5;
+    this.groundGridMaterial.minorUnitVisibility = 0.45;
+    this.groundGridMaterial.gridRatio = 2;
+    this.groundGridMaterial.backFaceCulling = false;
+    this.groundGridMaterial.mainColor = new BABYLON.Color3(1, 1, 1);
+    this.groundGridMaterial.lineColor = new BABYLON.Color3(1.0, 1.0, 1.0);
+    this.groundGridMaterial.opacity = 0.5;
+    return this.groundGridMaterial;
+  }
+
+StartBabylon.prototype.makeGround = function() {
+    this.mlog.log('GroundFactory-makeGround', {}, 5);
+    //create ground
+    let groundMaterial = this.makeGroundGridMaterial();
+    this.ground = this.makeHeightMapGround(groundMaterial);
+  }
+StartBabylon.prototype.makeHeightMapGround = function(groundMaterial) {
+    this.mlog.log('GroundFactory-makeHeightMapGround', {}, 5);
+    new BABYLON.CreateGroundFromHeightMap(
+      "ground",
+      //"/assets/ground/ground_heightMap.png",
+      "https://bjs-playground.s3.amazonaws.com/heightmap-example.jpg",
+      {
+        width: this.groundWidth,
+        height: this.groundHeight,
+        maxHeight: this.groundMaxHeight,
+        subdivisions: this.subdivisions,
+        onReady: function (grnd) {
+          this.ground = grnd;
+          grnd.material = groundMaterial;
+          grnd.position = new BABYLON.Vector3(0, 0, 0);
+          grnd.checkCollisions = true;
+          grnd.isPickable = false;
+          // grnd.freezeWorldMatrix();
+          // grnd.position = new Vector3(0, -0.5, 0);
+          // grnd.visibility = 1;
+          // //grnd.visibility = 0;
+          //console.log('Ground IMposter');
+          //grnd.physicsImpostor = new BABYLON.PhysicsImpostor(grnd, BABYLON.PhysicsImpostor.HeightmapImpostor, {mass: 0}, this.scene); //only works with canon
+          //console.log('GROUND',grnd.id, grnd.maxHeight)
+        }.bind(this)
+      },
+      this.scene
+    );
+
+  }
+        const scene = createScene(); //Call the createScene function
+        // Register a render loop to repeatedly render the scene
+        engine.runRenderLoop(function () {
+                scene.render();
+        });
+        // Watch for browser/canvas resize events
+        window.addEventListener("resize", function () {
+                engine.resize();
+        });
+	</script>
+
+   </body>
+
+</html>
