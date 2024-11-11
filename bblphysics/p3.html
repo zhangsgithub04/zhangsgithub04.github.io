@@ -1,264 +1,104 @@
-<!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml">
 
-    <head>
-        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-        <title>Babylon Template</title>
 
-        <style>
-            html, body {
-                overflow: hidden;
-                width: 100%;
-                height: 100%;
-                margin: 0;
-                padding: 0;
-            }
-            #renderCanvas {
-                width: 100%;
-                height: 100%;
-                touch-action: none;
-            }
-        </style>
+  
 
-        <script src="https://cdn.babylonjs.com/babylon.js"></script>
-	       <!-- Include Babylon.js Loaders if you plan to load models -->
-    <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
+	    <!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
-    <!-- Include Havok Physics Plugin -->
+    <title>Babylon.js using Havok</title>
+
+    <!-- Babylon.js -->
     <script src="https://cdn.babylonjs.com/havok/HavokPhysics_umd.js"></script>
+    <script src="https://cdn.babylonjs.com/babylon.js"></script>
+    <script src="https://cdn.babylonjs.com/gui/babylon.gui.min.js"></script>
 
+    <style>
+      html,
+      body {
+        overflow: hidden;
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
 
-    </head>
+      #renderCanvas {
+        width: 100%;
+        height: 100%;
+        touch-action: none;
+      }
 
-   <body>
+      #canvasZone {
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="canvasZone"><canvas id="renderCanvas"></canvas></div>
+    <script>
+      const canvas = document.getElementById("renderCanvas");
+      const engine = new BABYLON.Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true, disableWebGL2Support: false });
+  
+      const createScene = async function () {
+        // This creates a basic Babylon Scene object (non-mesh)
+        const scene = new BABYLON.Scene(engine);
 
-	<canvas id="renderCanvas"></canvas>
+        // This creates and positions a free camera (non-mesh)
+        const camera = new BABYLON.FreeCamera("camera1", new BABYLON.Vector3(0, 5, -10), scene);
 
-	<script>
-        const canvas = document.getElementById("renderCanvas"); // Get the canvas element
-        const engine = new BABYLON.Engine(canvas, true); // Generate the BABYLON 3D engine
-        
-var createScene = function () {
-    //-------------------------------------------------------------------------------------------------------
-    // Scene creation
-    var scene = new BABYLON.Scene(engine);
+        // This targets the camera to scene origin
+        camera.setTarget(BABYLON.Vector3.Zero());
 
-    // This creates and positions a free camera
-    var camera = new BABYLON.FreeCamera("camera1", new BABYLON.Vector3(0, 5, -10), scene);
+        // This attaches the camera to the canvas
+        camera.attachControl(canvas, true);
 
-    // Lighting
-    new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene).intensity = 0.7;
-    var light2 = new BABYLON.DirectionalLight("dir01", new BABYLON.Vector3(0.25, -1, 0.5), scene);
-    light2.position = new BABYLON.Vector3(0, 10, 0);
+        // This creates a light, aiming 0,1,0 - to the sky (non-mesh)
+        const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
 
-    // Shadows
-    var shadowGenerator = new BABYLON.ShadowGenerator(1024, light2);
-    shadowGenerator.useBlurExponentialShadowMap = true;
+        // Default intensity is 1. Let's dim the light a small amount
+        light.intensity = 0.7;
 
-    // initialize physics plugin
-    var hk = new BABYLON.HavokPlugin();
-    scene.enablePhysics(new BABYLON.Vector3(0, -9.8, 0), hk);
+        // Our built-in 'sphere' shape.
+        const sphere = BABYLON.MeshBuilder.CreateSphere("sphere", { diameter: 2, segments: 32 }, scene);
 
-    //-------------------------------------------------------------------------------------------------------
-    // Geometry and physics objects
+        // Move the sphere upward at 4 units
+        sphere.position.y = 4;
 
-    // Create a box in the middle of the scene that will act like walls
-    var wall = BABYLON.MeshBuilder.CreateBox("wall", {size: 2}, scene);
-    wall.position.y = 1;
-    var wallAggregate = new BABYLON.PhysicsAggregate(wall, BABYLON.PhysicsShapeType.BOX, { mass: 0, restitution:0.0}, scene);
-    const wallMaterial = new BABYLON.StandardMaterial("wall");
-    wallMaterial.diffuseTexture = new BABYLON.Texture("https://raw.githubusercontent.com/CedricGuillemet/dump/master/Wall_1mx1m.png");
-    wall.material = wallMaterial;
+        // Our built-in 'ground' shape.
+        const ground = BABYLON.MeshBuilder.CreateGround("ground", { width: 10, height: 10 }, scene);
 
-    // Mandatory ground
-    var ground = BABYLON.MeshBuilder.CreateGround("ground", {width: 10, height: 10}, scene);
-    var groundAggregate = new BABYLON.PhysicsAggregate(ground, BABYLON.PhysicsShapeType.BOX, { mass: 0 }, scene);
-    const groundMaterial = new BABYLON.StandardMaterial("ground");
-    groundMaterial.diffuseTexture = new BABYLON.Texture("https://raw.githubusercontent.com/CedricGuillemet/dump/master/Ground_1mx1m.png");
-    groundMaterial.diffuseTexture.vScale = 5;
-    groundMaterial.diffuseTexture.uScale = 5;
-    ground.material = groundMaterial;
+        // initialize plugin
+        const havokInstance = await HavokPhysics();
+        // pass the engine to the plugin
+        const hk = new BABYLON.HavokPlugin(true, havokInstance);
+        // enable physics in the scene with a gravity
+        scene.enablePhysics(new BABYLON.Vector3(0, -9.8, 0), hk);
 
-    // up/down lift
-    var liftMesh = BABYLON.MeshBuilder.CreateBox("lift", {width: 2, height:0.1, depth:2}, scene);
-    var liftAggregate = new BABYLON.PhysicsAggregate(liftMesh, BABYLON.PhysicsShapeType.BOX, { mass: 0 }, scene);
-    const liftMaterial = new BABYLON.StandardMaterial("lift");
-    liftMaterial.diffuseTexture = new BABYLON.Texture("https://raw.githubusercontent.com/CedricGuillemet/dump/master/Platform_1mx1m.png");
-    liftMesh.material = liftMaterial;
-    liftAggregate.body.disablePreStep = false;
-    liftAggregate.body.setMotionType(BABYLON.PhysicsMotionType.ANIMATED);
-    liftMesh.position.x= -2;
+        // Create a sphere shape and the associated body. Size will be determined automatically.
+        const sphereAggregate = new BABYLON.PhysicsAggregate(sphere, BABYLON.PhysicsShapeType.SPHERE, { mass: 1, restitution: 0.75 }, scene);
 
-    // left/right platform
-    var platformAggregate = new BABYLON.PhysicsAggregate(liftMesh.clone(), BABYLON.PhysicsShapeType.BOX, { mass: 0 }, scene);
-    platformAggregate.body.disablePreStep = false;
-    platformAggregate.body.setMotionType(BABYLON.PhysicsMotionType.ANIMATED);
-    platformAggregate.transformNode.position.set(2,2,0);
+        // Create a static box shape.
+        const groundAggregate = new BABYLON.PhysicsAggregate(ground, BABYLON.PhysicsShapeType.BOX, { mass: 0 }, scene);
 
-    // Character
-    const characterMesh = BABYLON.MeshBuilder.CreateCapsule("character", {height: 1.8, radius: 0.45 });
-    const characterMaterial = new BABYLON.StandardMaterial("character");
-    characterMaterial.diffuseColor = new BABYLON.Color3(1, 0.56, 0.56);
-    characterMesh.material = characterMaterial;
-    characterMesh.position.set(0,1,-3);
-    const characterAggregate = new BABYLON.PhysicsAggregate(characterMesh,
-                                                            BABYLON.PhysicsShapeType.CAPSULE,
-                                                            { mass: 1, friction: 0.5, restitution: 0 },
-                                                            this.scene);
-    const characterBody = characterAggregate.body;
-    characterBody.disablePreStep = false;
-    characterBody.setMassProperties({ inertia: BABYLON.Vector3.ZeroReadOnly });
+        return scene;
+      };
 
-    // Geometry is created, time to set everything as shadow receiver/caster
-    shadowGenerator.addShadowCaster(characterMesh, true);
-    shadowGenerator.addShadowCaster(liftMesh, true);
-    shadowGenerator.addShadowCaster(wall, true);
-    shadowGenerator.addShadowCaster(platformAggregate.transformNode, true);
-    characterMesh.receiveShadows = true;
-    liftMesh.receiveShadows = true;
-    wall.receiveShadows = true;
-    platformAggregate.transformNode.receiveShadows = true;
-    ground.receiveShadows = true;
-
-    //-------------------------------------------------------------------------------------------------------
-    // Game State and debug
-
-    // set the camera target to be the character current position. Otherwise, camera will try to catch up during the first second of running
-    camera.setTarget(characterMesh.position);
-
-    // debug red sphere that will be placed where the shape cast detects the casting collision point
-    const sphereHitWorld = BABYLON.MeshBuilder.CreateSphere("s", {diameter: 0.15});
-    const sphereHitWorldMaterial = new BABYLON.StandardMaterial("sm");
-    sphereHitWorldMaterial.diffuseColor = new BABYLON.Color3(1,0,0);
-    sphereHitWorld.material = sphereHitWorldMaterial;
-
-    // velocity determined by inpout arrow keys pressed. It's more a local direction vector than a velocity.
-    var inputVelocity = new BABYLON.Vector3(0,0,0);
-
-    // time mostly used to animate platforms
-    var time = 0;
-    // character state: is he falling? and the platform it's currently over.
-    var falling = false;
-    var platformHook = null;
-
-    // Show some text to tell what's going on
-    var advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
-    var textBlock = new BABYLON.GUI.TextBlock();
-    textBlock.text = "Use arrow keys to control the pink character\nUse the lift to access the moving platform.";
-    textBlock.color = "white";
-    textBlock.fontSize = 50;
-    textBlock.alpha = 10;
-    advancedTexture.addControl(textBlock);
-
-    //-------------------------------------------------------------------------------------------------------
-    // Game loop
-    scene.onBeforeAnimationsObservable.add( ()=> {
-        // get camera world direction and right vectors. Character will move in camera space. 
-        var cameraDirection = camera.getDirection(new BABYLON.Vector3(0,0,1));
-        cameraDirection.y = 0;
-        cameraDirection.normalize();
-        var cameraRight = camera.getDirection(new BABYLON.Vector3(1,0,0));
-        cameraRight.y = 0;
-        cameraRight.normalize();
-
-        // by default, character velocity is 0. It won't move if no input or not falling
-        var linearVelocity = new BABYLON.Vector3(0,0,0);
-        if (!falling)
-        {
-            // transform input velocity by camera vectors: character forward is camera forward. Same for right. 
-            cameraDirection.scaleAndAddToRef(inputVelocity.x, linearVelocity);
-            cameraRight.scaleAndAddToRef(inputVelocity.z, linearVelocity);
-            // interpolate between current velocity and targeted velocity. This will make acceleration and decceleration more visible
-            linearVelocity = BABYLON.Vector3.Lerp(characterBody.getLinearVelocity(), linearVelocity, 0.2)
-            // if on a platform, add the platform velocity
-            if (platformHook) {
-                linearVelocity.x += platformHook.deltax * 16.66;
-            }
-            linearVelocity.y = characterBody.getLinearVelocity().y;
-        } else {
-            // damping while in air. Replace 0.9 by a smaller value to get a stronger damping effect
-            linearVelocity.copyFrom(characterBody.getLinearVelocity());
-            linearVelocity.x *= 0.9;
-            linearVelocity.z *= 0.9;
-        }
-        // Apply computed linear velocity. Each frame is the same: get current velocity, transform it, apply it, ...
-        characterBody.setLinearVelocity(linearVelocity);
-
-        // Camera control: Interpolate the camera target with character position. compute an amount of distance to travel to be in an acceptable range.
-        camera.setTarget(BABYLON.Vector3.Lerp(camera.getTarget(), characterMesh.position, 0.1));
-        var dist = BABYLON.Vector3.Distance(camera.position, characterMesh.position);
-        const amount = (Math.min(dist-10, 0) + Math.max(dist-15, 0)) * 0.02;
-        cameraDirection.scaleAndAddToRef(amount, camera.position);
-
-        // animate world
-        liftMesh.position.y = (Math.cos(time*0.8) + 1) * 0.98;
-        const newPlatformx = (Math.sin(time*0.8) + 3);
-        platformAggregate.deltax = newPlatformx - platformAggregate.transformNode.position.x;
-        platformAggregate.transformNode.position.x = newPlatformx;
-       
-        // Casting the shape to the ground below. It works like a raycast but with thickness
-        const shapeLocalResult = new BABYLON.ShapeCastResult();
-        const hitWorldResult = new BABYLON.ShapeCastResult();
-        hk.shapeCast({shape: characterAggregate.shape,
-            rotation: characterMesh.rotationQuaternion,
-            startPosition: characterMesh.position,
-            endPosition: new BABYLON.Vector3(characterMesh.position.x, characterMesh.position.y-10, characterMesh.position.z),
-            shouldHitTriggers: false,
-        }, shapeLocalResult, hitWorldResult);
-
-        // move the debug sphere to the position detected by the shape cast
-        sphereHitWorld.position = hitWorldResult.hitPoint;
-        // is the casting detecting the platform?
-        platformHook = (hitWorldResult.body === platformAggregate.body) ? platformAggregate : null;
-
-        // falling is when there is a too much distance between the character and the ground
-        falling = (characterMesh.position.y - hitWorldResult.hitPoint.y) > 0.91; // 0.9 + little margin
-        
-        // character can't fall. If it's under a threshold, reset it back to it's default spawn point
-        if (characterMesh.position.y < -1)
-            characterMesh.position.set(0,1,-3);
-
-        // advance in time. deltaTime is in milliseonds, convert to seconds.
-        time += engine.getDeltaTime() * 0.001;
-
-        // hide progressively the GUI
-        textBlock.alpha = Math.max(textBlock.alpha - 0.02, 0);
-    });
-
-    //-------------------------------------------------------------------------------------------------------
-    // Input Handler. really simple. When a key is down, set the direction accordingly
-
-    scene.onKeyboardObservable.add((kbInfo) => {
-        const muliplier = (kbInfo.type == BABYLON.KeyboardEventTypes.KEYDOWN) ? 2 : 0;
-        switch (kbInfo.event.key) {
-            case 'ArrowUp':
-                inputVelocity.x = muliplier;
-                break;
-            case 'ArrowDown':
-                inputVelocity.x = -muliplier;
-                break;
-            case 'ArrowLeft':
-                inputVelocity.z = -muliplier;
-                break;
-            case 'ArrowRight':
-                inputVelocity.z = muliplier;
-                break;
-        }
-    });
-    return scene;
-};
-
-        const scene = createScene(); //Call the createScene function
-        // Register a render loop to repeatedly render the scene
+      createScene().then((scene) => {
         engine.runRenderLoop(function () {
-                scene.render();
+          if (scene) {
+            scene.render();
+          }
         });
-        // Watch for browser/canvas resize events
-        window.addEventListener("resize", function () {
-                engine.resize();
-        });
-	</script>
-
-   </body>
-
+      });
+      // Resize
+      window.addEventListener("resize", function () {
+        engine.resize();
+      });
+    </script>
+  </body>
 </html>
+
+	    
