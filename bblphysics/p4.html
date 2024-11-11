@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Babylon.js with Havok Physics</title>
+</head>
+<body>
+    <canvas id="renderCanvas"></canvas>
+
+    <!-- Include Babylon.js Core Engine -->
+    <script src="https://cdn.babylonjs.com/babylon.js"></script>
+
+    <!-- Load Havok Physics Plugin -->
+    <script type="module">
+        import * as BABYLON from 'https://cdn.jsdelivr.net/npm/@babylonjs/core@5.0.0';
+        import { HavokPlugin } from '@babylonjs/havok'; // Use this line only if using npm or local install
+
+        const canvas = document.getElementById("renderCanvas");
+        const engine = new BABYLON.Engine(canvas, true);
+
+        const createScene = async () => {
+            const scene = new BABYLON.Scene(engine);
+
+            // Check and initialize Havok
+            try {
+                const hk = await HavokPlugin(); // Load Havok asynchronously
+                scene.enablePhysics(new BABYLON.Vector3(0, -9.81, 0), hk);
+            } catch (error) {
+                console.error("Havok plugin failed to load:", error);
+                return scene; // Return the scene even if Havok fails to load
+            }
+
+            // Basic scene setup
+            const camera = new BABYLON.ArcRotateCamera("Camera", Math.PI / 2, Math.PI / 4, 10, BABYLON.Vector3.Zero(), scene);
+            camera.attachControl(canvas, true);
+            const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(1, 1, 0), scene);
+            const sphere = BABYLON.MeshBuilder.CreateSphere("sphere", { diameter: 1 }, scene);
+            sphere.position.y = 1;
+            const ground = BABYLON.MeshBuilder.CreateGround("ground", { width: 10, height: 10 }, scene);
+            
+            // Add physics impostors only if Havok is enabled
+            ground.physicsImpostor = new BABYLON.PhysicsImpostor(ground, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0.9 }, scene);
+            sphere.physicsImpostor = new BABYLON.PhysicsImpostor(sphere, BABYLON.PhysicsImpostor.SphereImpostor, { mass: 1, restitution: 0.9 }, scene);
+
+            return scene;
+        };
+
+        createScene().then(scene => {
+            engine.runRenderLoop(() => {
+                scene.render();
+            });
+        });
+
+        window.addEventListener("resize", () => {
+            engine.resize();
+        });
+    </script>
+</body>
+</html>
