@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frustum</title>
+    <style>
+        #canvas {
+            border: 1px solid black;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas" width="600" height="600"></canvas>
+    <script>
+        class Frustum {
+            /**
+             * @param {number} fov - Field of view (degrees)
+             * @param {number} aspectRatio - Aspect ratio
+             * @param {number} near - Near plane distance
+             * @param {number} far - Far plane distance
+             */
+            constructor(fov, aspectRatio, near, far) {
+                this.fov = fov;
+                this.aspectRatio = aspectRatio;
+                this.near = near;
+                this.far = far;
+            }
+
+            /**
+             * Calculate frustum vertices
+             * @returns {Object} vertices
+             */
+            calculateVertices() {
+                const fovRad = (this.fov * Math.PI) / 180;
+                const nearHeight = 2 * Math.tan(fovRad / 2) * this.near;
+                const nearWidth = nearHeight * this.aspectRatio;
+                const farHeight = 2 * Math.tan(fovRad / 2) * this.far;
+                const farWidth = farHeight * this.aspectRatio;
+
+                const vertices = {
+                    nearTopLeft: [-nearWidth / 2, nearHeight / 2, this.near],
+                    nearTopRight: [nearWidth / 2, nearHeight / 2, this.near],
+                    nearBottomLeft: [-nearWidth / 2, -nearHeight / 2, this.near],
+                    nearBottomRight: [nearWidth / 2, -nearHeight / 2, this.near],
+                    farTopLeft: [-farWidth / 2, farHeight / 2, this.far],
+                    farTopRight: [farWidth / 2, farHeight / 2, this.far],
+                    farBottomLeft: [-farWidth / 2, -farHeight / 2, this.far],
+                    farBottomRight: [farWidth / 2, -farHeight / 2, this.far],
+                };
+
+                return vertices;
+            }
+
+            /**
+             * Draw frustum on canvas
+             * @param {CanvasRenderingContext2D} ctx
+             */
+            draw(ctx) {
+                const vertices = this.calculateVertices();
+
+                // Draw near plane
+                ctx.beginPath();
+                ctx.moveTo(vertices.nearTopLeft[0], vertices.nearTopLeft[1]);
+                ctx.lineTo(vertices.nearTopRight[0], vertices.nearTopRight[1]);
+                ctx.lineTo(vertices.nearBottomRight[0], vertices.nearBottomRight[1]);
+                ctx.lineTo(vertices.nearBottomLeft[0], vertices.nearBottomLeft[1]);
+                ctx.closePath();
+                ctx.strokeStyle = 'blue';
+                ctx.stroke();
+
+                // Draw far plane
+                ctx.beginPath();
+                ctx.moveTo(vertices.farTopLeft[0], vertices.farTopLeft[1]);
+                ctx.lineTo(vertices.farTopRight[0], vertices.farTopRight[1]);
+                ctx.lineTo(vertices.farBottomRight[0], vertices.farBottomRight[1]);
+                ctx.lineTo(vertices.farBottomLeft[0], vertices.farBottomLeft[1]);
+                ctx.closePath();
+                ctx.strokeStyle = 'red';
+                ctx.stroke();
+
+                // Draw connecting lines
+                ctx.beginPath();
+                ctx.moveTo(vertices.nearTopLeft[0], vertices.nearTopLeft[1]);
+                ctx.lineTo(vertices.farTopLeft[0], vertices.farTopLeft[1]);
+                ctx.moveTo(vertices.nearTopRight[0], vertices.nearTopRight[1]);
+                ctx.lineTo(vertices.farTopRight[0], vertices.farTopRight[1]);
+                ctx.moveTo(vertices.nearBottomLeft[0], vertices.nearBottomLeft[1]);
+                ctx.lineTo(vertices.farBottomLeft[0], vertices.farBottomLeft[1]);
+                ctx.moveTo(vertices.nearBottomRight[0], vertices.nearBottomRight[1]);
+                ctx.lineTo(vertices.farBottomRight[0], vertices.farBottomRight[1]);
+                ctx.strokeStyle = 'green';
+                ctx.stroke();
+            }
+        }
+
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        const frustum = new Frustum(60, 1, 1, 10);
+        frustum.draw(ctx);
+    </script>
+</body>
+</html>
