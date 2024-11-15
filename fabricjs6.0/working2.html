@@ -1,0 +1,66 @@
+<canvas id="canvas" width="600" height="600"></canvas>
+
+<script src="https://cdn.jsdelivr.net/npm/fabric@6.4.3/dist/index.js"></script>
+<script>
+  const canvas = new fabric.Canvas('canvas', {
+    backgroundColor: 'blue', // Set canvas background to blue
+  });
+
+  // Create two rectangles
+  const rect1 = new fabric.Rect({
+    top: 100,
+    left: 100,
+    width: 60,
+    height: 70,
+    fill: 'red',
+  });
+
+  const rect2 = new fabric.Rect({
+    top: 300,
+    left: 300,
+    width: 60,
+    height: 70,
+    fill: 'green',
+  });
+
+  // Add rectangles to canvas
+  canvas.add(rect1);
+  canvas.add(rect2);
+
+  // Enable connection lines (arrows) between objects
+  canvas.on('object:moved', () => {
+    canvas.contextContainer.clearRect(0, 0, canvas.width, canvas.height);
+    drawConnectionLines();
+  });
+
+  function drawConnectionLines() {
+    const objects = canvas.getObjects();
+    for (let i = 0; i < objects.length; i++) {
+      for (let j = i + 1; j < objects.length; j++) {
+        const obj1 = objects[i];
+        const obj2 = objects[j];
+        const centerX1 = obj1.left + obj1.width / 2;
+        const centerY1 = obj1.top + obj1.height / 2;
+        const centerX2 = obj2.left + obj2.width / 2;
+        const centerY2 = obj2.top + obj2.height / 2;
+        drawArrow(centerX1, centerY1, centerX2, centerY2);
+      }
+    }
+  }
+
+  function drawArrow(fromX, fromY, toX, toY) {
+    const ctx = canvas.contextContainer;
+    ctx.beginPath();
+    ctx.moveTo(fromX, fromY);
+    ctx.lineTo(toX, toY);
+    ctx.strokeStyle = 'white';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(toX - (toX - fromX) / 4, toY - (toY - fromY) / 4);
+    ctx.lineTo(toX, toY);
+    ctx.lineTo(toX + (toX - fromX) / 4, toY + (toY - fromY) / 4);
+    ctx.fillStyle = 'white';
+    ctx.fill();
+  }
+</script>
