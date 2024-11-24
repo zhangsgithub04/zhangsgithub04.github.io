@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Babylon.js Shader Example</title>
+    <style>
+        #renderCanvas {
+            width: 100%;
+            height: 100vh;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="renderCanvas"></canvas>
+    <script src="https://cdn.babylonjs.com/babylon.max.js"></script>
+    <script>
+        const canvas = document.getElementById("renderCanvas");
+        const engine = new BABYLON.Engine(canvas);
+        const scene = new BABYLON.Scene(engine);
+
+        const camera = new BABYLON.ArcRotateCamera("camera", 1, 0.8, 10, BABYLON.Vector3.Zero(), scene);
+        camera.attachControl(canvas, true);
+
+        const vertexShaderCode = `
+            precision highp float;
+            attribute vec3 position;
+            uniform mat4 worldViewProjection;
+            void main(void) {
+                gl_Position = worldViewProjection * vec4(position, 1.0);
+            }
+        `;
+
+        const fragmentShaderCode = `
+            precision highp float;
+            uniform vec2 resolution;
+            uniform float time;
+            void main(void) {
+                vec2 uv = gl_FragCoord.xy / resolution.xy;
+                vec3 col = 0.5 + 0.5 * cos(3.0 * uv.x + time);
+                gl_FragColor = vec4(col, 1.0);
+            }
+        `;
+
+        const shaderMaterial = new BABYLON.ShaderMaterial("shader", scene, {
+            vertex: vertexShaderCode,
+            fragment: fragmentShaderCode,
+        }, {
+            attributes: ["position"],
+            uniforms: ["worldViewProjection", "resolution", "time"]
+        });
+
+        const sphere = BABYLON.MeshBuilder.CreateSphere("sphere", { diameter: 2 }, scene);
+        sphere.material = shaderMaterial;
+
+        engine.runRenderLoop(() => {
+            scene.render();
+            shaderMaterial.setFloat("time", performance.now() * 0.001);
+            shaderMaterial.setVector2("resolution", new BABYLON.Vector2(canvas.width, canvas.height));
+        });
+    </script>
+</body>
+</html>
