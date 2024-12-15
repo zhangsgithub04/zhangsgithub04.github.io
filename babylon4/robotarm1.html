@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Robot Arm Animation</title>
+    <style>
+        /* Style the canvas to fill the viewport */
+        canvas {
+            width: 100%;
+            height: 100vh;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="renderCanvas"></canvas>
+    <script src="https://cdn.babylonjs.com/babylon.max.js"></script>
+    <script>
+        // Get the canvas element
+        const canvas = document.getElementById('renderCanvas');
+        const engine = new BABYLON.Engine(canvas);
+        const scene = new BABYLON.Scene(engine);
+
+        // Load the GLB model
+        BABYLON.SceneLoader.ImportMeshAsync(null, 'robot_arm.glb', scene)
+            .then((result) => {
+                // result.meshes contains your loaded meshes
+                const robotArm = result.meshes[0]; // Assuming your robot arm is the first mesh
+
+                // Optional: Adjust the position, rotation, or scaling of your model here
+                // robotArm.position = new BABYLON.Vector3(1, 2, 3);
+
+                // Find the animation
+                const animation = scene.animations.find((a) => a.name === 'RobotArmAnimation');
+
+                if (animation) {
+                    // Play the animation
+                    scene.beginAnimation(animation, 0, 100, true); // loop forever
+                }
+            })
+            .catch((error) => {
+                console.error('Error loading model:', error);
+            });
+
+        // Render the scene
+        engine.runRenderLoop(() => {
+            scene.render();
+        });
+
+        // Resize the engine on window resize
+        window.addEventListener('resize', () => {
+            engine.resize();
+        });
+    </script>
+</body>
+</html>
