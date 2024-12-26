@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fabric.js Example</title>
+    <style>
+        canvas {
+            border: 1px solid black;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas" width="600" height="400"></canvas>
+    <script src="https://cdn.jsdelivr.net/npm/fabric@6.0/dist/fabric.min.js"></script>
+    <script>
+        // Get the canvas element
+        var canvas = new fabric.Canvas('canvas');
+
+        // Create a rectangle
+        var rect = new fabric.Rect({
+            left: 100,
+            top: 100,
+            width: 50,
+            height: 50,
+            fill: 'red'
+        });
+
+        // Add the rectangle to the canvas
+        canvas.add(rect);
+
+        // Create a text object
+        var text = new fabric.Text('Hello, World!', {
+            left: 200,
+            top: 200,
+            fontSize: 24
+        });
+
+        // Add the text to the canvas
+        canvas.add(text);
+    </script>
+</body>
+</html>
