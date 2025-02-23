@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fabric.js Example</title>
+    <!-- Include Fabric.js from CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/6.0.0/fabric.min.js"></script>
+</head>
+<body>
+    <canvas id="canvas" width="500" height="500" style="border:1px solid #000000;"></canvas>
+
+    <script>
+        // Initialize the Fabric.js canvas
+        var canvas = new fabric.Canvas('canvas');
+
+        // Create a rectangle object
+        var rect = new fabric.Rect({
+            left: 100,
+            top: 100,
+            fill: 'pink',
+            width: 200,
+            height: 200
+        });
+
+        // Add the rectangle to the canvas
+        canvas.add(rect);
+    </script>
+</body>
+</html>
