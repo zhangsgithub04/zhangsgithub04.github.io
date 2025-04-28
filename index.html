@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Education Hub</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #6e48aa;
+            --secondary: #9d50bb;
+            --accent: #4776e6;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --gradient: linear-gradient(135deg, var(--primary), var(--secondary));
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: var(--dark);
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+            position: relative;
+            overflow: hidden;
+            padding: 2rem 0;
+            border-radius: 15px;
+            background: var(--gradient);
+            color: white;
+            box-shadow: 0 10px 30px rgba(110, 72, 170, 0.3);
+            animation: gradientShift 8s ease infinite;
+            background-size: 200% 200%;
+        }
+        
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            font-weight: 800;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        
+        .ai-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+        
+        .resource-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+        
+        .resource-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .resource-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+        }
+        
+        .card-header {
+            padding: 1.5rem;
+            background: var(--gradient);
+            color: white;
+            position: relative;
+        }
+        
+        .card-icon {
+            position: absolute;
+            right: 1.5rem;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 2rem;
+            opacity: 0.2;
+        }
+        
+        .card-body {
+            padding: 1.5rem;
+        }
+        
+        .resource-list {
+            list-style: none;
+        }
+        
+        .resource-item {
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #eee;
+            transition: all 0.3s ease;
+        }
+        
+        .resource-item:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+        
+        .resource-item:hover {
+            transform: translateX(5px);
+        }
+        
+        .resource-link {
+            display: flex;
+            align-items: center;
+            color: var(--dark);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+        
+        .resource-link:hover {
+            color: var(--primary);
+        }
+        
+        .link-icon {
+            margin-right: 0.8rem;
+            color: var(--accent);
+            font-size: 1.2rem;
+        }
+        
+        .category-tag {
+            display: inline-block;
+            padding: 0.3rem 0.8rem;
+            background: rgba(110, 72, 170, 0.1);
+            color: var(--primary);
+            border-radius: 50px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-top: 0.5rem;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 4rem;
+            padding: 2rem;
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .search-bar {
+            margin: 2rem auto;
+            max-width: 600px;
+            position: relative;
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 1rem 1.5rem;
+            border: none;
+            border-radius: 50px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            box-shadow: 0 5px 20px rgba(110, 72, 170, 0.2);
+        }
+        
+        .search-icon {
+            position: absolute;
+            right: 1.5rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--primary);
+        }
+        
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.2rem;
+            }
+            
+            .resource-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="ai-icon">
+                <i class="fas fa-robot"></i>
+            </div>
+            <h1>AI Education Hub</h1>
+            <p class="subtitle">Explore the best resources to learn about Artificial Intelligence, Machine Learning, and Deep Learning from top institutions and experts worldwide.</p>
+        </header>
+        
+        <div class="search-bar">
+            <input type="text" class="search-input" placeholder="Search AI resources...">
+            <i class="fas fa-search search-icon"></i>
+        </div>
+        
+        <div class="resource-grid">
+            <!-- Free Courses Card -->
+            <div class="resource-card">
+                <div class="card-header">
+                    <h2>Free Courses</h2>
+                    <i class="fas fa-graduation-cap card-icon"></i>
+                </div>
+                <div class="card-body">
+                    <ul class="resource-list">
+                        <li class="resource-item">
+                            <a href="https://www.coursera.org/learn/machine-learning" class="resource-link" target="_blank">
+                                <i class="fas fa-external-link-alt link-icon"></i>
+                                Machine Learning - Andrew Ng (Coursera)
+                                <span class="category-tag">Beginner</span>
+                            </a>
+                        </li>
+                        <li class="resource-item">
+                            <a href="https://www.edx.org/course/introduction-to-artificial-intelligence-ai" class="resource-link" target="_blank">
+                                <i class="fas fa-external-link-alt link-icon"></i>
+                                Introduction to AI - IBM (edX)
+                                <span class="category-tag">Beginner</span>
+                            </a>
+                        </li>
+                        <li class="resource-item">
+                            <a href="https://www.fast.ai/" class="resource-link" target="_blank">
+                                <i class="fas fa-external-link-alt link-icon"></i>
+                                Practical Deep Learning - fast.ai
+                                <span class="category-tag">Intermediate</span>
+                            </a>
+                        </li>
+                        <li class="resource-item">
+                            <a href="https://developers.google.com/machine-learning/crash-course" class="resource-link" target="_blank">
+                                <i class="fas fa-external-link-alt link-icon"></i>
+                                ML Crash Course - Google
+                                <span class="category-tag">Beginner</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- University Programs Card -->
+            <div class="resource-card">
+                <div class="card-header">
+                    <h2>University Programs</h2>
+                    <i class="fas fa-university card-icon"></i>
+                </div>
+                <div class="card-body">
+                    <ul class="resource-list">
+                        <li class="resource-item">
+                            <a href="https://cs50.ai/" class="resource-link" target="_blank">
+                                <i class="fas fa-external-link-alt link-icon"></i>
+                                CS50's Introduction to AI - Harvard
+                                <span class="category-tag">Intermediate</span>
+                            </a>
+                        </li>
+                        <li class="resource-item">
+                            <a href="https://online.stanford.edu/courses/cs229-machine-learning" class="resource-link" target="_blank">
+                                <i class="fas fa-external-link-alt link-icon"></i>
+                                Machine Learning - Stanford
+                                <span class="category-tag">Advanced</span>
+                            </a>
+                        </li>
+                        <li class="resource-item">
+                            <a href="https://ocw.mit.edu/courses/6-034-artificial-intelligence-fall-2010/" class="resource-link" target="_blank">
+                                <i class="fas fa-external-link-alt link-icon"></i>
+                                Artificial Intelligence - MIT
+                                <span class="category-tag">Advanced</span>
+                            </a>
+                        </li>
+                        <li class="resource-item">
+                            <a href="https://www.oxford.ai/" class="resource-link" target="_blank">
+                                <i class="fas fa-external-link-alt link-icon"></i>
+                                AI Programme - Oxford
+                                <span class="category-tag">All Levels</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- Interactive Learning Card -->
+            <div class="resource-card">
+                <div class="card-header">
+                    <h2>Interactive Learning</h2>
+                    <i class="fas fa-laptop-code card-icon"></i>
+                </div>
+                <div class="card-body">
+                    <ul class="resource-list">
+                        <li class="resource-item">
+                            <a href="https://www.kaggle.com/learn/intro-to-deep-learning" class="resource-link" target="_blank">
+                                <i class="fas fa-external-link-alt link-icon"></i>
+                                Intro to Deep Learning - Kaggle
+                                <span class="category-tag">Hands-on</span>
+                            </a>
+                        </li>
+                        <li class="resource-item">
+                            <a href="https://www.elementsofai.com/" class="resource-link" target="_blank">
+                                <i class="fas fa-external-link-alt link-icon"></i>
+                                Elements of AI - University of Helsinki
+                                <span class="category-tag">Beginner</span>
+                            </a>
+                        </li>
+                        <li class="resource-item">
+                            <a href="https://playground.tensorflow.org/" class="resource-link" target="_blank">
+                                <i class="fas fa-external-link-alt link-icon"></i>
+                                TensorFlow Playground
+                                <span class="category-tag">Visual</span>
+                            </a>
+                        </li>
+                        <li class="resource-item">
+                            <a href="https://teachablemachine.withgoogle.com/" class="resource-link" target="_blank">
+                                <i class="fas fa-external-link-alt link-icon"></i>
+                                Teachable Machine - Google
+                                <span class="category-tag">Beginner</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- Books & Papers Card -->
+            <div class="resource-card">
+                <div class="card-header">
+                    <h2>Books & Papers</h2>
+                    <i class="fas fa-book card-icon"></i>
+                </div>
+                <div class="card-body">
+                    <ul class="resource-list">
+                        <li class="resource-item">
+                            <a href="http://aima.cs.berkeley.edu/" class="resource-link" target="_blank">
+                                <i class="fas fa-external-link-alt link-icon"></i>
+                                Artificial Intelligence: A Modern Approach
+                                <span class="category-tag">Textbook</span>
+                            </a>
+                        </li>
+                        <li class="resource-item">
+                            <a href="https://www.deeplearningbook.org/" class="resource-link" target="_blank">
+                                <i class="fas fa-external-link-alt link-icon"></i>
+                                Deep Learning Book - Ian Goodfellow
+                                <span class="category-tag">Advanced</span>
+                            </a>
+                        </li>
+                        <li class="resource-item">
+                            <a href="https://arxiv.org/list/cs.AI/recent" class="resource-link" target="_blank">
+                                <i class="fas fa-external-link-alt link-icon"></i>
+                                Latest AI Papers - arXiv
+                                <span class="category-tag">Research</span>
+                            </a>
+                        </li>
+                        <li class="resource-item">
+                            <a href="https://d2l.ai/" class="resource-link" target="_blank">
+                                <i class="fas fa-external-link-alt link-icon"></i>
+                                Dive into Deep Learning
+                                <span class="category-tag">Interactive</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- YouTube Channels Card -->
+            <div class="resource-card">
+                <div class="card-header">
+                    <h2>YouTube Channels</h2>
+                    <i class="fas fa-video card-icon"></i>
+                </div>
+                <div class="card-body">
+                    <ul class="resource-list">
+                        <li class="resource-item">
+                            <a href="https://www.youtube.com/c/3blue1brown" class="resource-link" target="_blank">
+                                <i class="fas fa-external-link-alt link-icon"></i>
+                                3Blue1Brown - Neural Networks
+                                <span class="category-tag">Visual</span>
+                            </a>
+                        </li>
+                        <li class="resource-item">
+                            <a href="https://www.youtube.com/c/YannicKilcher" class="resource-link" target="_blank">
+                                <i class="fas fa-external-link-alt link-icon"></i>
+                                Yannic Kilcher - Paper Explanations
+                                <span class="category-tag">Advanced</span>
+                            </a>
+                        </li>
+                        <li class="resource-item">
+                            <a href="https://www.youtube.com/c/sentdex" class="resource-link" target="_blank">
+                                <i class="fas fa-external-link-alt link-icon"></i>
+                                Sentdex - Python & ML
+                                <span class="category-tag">Practical</span>
+                            </a>
+                        </li>
+                        <li class="resource-item">
+                            <a href="https://www.youtube.com/c/ArxivInsights" class="resource-link" target="_blank">
+                                <i class="fas fa-external-link-alt link-icon"></i>
+                                Arxiv Insights
+                                <span class="category-tag">Research</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- Communities & More Card -->
+            <div class="resource-card">
+                <div class="card-header">
+                    <h2>Communities & More</h2>
+                    <i class="fas fa-users card-icon"></i>
+                </div>
+                <div class="card-body">
+                    <ul class="resource-list">
+                        <li class="resource-item">
+                            <a href="https://www.reddit.com/r/MachineLearning/" class="resource-link" target="_blank">
+                                <i class="fas fa-external-link-alt link-icon"></i>
+                                r/MachineLearning
+                                <span class="category-tag">Community</span>
+                            </a>
+                        </li>
+                        <li class="resource-item">
+                            <a href="https://www.kaggle.com/" class="resource-link" target="_blank">
+                                <i class="fas fa-external-link-alt link-icon"></i>
+                                Kaggle Competitions
+                                <span class="category-tag">Hands-on</span>
+                            </a>
+                        </li>
+                        <li class="resource-item">
+                            <a href="https://paperswithcode.com/" class="resource-link" target="_blank">
+                                <i class="fas fa-external-link-alt link-icon"></i>
+                                Papers With Code
+                                <span class="category-tag">Research</span>
+                            </a>
+                        </li>
+                        <li class="resource-item">
+                            <a href="https://ai.google/education/" class="resource-link" target="_blank">
+                                <i class="fas fa-external-link-alt link-icon"></i>
+                                Google AI Education
+                                <span class="category-tag">Resources</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>© 2023 AI Education Hub | Continuously updated with the best AI learning resources</p>
+            <p>Follow us: 
+                <a href="#" style="color: var(--primary);"><i class="fab fa-twitter"></i></a> 
+                <a href="#" style="color: var(--primary);"><i class="fab fa-github"></i></a> 
+                <a href="#" style="color: var(--primary);"><i class="fab fa-linkedin"></i></a>
+            </p>
+        </footer>
+    </div>
+    
+    <script>
+        // Simple search functionality
+        document.querySelector('.search-input').addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const cards = document.querySelectorAll('.resource-card');
+            
+            cards.forEach(card => {
+                const text = card.textContent.toLowerCase();
+                if (text.includes(searchTerm)) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+        
+        // Add animation to cards when they come into view
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = 1;
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, { threshold: 0.1 });
+        
+        document.querySelectorAll('.resource-card').forEach(card => {
+            card.style.opacity = 0;
+            card.style.transform = 'translateY(20px)';
+            card.style.transition = 'all 0.5s ease';
+            observer.observe(card);
+        });
+    </script>
+</body>
+</html>
