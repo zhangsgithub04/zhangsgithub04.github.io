@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>RL Grid Example</title>
+  <style>
+    canvas { border: 1px solid black; margin-top: 10px; }
+    #train { margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <h2>Reinforcement Learning Grid (Q-Learning)</h2>
+  <button id="train">Train Agent</button>
+  <canvas id="grid" width="300" height="300"></canvas>
+
+  <script>
+    const canvas = document.getElementById("grid");
+    const ctx = canvas.getContext("2d");
+    const gridSize = 6;
+    const cellSize = canvas.width / gridSize;
+
+    const actions = ['up', 'down', 'left', 'right'];
+    const qTable = {};
+    const rewards = [];
+
+    let walls = [[1,1],[1,2],[2,1]];
+    let goal = [5,5];
+    let episodes = 500;
+    let alpha = 0.1;
+    let gamma = 0.9;
+    let epsilon = 0.2;
+
+    function stateKey(x, y) {
+      return `${x},${y}`;
+    }
+
+    function getValidActions(x, y) {
+      return actions.filter(a => {
+        let [nx, ny] = move(x, y, a);
+        return nx >= 0 && ny >= 0 && nx < gridSize && ny < gridSize &&
+          !walls.some(w => w[0] === nx && w[1] === ny);
+      });
+    }
+
+    function move(x, y, action) {
+      switch (action) {
+        case 'up': return [x, y - 1];
+        case 'down': return [x, y + 1];
+        case 'left': return [x - 1, y];
+        case 'right': return [x + 1, y];
+      }
+    }
+
+    function chooseAction(x, y) {
+      if (Math.random() < epsilon) {
+        let valid = getValidActions(x, y);
+        return valid[Math.floor(Math.random() * valid.length)];
+      }
+      let key = stateKey(x, y);
+      let best = -Infinity, bestA = null;
+      for (let a of getValidActions(x, y)) {
+        let q = qTable[`${key}:${a}`] ?? 0;
+        if (q > best) {
+          best = q;
+          bestA = a;
+        }
+      }
+      return bestA || getValidActions(x, y)[0];
+    }
+
+    function train() {
+      for (let ep = 0; ep < episodes; ep++) {
+        let x = 0, y = 0;
+        let totalReward = 0;
+
+        while (x !== goal[0] || y !== goal[1]) {
+          let action = chooseAction(x, y);
+          let [nx, ny] = move(x, y, action);
+
+          let reward = (nx === goal[0] && ny === goal[1]) ? 10 : -0.1;
+          totalReward += reward;
+
+          let key = stateKey(x, y);
+          let nextKey = stateKey(nx, ny);
+          let q = qTable[`${key}:${action}`] ?? 0;
+
+          let maxNextQ = Math.max(...getValidActions(nx, ny).map(a => qTable[`${nextKey}:${a}`] ?? 0));
+          qTable[`${key}:${action}`] = q + alpha * (reward + gamma * maxNextQ - q);
+
+          x = nx;
+          y = ny;
+        }
+
+        rewards.push(totalReward);
+      }
+      drawGrid();
+    }
+
+    function drawGrid() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (let x = 0; x < gridSize; x++) {
+        for (let y = 0; y < gridSize; y++) {
+          ctx.strokeRect(x * cellSize, y * cellSize, cellSize, cellSize);
+        }
+      }
+
+      for (let [x, y] of walls) {
+        ctx.fillStyle = "gray";
+        ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+      }
+
+      ctx.fillStyle = "green";
+      ctx.fillRect(goal[0] * cellSize, goal[1] * cellSize, cellSize, cellSize);
+
+      ctx.fillStyle = "blue";
+      let x = 0, y = 0;
+      while (x !== goal[0] || y !== goal[1]) {
+        let action = chooseAction(x, y);
+        let [nx, ny] = move(x, y, action);
+        ctx.beginPath();
+        ctx.arc(x * cellSize + cellSize/2, y * cellSize + cellSize/2, 5, 0, Math.PI * 2);
+        ctx.fill();
+        x = nx; y = ny;
+      }
+    }
+
+    document.getElementById("train").onclick = () => {
+      train();
+    };
+  </script>
+</body>
+</html>
