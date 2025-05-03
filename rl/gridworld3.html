@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reinforcement Learning Grid World</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        h1, h2 {
+            color: #2c3e50;
+        }
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+        }
+        .grid-container {
+            flex: 1;
+            min-width: 300px;
+        }
+        .controls {
+            flex: 1;
+            min-width: 250px;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(5, 60px);
+            grid-template-rows: repeat(5, 60px);
+            gap: 2px;
+            margin: 20px 0;
+            background-color: #eee;
+            padding: 5px;
+            border-radius: 5px;
+        }
+        .cell {
+            width: 60px;
+            height: 60px;
+            border: 1px solid #ccc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            background-color: white;
+        }
+        .cell:hover {
+            transform: scale(1.05);
+        }
+        .start {
+            background-color: #3498db;
+            color: white;
+        }
+        .goal {
+            background-color: #2ecc71;
+            color: white;
+        }
+        .obstacle {
+            background-color: #e74c3c;
+            color: white;
+        }
+        .agent {
+            background-color: #f39c12;
+            color: white;
+            border-radius: 50%;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            margin: 5px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        .slider-container {
+            margin: 15px 0;
+        }
+        .slider-container label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .log {
+            height: 150px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-top: 20px;
+            background-color: #f9f9f9;
+            border-radius: 4px;
+        }
+        .q-values {
+            font-size: 10px;
+            text-align: center;
+            line-height: 1.2;
+        }
+        .explanation {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Reinforcement Learning Grid World</h1>
+    <p>A simple demonstration of Q-learning in a grid world environment.</p>
+    
+    <div class="container">
+        <div class="grid-container">
+            <h2>Grid World</h2>
+            <div class="grid" id="grid"></div>
+            <div>
+                <button id="train">Train Agent</button>
+                <button id="reset">Reset Agent</button>
+                <button id="test">Test Agent</button>
+                <button id="resetAll">Reset Everything</button>
+            </div>
+            <div class="log" id="log"></div>
+        </div>
+        
+        <div class="controls">
+            <h2>Controls</h2>
+            <div class="slider-container">
+                <label for="episodes">Training Episodes: <span id="episodesValue">100</span></label>
+                <input type="range" id="episodes" min="10" max="1000" value="100" step="10">
+            </div>
+            
+            <div class="slider-container">
+                <label for="learningRate">Learning Rate (α): <span id="learningRateValue">0.1</span></label>
+                <input type="range" id="learningRate" min="0" max="1" value="0.1" step="0.05">
+            </div>
+            
+            <div class="slider-container">
+                <label for="discountFactor">Discount Factor (γ): <span id="discountFactorValue">0.9</span></label>
+                <input type="range" id="discountFactor" min="0" max="1" value="0.9" step="0.05">
+            </div>
+            
+            <div class="slider-container">
+                <label for="explorationRate">Exploration Rate (ε): <span id="explorationRateValue">0.2</span></label>
+                <input type="range" id="explorationRate" min="0" max="1" value="0.2" step="0.05">
+            </div>
+            
+            <div>
+                <h3>Cell Types</h3>
+                <button id="setStart">Set Start</button>
+                <button id="setGoal">Set Goal</button>
+                <button id="setObstacle">Set Obstacle</button>
+                <button id="setNormal">Set Normal</button>
+            </div>
+            
+            <div class="explanation">
+                <h3>How It Works</h3>
+                <p>This demo shows Q-learning, where the agent learns by:</p>
+                <ol>
+                    <li>Exploring the environment (random moves)</li>
+                    <li>Updating Q-values based on rewards</li>
+                    <li>Gradually exploiting learned knowledge</li>
+                </ol>
+                <p>The agent gets +10 for reaching the goal, -5 for hitting obstacles, and -1 for each move.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Grid configuration
+        const ROWS = 5;
+        const COLS = 5;
+        let grid = [];
+        let qTable = {};
+        let agentPosition = { row: 0, col: 0 };
+        let startPosition = { row: 0, col: 0 };
+        let goalPosition = { row: ROWS-1, col: COLS-1 };
+        let obstacles = [];
+        let selectedCellType = 'normal';
+        let isTraining = false;
+        let trainingInterval;
+        
+        // RL parameters
+        let learningRate = 0.1;
+        let discountFactor = 0.9;
+        let explorationRate = 0.2;
+        let trainingEpisodes = 100;
+        
+        // DOM elements
+        const gridElement = document.getElementById('grid');
+        const logElement = document.getElementById('log');
+        const episodesSlider = document.getElementById('episodes');
+        const episodesValue = document.getElementById('episodesValue');
+        const learningRateSlider = document.getElementById('learningRate');
+        const learningRateValue = document.getElementById('learningRateValue');
+        const discountFactorSlider = document.getElementById('discountFactor');
+        const discountFactorValue = document.getElementById('discountFactorValue');
+        const explorationRateSlider = document.getElementById('explorationRate');
+        const explorationRateValue = document.getElementById('explorationRateValue');
+        
+        // Initialize the grid
+        function initializeGrid() {
+            gridElement.innerHTML = '';
+            grid = [];
+            
+            for (let row = 0; row < ROWS; row++) {
+                grid[row] = [];
+                for (let col = 0; col < COLS; col++) {
+                    grid[row][col] = 'normal';
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.dataset.row = row;
+                    cell.dataset.col = col;
+                    
+                    // Set special cells
+                    if (row === startPosition.row && col === startPosition.col) {
+                        grid[row][col] = 'start';
+                        cell.classList.add('start');
+                        cell.textContent = 'S';
+                    } else if (row === goalPosition.row && col === goalPosition.col) {
+                        grid[row][col] = 'goal';
+                        cell.classList.add('goal');
+                        cell.textContent = 'G';
+                    } else if (obstacles.some(obs => obs.row === row && obs.col === col)) {
+                        grid[row][col] = 'obstacle';
+                        cell.classList.add('obstacle');
+                        cell.textContent = 'X';
+                    }
+                    
+                    cell.addEventListener('click', () => handleCellClick(row, col));
+                    gridElement.appendChild(cell);
+                }
+            }
+            
+            // Place agent at start
+            placeAgent(startPosition.row, startPosition.col);
+        }
+        
+        // Place the agent at a specific position
+        function placeAgent(row, col) {
+            // Remove agent from previous position
+            const prevAgent = document.querySelector('.agent');
+            if (prevAgent) {
+                prevAgent.classList.remove('agent');
+                const prevRow = parseInt(prevAgent.dataset.row);
+                const prevCol = parseInt(prevAgent.dataset.col);
+                updateCellAppearance(prevRow, prevCol);
+            }
+            
+            // Place agent at new position
+            agentPosition = { row, col };
+            const cells = document.querySelectorAll('.cell');
+            const cellIndex = row * COLS + col;
+            cells[cellIndex].classList.add('agent');
+            
+            // Update cell appearance (in case it was a special cell)
+            updateCellAppearance(row, col);
+        }
+        
+        // Update cell appearance based on its type
+        function updateCellAppearance(row, col) {
+            const cells = document.querySelectorAll('.cell');
+            const cellIndex = row * COLS + col;
+            const cell = cells[cellIndex];
+            
+            // Reset classes
+            cell.className = 'cell';
+            cell.textContent = '';
+            
+            // Apply appropriate classes
+            switch(grid[row][col]) {
+                case 'start':
+                    cell.classList.add('start');
+                    cell.textContent = 'S';
+                    break;
+                case 'goal':
+                    cell.classList.add('goal');
+                    cell.textContent = 'G';
+                    break;
+                case 'obstacle':
+                    cell.classList.add('obstacle');
+                    cell.textContent = 'X';
+                    break;
+            }
+            
+            // If agent is here, add agent class
+            if (row === agentPosition.row && col === agentPosition.col) {
+                cell.classList.add('agent');
+            }
+        }
+        
+        // Handle cell clicks
+        function handleCellClick(row, col) {
+            if (isTraining) return;
+            
+            const cellType = grid[row][col];
+            
+            switch(selectedCellType) {
+                case 'start':
+                    if (cellType !== 'goal' && cellType !== 'obstacle') {
+                        // Update grid
+                        grid[startPosition.row][startPosition.col] = 'normal';
+                        startPosition = { row, col };
+                        grid[row][col] = 'start';
+                        
+                        // If agent was at old start, move to new start
+                        if (agentPosition.row === startPosition.row && agentPosition.col === startPosition.col) {
+                            placeAgent(row, col);
+                        }
+                        
+                        initializeGrid();
+                    }
+                    break;
+                case 'goal':
+                    if (cellType !== 'start' && cellType !== 'obstacle') {
+                        grid[goalPosition.row][goalPosition.col] = 'normal';
+                        goalPosition = { row, col };
+                        grid[row][col] = 'goal';
+                        initializeGrid();
+                    }
+                    break;
+                case 'obstacle':
+                    if (cellType !== 'start' && cellType !== 'goal') {
+                        if (cellType === 'obstacle') {
+                            // Remove obstacle
+                            grid[row][col] = 'normal';
+                            obstacles = obstacles.filter(obs => !(obs.row === row && obs.col === col));
+                        } else {
+                            // Add obstacle
+                            grid[row][col] = 'obstacle';
+                            obstacles.push({ row, col });
+                        }
+                        initializeGrid();
+                    }
+                    break;
+                case 'normal':
+                    if (cellType === 'obstacle') {
+                        // Remove obstacle
+                        grid[row][col] = 'normal';
+                        obstacles = obstacles.filter(obs => !(obs.row === row && obs.col === col));
+                        initializeGrid();
+                    }
+                    break;
+            }
+        }
+        
+        // Initialize Q-table
+        function initializeQTable() {
+            qTable = {};
+            
+            for (let row = 0; row < ROWS; row++) {
+                for (let col = 0; col < COLS; col++) {
+                    const state = `${row},${col}`;
+                    qTable[state] = {
+                        up: 0,
+                        down: 0,
+                        left: 0,
+                        right: 0
+                    };
+                }
+            }
+        }
+        
+        // Get possible actions for a state
+        function getPossibleActions(row, col) {
+            const actions = [];
+            
+            if (row > 0) actions.push('up');
+            if (row < ROWS - 1) actions.push('down');
+            if (col > 0) actions.push('left');
+            if (col < COLS - 1) actions.push('right');
+            
+            return actions;
+        }
+        
+        // Choose an action using ε-greedy policy
+        function chooseAction(row, col, epsilon) {
+            const state = `${row},${col}`;
+            const possibleActions = getPossibleActions(row, col);
+            
+            // Exploration: random action
+            if (Math.random() < epsilon) {
+                const randomIndex = Math.floor(Math.random() * possibleActions.length);
+                return possibleActions[randomIndex];
+            }
+            
+            // Exploitation: best action
+            let bestAction = null;
+            let maxQValue = -Infinity;
+            
+            for (const action of possibleActions) {
+                if (qTable[state][action] > maxQValue) {
+                    maxQValue = qTable[state][action];
+                    bestAction = action;
+                }
+            }
+            
+            return bestAction || possibleActions[0];
+        }
+        
+        // Get reward for moving to a cell
+        function getReward(row, col) {
+            if (row === goalPosition.row && col === goalPosition.col) {
+                return 10; // Goal reward
+            }
+            
+            if (obstacles.some(obs => obs.row === row && obs.col === col)) {
+                return -5; // Obstacle penalty
+            }
+            
+            return -1; // Step penalty
+        }
+        
+        // Check if state is terminal
+        function isTerminalState(row, col) {
+            return (row === goalPosition.row && col === goalPosition.col) || 
+                   obstacles.some(obs => obs.row === row && obs.col === col);
+        }
+        
+        // Perform one training episode
+        function trainEpisode() {
+            let currentRow = startPosition.row;
+            let currentCol = startPosition.col;
+            let totalReward = 0;
+            let steps = 0;
+            
+            // Reset agent position
+            placeAgent(currentRow, currentCol);
+            
+            while (!isTerminalState(currentRow, currentCol)) {
+                const state = `${currentRow},${currentCol}`;
+                const action = chooseAction(currentRow, currentCol, explorationRate);
+                
+                // Determine next state
+                let nextRow = currentRow;
+                let nextCol = currentCol;
+                
+                switch(action) {
+                    case 'up': nextRow--; break;
+                    case 'down': nextRow++; break;
+                    case 'left': nextCol--; break;
+                    case 'right': nextCol++; break;
+                }
+                
+                // Get reward
+                const reward = getReward(nextRow, nextCol);
+                totalReward += reward;
+                
+                // Q-learning update
+                const nextState = `${nextRow},${nextCol}`;
+                const currentQ = qTable[state][action];
+                let maxNextQ = -Infinity;
+                
+                // Find max Q-value for next state
+                if (!isTerminalState(nextRow, nextCol)) {
+                    const possibleActions = getPossibleActions(nextRow, nextCol);
+                    for (const possibleAction of possibleActions) {
+                        if (qTable[nextState][possibleAction] > maxNextQ) {
+                            maxNextQ = qTable[nextState][possibleAction];
+                        }
+                    }
+                }
+                
+                // Q-learning formula
+                qTable[state][action] = currentQ + learningRate * (
+                    reward + discountFactor * maxNextQ - currentQ
+                );
+                
+                // Move to next state
+                currentRow = nextRow;
+                currentCol = nextCol;
+                steps++;
+                
+                // Prevent infinite loops
+                if (steps > 100) break;
+            }
+            
+            return { totalReward, steps };
+        }
+        
+        // Test the trained agent
+        function testAgent() {
+            let currentRow = startPosition.row;
+            let currentCol = startPosition.col;
+            let path = [];
+            let steps = 0;
+            
+            placeAgent(currentRow, currentCol);
+            path.push({ row: currentRow, col: currentCol });
+            
+            while (!isTerminalState(currentRow, currentCol) && steps < 50) {
+                const state = `${currentRow},${currentCol}`;
+                const action = chooseAction(currentRow, currentCol, 0); // No exploration during test
+                
+                // Move agent
+                switch(action) {
+                    case 'up': currentRow--; break;
+                    case 'down': currentRow++; break;
+                    case 'left': currentCol--; break;
+                    case 'right': currentCol++; break;
+                }
+                
+                placeAgent(currentRow, currentCol);
+                path.push({ row: currentRow, col: currentCol });
+                steps++;
+                
+                // Small delay for visualization
+                // Note: In a real implementation, you'd use async/await with delays
+            }
+            
+            log(`Test complete. Path length: ${steps}`);
+            return path;
+        }
+        
+        // Train the agent
+        function trainAgent() {
+            if (isTraining) return;
+            
+            isTraining = true;
+            let episodesCompleted = 0;
+            let totalReward = 0;
+            
+            // Update parameters from sliders
+            learningRate = parseFloat(learningRateSlider.value);
+            discountFactor = parseFloat(discountFactorSlider.value);
+            explorationRate = parseFloat(explorationRateSlider.value);
+            trainingEpisodes = parseInt(episodesSlider.value);
+            
+            log(`Starting training with ${trainingEpisodes} episodes...`);
+            
+            trainingInterval = setInterval(() => {
+                if (episodesCompleted >= trainingEpisodes) {
+                    clearInterval(trainingInterval);
+                    isTraining = false;
+                    log(`Training complete! Average reward: ${(totalReward / trainingEpisodes).toFixed(2)}`);
+                    return;
+                }
+                
+                const { totalReward: episodeReward } = trainEpisode();
+                totalReward += episodeReward;
+                episodesCompleted++;
+                
+                if (episodesCompleted % 10 === 0) {
+                    log(`Episode ${episodesCompleted}: Average reward so far: ${(totalReward / episodesCompleted).toFixed(2)}`);
+                }
+            }, 10);
+        }
+        
+        // Log messages
+        function log(message) {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString();
+            logElement.innerHTML += `[${timeString}] ${message}<br>`;
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+        
+        // Reset agent position
+        function resetAgent() {
+            placeAgent(startPosition.row, startPosition.col);
+            log("Agent reset to start position.");
+        }
+        
+        // Reset everything
+        function resetAll() {
+            clearInterval(trainingInterval);
+            isTraining = false;
+            startPosition = { row: 0, col: 0 };
+            goalPosition = { row: ROWS-1, col: COLS-1 };
+            obstacles = [];
+            initializeQTable();
+            initializeGrid();
+            logElement.innerHTML = '';
+            log("Everything has been reset to default.");
+        }
+        
+        // Event listeners
+        document.getElementById('train').addEventListener('click', trainAgent);
+        document.getElementById('reset').addEventListener('click', resetAgent);
+        document.getElementById('test').addEventListener('click', testAgent);
+        document.getElementById('resetAll').addEventListener('click', resetAll);
+        
+        document.getElementById('setStart').addEventListener('click', () => {
+            selectedCellType = 'start';
+            log("Click on a cell to set it as the start position.");
+        });
+        
+        document.getElementById('setGoal').addEventListener('click', () => {
+            selectedCellType = 'goal';
+            log("Click on a cell to set it as the goal position.");
+        });
+        
+        document.getElementById('setObstacle').addEventListener('click', () => {
+            selectedCellType = 'obstacle';
+            log("Click on normal cells to add obstacles, or on obstacles to remove them.");
+        });
+        
+        document.getElementById('setNormal').addEventListener('click', () => {
+            selectedCellType = 'normal';
+            log("Click on obstacles to remove them.");
+        });
+        
+        // Update slider value displays
+        episodesSlider.addEventListener('input', () => {
+            episodesValue.textContent = episodesSlider.value;
+        });
+        
+        learningRateSlider.addEventListener('input', () => {
+            learningRateValue.textContent = learningRateSlider.value;
+        });
+        
+        discountFactorSlider.addEventListener('input', () => {
+            discountFactorValue.textContent = discountFactorSlider.value;
+        });
+        
+        explorationRateSlider.addEventListener('input', () => {
+            explorationRateValue.textContent = explorationRateSlider.value;
+        });
+        
+        // Initialize everything
+        window.onload = function() {
+            initializeQTable();
+            initializeGrid();
+            log("Welcome to the Reinforcement Learning Grid World! Set up your environment and start training.");
+        };
+    </script>
+</body>
+</html>
