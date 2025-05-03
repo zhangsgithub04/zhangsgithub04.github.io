@@ -533,3 +533,95 @@
             trainingInterval = setInterval(() => {
                 if (episodesCompleted >= trainingEpisodes) {
                     clearInterval(trainingInterval);
+                    isTraining = false;
+                    log(`Training complete! Average reward: ${(totalReward / trainingEpisodes).toFixed(2)}`);
+                    return;
+                }
+                
+                const { totalReward: episodeReward } = trainEpisode();
+                totalReward += episodeReward;
+                episodesCompleted++;
+                
+                if (episodesCompleted % 10 === 0) {
+                    log(`Episode ${episodesCompleted}: Average reward so far: ${(totalReward / episodesCompleted).toFixed(2)}`);
+                }
+            }, 10);
+        }
+        
+        // Log messages
+        function log(message) {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString();
+            logElement.innerHTML += `[${timeString}] ${message}<br>`;
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+        
+        // Reset agent position
+        function resetAgent() {
+            placeAgent(startPosition.row, startPosition.col);
+            log("Agent reset to start position.");
+        }
+        
+        // Reset everything
+        function resetAll() {
+            clearInterval(trainingInterval);
+            isTraining = false;
+            startPosition = { row: 0, col: 0 };
+            goalPosition = { row: ROWS-1, col: COLS-1 };
+            obstacles = [];
+            initializeQTable();
+            initializeGrid();
+            logElement.innerHTML = '';
+            log("Everything has been reset to default.");
+        }
+        
+        // Event listeners
+        document.getElementById('train').addEventListener('click', trainAgent);
+        document.getElementById('reset').addEventListener('click', resetAgent);
+        document.getElementById('test').addEventListener('click', testAgent);
+        document.getElementById('resetAll').addEventListener('click', resetAll);
+        
+        document.getElementById('setStart').addEventListener('click', () => {
+            selectedCellType = 'start';
+            log("Click on a cell to set it as the start position.");
+        });
+        
+        document.getElementById('setGoal').addEventListener('click', () => {
+            selectedCellType = 'goal';
+            log("Click on a cell to set it as the goal position.");
+        });
+        
+        document.getElementById('setObstacle').addEventListener('click', () => {
+            selectedCellType = 'obstacle';
+            log("Click on normal cells to add obstacles, or on obstacles to remove them.");
+        });
+        
+        document.getElementById('setNormal').addEventListener('click', () => {
+            selectedCellType = 'normal';
+            log("Click on obstacles to remove them.");
+        });
+        
+        // Update slider value displays
+        episodesSlider.addEventListener('input', () => {
+            episodesValue.textContent = episodesSlider.value;
+        });
+        
+        learningRateSlider.addEventListener('input', () => {
+            learningRateValue.textContent = learningRateSlider.value;
+        });
+        
+        discountFactorSlider.addEventListener('input', () => {
+            discountFactorValue.textContent = discountFactorSlider.value;
+        });
+        
+        explorationRateSlider.addEventListener('input', () => {
+            explorationRateValue.textContent = explorationRateSlider.value;
+        });
+        
+        // Initialize everything
+        initializeQTable();
+        initializeGrid();
+        log("Welcome to the Reinforcement Learning Grid World! Set up your environment and start training.");
+    </script>
+</body>
+</html>
