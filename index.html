@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dr. Foagawa SaOAs - Professional Portfolio</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #34495e;
+            --accent-color: #3498db;
+            --text-color: #333;
+            --light-text: #ecf0f1;
+            --sidebar-width: 250px;
+            --transition-speed: 0.3s;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            display: flex;
+            min-height: 100vh;
+            color: var(--text-color);
+            background-color: #f5f7fa;
+        }
+        
+        /* Sidebar Styles */
+        .sidebar {
+            width: var(--sidebar-width);
+            background-color: var(--primary-color);
+            color: var(--light-text);
+            position: fixed;
+            height: 100vh;
+            padding: 20px 0;
+            transition: all var(--transition-speed) ease;
+            z-index: 100;
+        }
+        
+        .sidebar-header {
+            text-align: center;
+            padding: 20px 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .sidebar-header h2 {
+            font-size: 1.2rem;
+            margin-top: 10px;
+        }
+        
+        .sidebar-menu {
+            padding: 20px 0;
+        }
+        
+        .sidebar-menu ul {
+            list-style: none;
+        }
+        
+        .sidebar-menu li {
+            margin-bottom: 5px;
+        }
+        
+        .sidebar-menu a {
+            display: block;
+            padding: 12px 20px;
+            color: var(--light-text);
+            text-decoration: none;
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+        }
+        
+        .sidebar-menu a:hover, .sidebar-menu a.active {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-left: 3px solid var(--accent-color);
+        }
+        
+        .sidebar-menu i {
+            margin-right: 10px;
+        }
+        
+        /* Main Content Styles */
+        .main-content {
+            flex: 1;
+            margin-left: var(--sidebar-width);
+            padding: 30px;
+            background-color: white;
+            min-height: 100vh;
+            box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .page-header {
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .page-header h1 {
+            color: var(--primary-color);
+            font-size: 2rem;
+        }
+        
+        .section {
+            margin-bottom: 30px;
+        }
+        
+        .section h2 {
+            color: var(--secondary-color);
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+        }
+        
+        .section p {
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+        
+        .specialization-list {
+            list-style-type: none;
+        }
+        
+        .specialization-list li {
+            padding: 10px 0;
+            border-bottom: 1px dashed #eee;
+            display: flex;
+            align-items: center;
+        }
+        
+        .specialization-list li:before {
+            content: "•";
+            color: var(--accent-color);
+            font-weight: bold;
+            display: inline-block;
+            width: 1em;
+            margin-right: 10px;
+            font-size: 1.2rem;
+        }
+        
+        .divider {
+            height: 1px;
+            background-color: #eee;
+            margin: 20px 0;
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 70px;
+                overflow: hidden;
+            }
+            
+            .sidebar-header h2, .sidebar-menu a span {
+                display: none;
+            }
+            
+            .sidebar-menu a {
+                text-align: center;
+                padding: 15px 5px;
+            }
+            
+            .sidebar-menu i {
+                margin-right: 0;
+                font-size: 1.2rem;
+            }
+            
+            .main-content {
+                margin-left: 70px;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h2>Dr. Foagawa SaOAs</h2>
+        </div>
+        
+        <nav class="sidebar-menu">
+            <ul>
+                <li><a href="#home" class="active"><i class="fas fa-home"></i> <span>Home</span></a></li>
+                <li><a href="#about"><i class="fas fa-user"></i> <span>About</span></a></li>
+                <li><a href="#skills"><i class="fas fa-code"></i> <span>Skills</span></a></li>
+                <li><a href="#education"><i class="fas fa-graduation-cap"></i> <span>Education</span></a></li>
+                <li><a href="#research"><i class="fas fa-flask"></i> <span>Research</span></a></li>
+                <li><a href="#teaching"><i class="fas fa-chalkboard-teacher"></i> <span>Teaching Experience</span></a></li>
+                <li><a href="#services"><i class="fas fa-handshake"></i> <span>Services</span></a></li>
+                <li><a href="#publications"><i class="fas fa-book"></i> <span>Publications</span></a></li>
+                <li><a href="#contact"><i class="fas fa-envelope"></i> <span>Contact</span></a></li>
+            </ul>
+        </nav>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+        <section id="about" class="section">
+            <div class="page-header">
+                <h1>About</h1>
+            </div>
+            
+            <p>As a highly qualified and experienced Computer Science and Data Science educator, I possess a demonstrated ability to integrate technology-based pedagogical strategies. My strong commitment to imparting knowledge and fostering student motivation underpins my approach to teaching a broad range of computer technology concepts, subjects, and contemporary research areas. I am a dedicated and adaptable team member, consistently demonstrating a willingness to contribute to the collective success of the group.</p>
+            
+            <div class="section">
+                <h2>Specialization</h2>
+                <ul class="specialization-list">
+                    <li><strong>Data Science</strong></li>
+                    <li><strong>Artificial Intelligence(AI) Cognitive Systems,</strong><br>
+                    <strong>Common Sense Reasoning, and Natural Language Understanding</strong></li>
+                    <li><strong>Machine learning (Probabilistic Graphical Models)</strong></li>
+                    <li><strong>Semantic Computing based on Eye-tracking</strong></li>
+                    <li><strong>Web Programming and Complex Network Analysis</strong></li>
+                </ul>
+            </div>
+            
+            <div class="divider"></div>
+            
+            <p>More than 10 years of experience in Computer Science and Academic fields with a demonstrative higher education. Intend to build a career in a renowned educational society in a hi-tech environment committed & dedicated professionals that provide excellent opportunities.</p>
+        </section>
+        
+        <!-- Other sections would go here with similar structure -->
+        <!-- They would be hidden by default and shown when navigating -->
+    </div>
+
+    <script>
+        // Simple SPA navigation
+        document.querySelectorAll('.sidebar-menu a').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                // Remove active class from all links
+                document.querySelectorAll('.sidebar-menu a').forEach(item => {
+                    item.classList.remove('active');
+                });
+                
+                // Add active class to clicked link
+                this.classList.add('active');
+                
+                // Here you would typically load content dynamically
+                // For this example, we'll just show the about section
+                document.querySelectorAll('.section').forEach(section => {
+                    section.style.display = 'none';
+                });
+                
+                const targetId = this.getAttribute('href').substring(1);
+                if (targetId === 'about') {
+                    document.querySelector('#about').style.display = 'block';
+                }
+                // You would add similar logic for other sections
+            });
+        });
+        
+        // Initialize - show about section by default
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelector('#about').style.display = 'block';
+        });
+    </script>
+</body>
+</html>
