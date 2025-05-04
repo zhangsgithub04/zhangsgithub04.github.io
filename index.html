@@ -11,7 +11,7 @@
             --accent-color: #3498db;
             --text-color: #333;
             --light-text: #ecf0f1;
-            --sidebar-width: 250px;
+            --sidebar-width: 280px;
             --transition-speed: 0.3s;
         }
         
@@ -39,12 +39,17 @@
             padding: 20px 0;
             transition: all var(--transition-speed) ease;
             z-index: 100;
+            overflow-y: auto;
         }
         
         .sidebar-header {
             text-align: center;
             padding: 20px 10px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            position: sticky;
+            top: 0;
+            background-color: var(--primary-color);
+            z-index: 10;
         }
         
         .sidebar-header h2 {
@@ -86,7 +91,7 @@
         .main-content {
             flex: 1;
             margin-left: var(--sidebar-width);
-            padding: 30px;
+            padding: 40px;
             background-color: white;
             min-height: 100vh;
             box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
@@ -104,12 +109,23 @@
         }
         
         .section {
-            margin-bottom: 30px;
+            margin-bottom: 40px;
+            display: none;
+        }
+        
+        .section.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
         
         .section h2 {
             color: var(--secondary-color);
-            margin-bottom: 15px;
+            margin-bottom: 20px;
             font-size: 1.5rem;
         }
         
@@ -118,18 +134,25 @@
             margin-bottom: 15px;
         }
         
-        .specialization-list {
+        .specialization-list, .skills-list, .education-list, 
+        .research-list, .teaching-list, .services-list, 
+        .publications-list {
             list-style-type: none;
         }
         
-        .specialization-list li {
-            padding: 10px 0;
+        .specialization-list li, .skills-list li, .education-list li,
+        .research-list li, .teaching-list li, .services-list li,
+        .publications-list li {
+            padding: 12px 0;
             border-bottom: 1px dashed #eee;
             display: flex;
             align-items: center;
         }
         
-        .specialization-list li:before {
+        .specialization-list li:before, .skills-list li:before,
+        .education-list li:before, .research-list li:before,
+        .teaching-list li:before, .services-list li:before,
+        .publications-list li:before {
             content: "•";
             color: var(--accent-color);
             font-weight: bold;
@@ -143,6 +166,18 @@
             height: 1px;
             background-color: #eee;
             margin: 20px 0;
+        }
+        
+        .contact-info {
+            display: grid;
+            grid-template-columns: max-content 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .contact-info i {
+            color: var(--accent-color);
+            font-size: 1.2rem;
         }
         
         @media (max-width: 768px) {
@@ -167,6 +202,7 @@
             
             .main-content {
                 margin-left: 70px;
+                padding: 20px;
             }
         }
     </style>
@@ -181,12 +217,13 @@
         
         <nav class="sidebar-menu">
             <ul>
+                <li><a href="index_ai.html" target="_blank"><i class="fas fa-robot"></i> <span>AI Research</span></a></li>
                 <li><a href="#home" class="active"><i class="fas fa-home"></i> <span>Home</span></a></li>
                 <li><a href="#about"><i class="fas fa-user"></i> <span>About</span></a></li>
                 <li><a href="#skills"><i class="fas fa-code"></i> <span>Skills</span></a></li>
                 <li><a href="#education"><i class="fas fa-graduation-cap"></i> <span>Education</span></a></li>
                 <li><a href="#research"><i class="fas fa-flask"></i> <span>Research</span></a></li>
-                <li><a href="#teaching"><i class="fas fa-chalkboard-teacher"></i> <span>Teaching Experience</span></a></li>
+                <li><a href="#teaching"><i class="fas fa-chalkboard-teacher"></i> <span>Teaching</span></a></li>
                 <li><a href="#services"><i class="fas fa-handshake"></i> <span>Services</span></a></li>
                 <li><a href="#publications"><i class="fas fa-book"></i> <span>Publications</span></a></li>
                 <li><a href="#contact"><i class="fas fa-envelope"></i> <span>Contact</span></a></li>
@@ -196,6 +233,30 @@
     
     <!-- Main Content -->
     <div class="main-content">
+        <!-- Home Section -->
+        <section id="home" class="section active">
+            <div class="page-header">
+                <h1>Welcome</h1>
+            </div>
+            
+            <p>Welcome to my professional portfolio. I am Dr. Foagawa SaOAs, a Computer Science and Data Science educator with over 10 years of experience in academia and research.</p>
+            
+            <div class="divider"></div>
+            
+            <h2>Recent Highlights</h2>
+            <ul class="specialization-list">
+                <li>Published new research on Cognitive AI Systems in Nature AI Journal</li>
+                <li>Awarded the 2024 Distinguished Teaching Award at Tech University</li>
+                <li>Keynote speaker at International Conference on Machine Learning 2024</li>
+                <li>Launched new course on Probabilistic Graphical Models</li>
+            </ul>
+            
+            <div class="divider"></div>
+            
+            <p>This website showcases my academic journey, research interests, teaching philosophy, and professional achievements. Please explore the different sections to learn more about my work.</p>
+        </section>
+        
+        <!-- About Section -->
         <section id="about" class="section">
             <div class="page-header">
                 <h1>About</h1>
@@ -220,41 +281,249 @@
             <p>More than 10 years of experience in Computer Science and Academic fields with a demonstrative higher education. Intend to build a career in a renowned educational society in a hi-tech environment committed & dedicated professionals that provide excellent opportunities.</p>
         </section>
         
-        <!-- Other sections would go here with similar structure -->
-        <!-- They would be hidden by default and shown when navigating -->
+        <!-- Skills Section -->
+        <section id="skills" class="section">
+            <div class="page-header">
+                <h1>Technical Skills</h1>
+            </div>
+            
+            <h2>Programming Languages</h2>
+            <ul class="skills-list">
+                <li>Python (Advanced)</li>
+                <li>R (Advanced)</li>
+                <li>Java (Intermediate)</li>
+                <li>JavaScript (Intermediate)</li>
+                <li>SQL (Advanced)</li>
+            </ul>
+            
+            <h2>AI/ML Frameworks</h2>
+            <ul class="skills-list">
+                <li>TensorFlow, PyTorch</li>
+                <li>Scikit-learn, Keras</li>
+                <li>NLTK, spaCy</li>
+                <li>OpenCV</li>
+            </ul>
+            
+            <h2>Data Science Tools</h2>
+            <ul class="skills-list">
+                <li>Pandas, NumPy</li>
+                <li>Matplotlib, Seaborn</li>
+                <li>Tableau, Power BI</li>
+                <li>Hadoop, Spark</li>
+            </ul>
+        </section>
+        
+        <!-- Education Section -->
+        <section id="education" class="section">
+            <div class="page-header">
+                <h1>Education</h1>
+            </div>
+            
+            <ul class="education-list">
+                <li>
+                    <strong>Ph.D. in Computer Science</strong><br>
+                    Stanford University, 2015<br>
+                    Dissertation: "Cognitive Systems for Natural Language Understanding"
+                </li>
+                <li>
+                    <strong>M.Sc. in Artificial Intelligence</strong><br>
+                    Massachusetts Institute of Technology, 2010<br>
+                    Thesis: "Probabilistic Models for Common Sense Reasoning"
+                </li>
+                <li>
+                    <strong>B.Sc. in Computer Science</strong><br>
+                    University of Tokyo, 2008<br>
+                    Graduated with Honors
+                </li>
+            </ul>
+        </section>
+        
+        <!-- Research Section -->
+        <section id="research" class="section">
+            <div class="page-header">
+                <h1>Research</h1>
+            </div>
+            
+            <h2>Research Interests</h2>
+            <ul class="research-list">
+                <li>Cognitive AI Systems</li>
+                <li>Natural Language Understanding</li>
+                <li>Common Sense Reasoning in Machines</li>
+                <li>Eye-tracking for Semantic Computing</li>
+                <li>Probabilistic Graphical Models</li>
+            </ul>
+            
+            <div class="divider"></div>
+            
+            <h2>Current Projects</h2>
+            <ul class="research-list">
+                <li>
+                    <strong>COGENT:</strong> Cognitive Engine for Natural Text Understanding<br>
+                    Funded by NSF (2023-2026)
+                </li>
+                <li>
+                    <strong>EYE-SEM:</strong> Eye-tracking for Semantic Analysis<br>
+                    Collaboration with Google Research
+                </li>
+            </ul>
+        </section>
+        
+        <!-- Teaching Section -->
+        <section id="teaching" class="section">
+            <div class="page-header">
+                <h1>Teaching Experience</h1>
+            </div>
+            
+            <h2>Current Courses</h2>
+            <ul class="teaching-list">
+                <li>
+                    <strong>CS 501:</strong> Advanced Machine Learning<br>
+                    Graduate level, offered annually
+                </li>
+                <li>
+                    <strong>CS 402:</strong> Natural Language Processing<br>
+                    Undergraduate/Graduate cross-listed
+                </li>
+            </ul>
+            
+            <div class="divider"></div>
+            
+            <h2>Previous Courses</h2>
+            <ul class="teaching-list">
+                <li>Introduction to Artificial Intelligence</li>
+                <li>Data Structures and Algorithms</li>
+                <li>Probabilistic Graphical Models</li>
+                <li>Web Programming</li>
+                <li>Complex Network Analysis</li>
+            </ul>
+        </section>
+        
+        <!-- Services Section -->
+        <section id="services" class="section">
+            <div class="page-header">
+                <h1>Professional Services</h1>
+            </div>
+            
+            <h2>Academic Services</h2>
+            <ul class="services-list">
+                <li>Department Curriculum Committee Chair (2022-present)</li>
+                <li>Graduate Admissions Committee (2018-2021)</li>
+                <li>Faculty Senate Representative (2020-2022)</li>
+            </ul>
+            
+            <div class="divider"></div>
+            
+            <h2>Conference Activities</h2>
+            <ul class="services-list">
+                <li>Program Committee Member: ACL 2023, NeurIPS 2022</li>
+                <li>Area Chair: ICML 2021, AAAI 2020</li>
+                <li>Reviewer for IEEE Transactions on Pattern Analysis and Machine Intelligence</li>
+            </ul>
+        </section>
+        
+        <!-- Publications Section -->
+        <section id="publications" class="section">
+            <div class="page-header">
+                <h1>Selected Publications</h1>
+            </div>
+            
+            <h2>Journal Articles</h2>
+            <ul class="publications-list">
+                <li>
+                    "Cognitive Architectures for Natural Language Understanding"<br>
+                    <em>Nature AI</em>, 2023 (Impact Factor: 12.5)
+                </li>
+                <li>
+                    "Eye-tracking Based Semantic Analysis"<br>
+                    <em>Journal of Artificial Intelligence Research</em>, 2022
+                </li>
+            </ul>
+            
+            <div class="divider"></div>
+            
+            <h2>Conference Papers</h2>
+            <ul class="publications-list">
+                <li>
+                    "Probabilistic Models for Common Sense Reasoning"<br>
+                    <em>NeurIPS 2021</em> (Oral Presentation)
+                </li>
+                <li>
+                    "Multi-modal Learning with Eye-tracking Data"<br>
+                    <em>ICML 2020</em>
+                </li>
+            </ul>
+        </section>
+        
+        <!-- Contact Section -->
+        <section id="contact" class="section">
+            <div class="page-header">
+                <h1>Contact</h1>
+            </div>
+            
+            <div class="contact-info">
+                <i class="fas fa-envelope"></i>
+                <div>foagawa.saoas@university.edu</div>
+                
+                <i class="fas fa-phone"></i>
+                <div>+1 (555) 123-4567</div>
+                
+                <i class="fas fa-map-marker-alt"></i>
+                <div>
+                    Department of Computer Science<br>
+                    Tech University<br>
+                    123 Academic Way, Suite 456<br>
+                    San Francisco, CA 94107
+                </div>
+                
+                <i class="fas fa-clock"></i>
+                <div>Office Hours: Mon/Wed 2-4pm or by appointment</div>
+            </div>
+            
+            <div class="divider"></div>
+            
+            <h2>Connect</h2>
+            <div style="display: flex; gap: 15px; margin-top: 15px;">
+                <a href="#" style="color: var(--accent-color);"><i class="fab fa-linkedin fa-2x"></i></a>
+                <a href="#" style="color: var(--accent-color);"><i class="fab fa-google-scholar fa-2x"></i></a>
+                <a href="#" style="color: var(--accent-color);"><i class="fab fa-github fa-2x"></i></a>
+                <a href="#" style="color: var(--accent-color);"><i class="fab fa-twitter fa-2x"></i></a>
+            </div>
+        </section>
     </div>
 
     <script>
-        // Simple SPA navigation
+        // SPA Navigation
         document.querySelectorAll('.sidebar-menu a').forEach(link => {
-            link.addEventListener('click', function(e) {
-                e.preventDefault();
-                
-                // Remove active class from all links
-                document.querySelectorAll('.sidebar-menu a').forEach(item => {
-                    item.classList.remove('active');
+            if (link.getAttribute('href').startsWith('#')) {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    // Remove active class from all links
+                    document.querySelectorAll('.sidebar-menu a').forEach(item => {
+                        item.classList.remove('active');
+                    });
+                    
+                    // Add active class to clicked link
+                    this.classList.add('active');
+                    
+                    // Hide all sections
+                    document.querySelectorAll('.section').forEach(section => {
+                        section.classList.remove('active');
+                    });
+                    
+                    // Show target section
+                    const targetId = this.getAttribute('href').substring(1);
+                    document.getElementById(targetId).classList.add('active');
+                    
+                    // Scroll to top of main content
+                    document.querySelector('.main-content').scrollTo(0, 0);
                 });
-                
-                // Add active class to clicked link
-                this.classList.add('active');
-                
-                // Here you would typically load content dynamically
-                // For this example, we'll just show the about section
-                document.querySelectorAll('.section').forEach(section => {
-                    section.style.display = 'none';
-                });
-                
-                const targetId = this.getAttribute('href').substring(1);
-                if (targetId === 'about') {
-                    document.querySelector('#about').style.display = 'block';
-                }
-                // You would add similar logic for other sections
-            });
+            }
         });
         
-        // Initialize - show about section by default
+        // Initialize - show home section by default
         document.addEventListener('DOMContentLoaded', function() {
-            document.querySelector('#about').style.display = 'block';
+            document.querySelector('#home').classList.add('active');
         });
     </script>
 </body>
