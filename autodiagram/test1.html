@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Smart Whiteboard from Natural Language</title>
+  <style>
+    body { font-family: sans-serif; padding: 1em; }
+    canvas { border: 1px solid #ccc; }
+  </style>
+</head>
+<body>
+  <h2>🧠 Natural Language → Whiteboard</h2>
+  <textarea id="input" rows="4" cols="80" placeholder="Describe your diagram...">Draw a whiteboard for employee onboarding process</textarea><br>
+  <button onclick="generateDiagram()">Generate Diagram</button>
+  <br><br>
+  <canvas id="board" width="1200" height="1000"></canvas>
+
+  <script>
+    const canvas = document.getElementById('board');
+    const ctx = canvas.getContext('2d');
+
+    function drawWidget(w) {
+      ctx.fillStyle = "#fff";
+      ctx.strokeStyle = "#000";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      
+      switch (w.type) {
+        case "rectangle":
+          ctx.fillRect(w.x, w.y, w.width, w.height);
+          ctx.strokeRect(w.x, w.y, w.width, w.height);
+          break;
+        case "circle":
+          ctx.arc(w.x + w.width/2, w.y + w.height/2, w.width/2, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          break;
+        case "diamond":
+          ctx.moveTo(w.x + w.width/2, w.y);
+          ctx.lineTo(w.x + w.width, w.y + w.height/2);
+          ctx.lineTo(w.x + w.width/2, w.y + w.height);
+          ctx.lineTo(w.x, w.y + w.height/2);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          break;
+        case "sticky_note":
+          ctx.fillStyle = "#fffa91";
+          ctx.fillRect(w.x, w.y, w.width, w.height);
+          ctx.strokeRect(w.x, w.y, w.width, w.height);
+          break;
+        default:
+          ctx.fillRect(w.x, w.y, w.width, w.height);
+          ctx.strokeRect(w.x, w.y, w.width, w.height);
+      }
+
+      ctx.fillStyle = "#000";
+      ctx.font = "12px sans-serif";
+      ctx.fillText(w.label, w.x + 5, w.y + 15);
+    }
+
+    function drawConnectors(widgets) {
+      ctx.strokeStyle = "#888";
+      ctx.lineWidth = 1;
+      widgets.forEach(w => {
+        if (!w.outgoing) return;
+        w.outgoing.forEach(targetId => {
+          const target = widgets.find(t => t._id === targetId);
+          if (target) {
+            const x1 = w.x + w.width / 2;
+            const y1 = w.y + w.height;
+            const x2 = target.x + target.width / 2;
+            const y2 = target.y;
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.stroke();
+          }
+        });
+      });
+    }
+
+    function renderDiagram(widgets) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawConnectors(widgets);
+      widgets.forEach(drawWidget);
+    }
+
+    async function generateDiagram() {
+      const input = document.getElementById('input').value;
+
+      // TODO: Replace with actual LLM API call (e.g., OpenAI, local model, etc.)
+      const widgets = mockLLM(input);
+      renderDiagram(widgets);
+    }
+
+    // 🧪 Mocked LLM Output (replace with real API)
+    function mockLLM(input) {
+      return [
+        {
+          "_id": "start123",
+          "type": "circle",
+          "label": "Offer Accepted",
+          "role": "Employee",
+          "x": 550,
+          "y": 50,
+          "width": 100,
+          "height": 100,
+          "incoming": [],
+          "outgoing": ["prep456"]
+        },
+        {
+          "_id": "prep456",
+          "type": "rectangle",
+          "label": "Prepare IT Setup",
+          "role": "IT",
+          "x": 400,
+          "y": 170,
+          "width": 200,
+          "height": 80,
+          "incoming": ["start123"],
+          "outgoing": ["train789"]
+        },
+        {
+          "_id": "train789",
+          "type": "diamond",
+          "label": "Training Completed?",
+          "role": "Employee",
+          "x": 550,
+          "y": 290,
+          "width": 100,
+          "height": 100,
+          "incoming": ["prep456"],
+          "outgoing": ["final321"]
+        },
+        {
+          "_id": "final321",
+          "type": "circle",
+          "label": "Onboarding Complete",
+          "role": "Employee",
+          "x": 550,
+          "y": 420,
+          "width": 100,
+          "height": 100,
+          "incoming": ["train789"],
+          "outgoing": []
+        }
+      ];
+    }
+  </script>
+</body>
+</html>
