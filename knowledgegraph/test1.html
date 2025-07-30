@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>LLM-Inferred Concept Map</title>
+  <style>
+    body { font-family: Arial; }
+    svg { border: 1px solid #ddd; margin-top: 20px; }
+    .node circle { fill: #58a; stroke: #fff; stroke-width: 1.5px; }
+    .node text { font-size: 12px; pointer-events: none; }
+    .link { stroke: #999; stroke-opacity: 0.6; }
+    .label { font-size: 10px; fill: #444; }
+  </style>
+</head>
+<body>
+  <h2>LLM-Inferred Concept Graph</h2>
+  <svg width="800" height="600"></svg>
+
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script>
+    const nodes = [
+      { id: "AI" },
+      { id: "ML" },
+      { id: "DL" },
+      { id: "NLP" },
+      { id: "CV" }
+    ];
+
+    const links = [
+      { source: "AI", target: "ML", relation: "includes" },
+      { source: "ML", target: "DL", relation: "specialization of" },
+      { source: "ML", target: "NLP", relation: "applied to" },
+      { source: "ML", target: "CV", relation: "applied to" },
+      { source: "AI", target: "CV", relation: "includes" }
+    ];
+
+    const svg = d3.select("svg");
+    const width = +svg.attr("width");
+    const height = +svg.attr("height");
+
+    const simulation = d3.forceSimulation(nodes)
+      .force("link", d3.forceLink(links).id(d => d.id).distance(120))
+      .force("charge", d3.forceManyBody().strength(-400))
+      .force("center", d3.forceCenter(width / 2, height / 2));
+
+    const link = svg.append("g")
+      .selectAll("line")
+      .data(links)
+      .join("line")
+      .attr("class", "link")
+      .attr("stroke-width", 2);
+
+    const linkLabels = svg.append("g")
+      .selectAll("text")
+      .data(links)
+      .join("text")
+      .attr("class", "label")
+      .text(d => d.relation);
+
+    const node = svg.append("g")
+      .selectAll("g")
+      .data(nodes)
+      .join("g")
+      .call(d3.drag()
+        .on("start", dragstarted)
+        .on("drag", dragged)
+        .on("end", dragended));
+
+    node.append("circle")
+      .attr("r", 25);
+
+    node.append("text")
+      .attr("dy", 4)
+      .attr("text-anchor", "middle")
+      .text(d => d.id);
+
+    simulation.on("tick", () => {
+      link
+        .attr("x1", d => d.source.x)
+        .attr("y1", d => d.source.y)
+        .attr("x2", d => d.target.x)
+        .attr("y2", d => d.target.y);
+
+      linkLabels
+        .attr("x", d => (d.source.x + d.target.x) / 2)
+        .attr("y", d => (d.source.y + d.target.y) / 2);
+
+      node
+        .attr("transform", d => `translate(${d.x},${d.y})`);
+    });
+
+    function dragstarted(event, d) {
+      if (!event.active) simulation.alphaTarget(0.3).restart();
+      d.fx = d.x;
+      d.fy = d.y;
+    }
+
+    function dragged(event, d) {
+      d.fx = event.x;
+      d.fy = event.y;
+    }
+
+    function dragended(event, d) {
+      if (!event.active) simulation.alphaTarget(0);
+      d.fx = null;
+      d.fy = null;
+    }
+  </script>
+</body>
+</html>
