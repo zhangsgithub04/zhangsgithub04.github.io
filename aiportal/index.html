@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI in Education - Learning Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600&display=swap');
+        
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .font-mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .section-hidden {
+            display: none;
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .progress-bar {
+            background: linear-gradient(90deg, #3b82f6 0%, #1d4ed8 100%);
+            height: 8px;
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+        
+        .module-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid #e5e7eb;
+        }
+        
+        .module-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+            border-color: #3b82f6;
+        }
+        
+        .nav-indicator {
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            height: 2px;
+            background: #3b82f6;
+            transition: all 0.3s ease;
+            border-radius: 1px;
+        }
+        
+        .sticky-nav {
+            backdrop-filter: blur(12px);
+            background: rgba(255, 255, 255, 0.9);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+        
+        .learning-path {
+            position: relative;
+        }
+        
+        .learning-path::before {
+            content: '';
+            position: absolute;
+            left: 15px;
+            top: 40px;
+            bottom: 0;
+            width: 2px;
+            background: #e5e7eb;
+        }
+        
+        .ai-gradient {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 8s ease-in-out infinite;
+        }
+        
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+        
+        .blog-card {
+            border-left: 4px solid #3b82f6;
+            transition: all 0.3s ease;
+        }
+        
+        .blog-card:hover {
+            border-left-color: #1d4ed8;
+            background: #f8fafc;
+        }
+    </style>
+</head>
+<body class="bg-white text-gray-900">
+    <!-- Navigation -->
+    <nav class="fixed top-0 w-full z-50 sticky-nav">
+        <div class="max-w-7xl mx-auto px-6 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-3">
+                    <div class="w-8 h-8 ai-gradient rounded-lg flex items-center justify-center">
+                        <span class="text-white font-bold text-sm">AI</span>
+                    </div>
+                    <div>
+                        <div class="font-bold text-lg">AI in Education</div>
+                        <div class="text-xs text-gray-500 font-mono">Learning Portal</div>
+                    </div>
+                </div>
+                <div class="hidden md:flex space-x-8">
+                    <button onclick="showSection('overview')" class="nav-link relative px-3 py-2 text-sm font-medium hover:text-blue-600 transition-colors">
+                        Overview
+                        <div class="nav-indicator w-0"></div>
+                    </button>
+                    <button onclick="showSection('syllabus')" class="nav-link relative px-3 py-2 text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors">
+                        Syllabus
+                        <div class="nav-indicator w-0"></div>
+                    </button>
+                    <button onclick="showSection('modules')" class="nav-link relative px-3 py-2 text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors">
+                        Modules
+                        <div class="nav-indicator w-0"></div>
+                    </button>
+                    <button onclick="showSection('resources')" class="nav-link relative px-3 py-2 text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors">
+                        Resources
+                        <div class="nav-indicator w-0"></div>
+                    </button>
+                    <button onclick="showSection('blogs')" class="nav-link relative px-3 py-2 text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors">
+                        Blog
+                        <div class="nav-indicator w-0"></div>
+                    </button>
+                </div>
+                <button class="md:hidden">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Overview Section -->
+    <section id="overview" class="pt-24 pb-16 px-6">
+        <div class="max-w-7xl mx-auto">
+            <!-- Hero -->
+            <div class="text-center mb-16">
+                <div class="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 rounded-full text-blue-700 font-medium text-sm mb-6">
+                    <div class="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                    Course Active • Spring 2025
+                </div>
+                <h1 class="text-5xl md:text-6xl font-bold mb-6 leading-tight">
+                    Artificial Intelligence<br/>
+                    <span class="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">in Education</span>
+                </h1>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
+                    Explore how AI is transforming learning, teaching methodologies, and educational outcomes. 
+                    From personalized learning to automated assessment systems.
+                </p>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <button onclick="showSection('modules')" class="px-8 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors">
+                        Start Learning
+                    </button>
+                    <button onclick="showSection('syllabus')" class="px-8 py-3 border border-gray-300 rounded-lg font-medium hover:border-gray-400 transition-colors">
+                        View Syllabus
+                    </button>
+                </div>
+            </div>
+
+            <!-- Learning Outcomes -->
+            <div class="bg-gray-50 rounded-2xl p-8 mb-16">
+                <h2 class="text-2xl font-bold mb-6">Learning Outcomes</h2>
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div class="space-y-4">
+                        <div class="flex items-start gap-3">
+                            <div class="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <span class="text-blue-600 text-xs font-bold">1</span>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold mb-1">Understanding AI Fundamentals</h3>
+                                <p class="text-gray-600 text-sm">Master core AI concepts including machine learning, neural networks, and natural language processing.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <div class="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <span class="text-blue-600 text-xs font-bold">2</span>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold mb-1">Educational Applications</h3>
+                                <p class="text-gray-600 text-sm">Explore AI-powered learning platforms, adaptive learning systems, and intelligent tutoring systems.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <div class="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <span class="text-blue-600 text-xs font-bold">3</span>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold mb-1">Assessment & Analytics</h3>
+                                <p class="text-gray-600 text-sm">Learn about automated grading, learning analytics, and performance prediction models.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="space-y-4">
+                        <div class="flex items-start gap-3">
+                            <div class="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <span class="text-blue-600 text-xs font-bold">4</span>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold mb-1">Ethical Considerations</h3>
+                                <p class="text-gray-600 text-sm">Address bias, privacy, and fairness in AI educational systems.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <div class="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <span class="text-blue-600 text-xs font-bold">5</span>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold mb-1">Implementation Strategies</h3>
+                                <p class="text-gray-600 text-sm">Design and deploy AI solutions in educational environments effectively.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <div class="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <span class="text-blue-600 text-xs font-bold">6</span>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold mb-1">Future Trends</h3>
+                                <p class="text-gray-600 text-sm">Anticipate emerging technologies and their potential impact on education.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Course Stats -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
+                <div class="text-center">
+                    <div class="text-3xl font-bold text-blue-600 mb-2">12</div>
+                    <div class="text-gray-600">Weeks</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-3xl font-bold text-blue-600 mb-2">8</div>
+                    <div class="text-gray-600">Modules</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-3xl font-bold text-blue-600 mb-2">4</div>
+                    <div class="text-gray-600">Projects</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-3xl font-bold text-blue-600 mb-2">24</div>
+                    <div class="text-gray-600">Lectures</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Syllabus Section -->
+    <section id="syllabus" class="section-hidden py-16 px-6">
+        <div class="max-w-5xl mx-auto">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-bold mb-4">Course Syllabus</h2>
+                <p class="text-xl text-gray-600">Comprehensive 12-week curriculum covering AI applications in educational contexts</p>
+            </div>
+            
+            <div class="learning-path space-y-8">
+                <!-- Week 1-2 -->
+                <div class="relative bg-white border rounded-xl p-6 ml-8">
+                    <div class="absolute -left-8 top-6 w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+                        <span class="text-white text-sm font-bold">1</span>
+                    </div>
+                    <div class="flex justify-between items-start mb-4">
+                        <h3 class="text-xl font-bold">Foundations of AI in Education</h3>
+                        <span class="text-sm text-gray-500 font-mono">Weeks 1-2</span>
+                    </div>
+                    <p class="text-gray-600 mb-4">Introduction to artificial intelligence concepts and their relevance to educational technology.</p>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm">Machine Learning Basics</span>
+                        <span class="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm">Educational Technology</span>
+                        <span class="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm">Historical Context</span>
+                    </div>
+                </div>
+
+                <!-- Week 3-4 -->
+                <div class="relative bg-white border rounded-xl p-6 ml-8">
+                    <div class="absolute -left-8 top-6 w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+                        <span class="text-white text-sm font-bold">2</span>
+                    </div>
+                    <div class="flex justify-between items-start mb-4">
+                        <h3 class="text-xl font-bold">Personalized Learning Systems</h3>
+                        <span class="text-sm text-gray-500 font-mono">Weeks 3-4</span>
+                    </div>
+                    <p class="text-gray-600 mb-4">Adaptive learning platforms, recommendation systems, and personalization algorithms.</p>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="px-3 py-1 bg-green-50 text-green-700 rounded-full text-sm">Adaptive Systems</span>
+                        <span class="px-3 py-1 bg-green-50 text-green-700 rounded-full text-sm">User Modeling</span>
+                        <span class="px-3 py-1 bg-green-50 text-green-700 rounded-full text-sm">Content Recommendation</span>
+                    </div>
+                </div>
+
+                <!-- Week 5-6 -->
+                <div class="relative bg-white border rounded-xl p-6 ml-8">
+                    <div class="absolute -left-8 top-6 w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+                        <span class="text-white text-sm font-bold">3</span>
+                    </div>
+                    <div class="flex justify-between items-start mb-4">
+                        <h3 class="text-xl font-bold">Intelligent Tutoring Systems</h3>
+                        <span class="text-sm text-gray-500 font-mono">Weeks 5-6</span>
+                    </div>
+                    <p class="text-gray-600 mb-4">Design and implementation of AI-powered tutoring systems and virtual teaching assistants.</p>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="px-3 py-1 bg-purple-50 text-purple-700 rounded-full text-sm">Chatbots</span>
+                        <span class="px-3 py-1 bg-purple-50 text-purple-700 rounded-full text-sm">NLP in Education</span>
+                        <span class="px-3 py-1 bg-purple-50 text-purple-700 rounded-full text-sm">Virtual Assistants</span>
+                    </div>
+                </div>
+
+                <!-- Week 7-8 -->
+                <div class="relative bg-white border rounded-xl p-6 ml-8">
+                    <div class="absolute -left-8 top-6 w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+                        <span class="text-white text-sm font-bold">4</span>
+                    </div>
+                    <div class="flex justify-between items-start mb-4">
+                        <h3 class="text-xl font-bold">Assessment & Analytics</h3>
+                        <span class="text-sm text-gray-500 font-mono">Weeks 7-8</span>
+                    </div>
+                    <p class="text-gray-600 mb-4">Automated grading, learning analytics, and predictive modeling for student success.</p>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="px-3 py-1 bg-orange-50 text-orange-700 rounded-full text-sm">Auto-Grading</span>
+                        <span class="px-3 py-1 bg-orange-50 text-orange-700 rounded-full text-sm">Learning Analytics</span>
+                        <span class="px-3 py-1 bg-orange-50 text-orange-700 rounded-full text-sm">Predictive Models</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Modules Section -->
+    <section id="modules" class="section-hidden py-16 px-6 bg-gray-50">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-bold mb-4">Learning Modules</h2>
+                <p class="text-xl text-gray-600">Interactive modules with lectures, assignments, and hands-on projects</p>
+            </div>
+            
+            <div class="grid lg:grid-cols-3 gap-8">
+                <!-- Module 1 -->
+                <div class="module-card bg-white rounded-xl p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                                <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="font-bold">AI Fundamentals</h3>
+                                <p class="text-sm text-gray-500">Module 1</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-sm font-medium text-green-600">Completed</div>
+                            <div class="text-xs text-gray-500">4 hours</div>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <div class="flex justify-between text-sm mb-2">
+                            <span>Progress</span>
+                            <span>100%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class="progress-bar w-full"></div>
+                        </div>
+                    </div>
+                    <p class="text-gray-600 text-sm mb-4">Introduction to machine learning, neural networks, and AI applications in education.</p>
+                    <div class="flex gap-2">
+                        <button class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">
+                            Review
+                        </button>
+                        <button class="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium hover:border-gray-400 transition-colors">
+                            Quiz
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Module 2 -->
+                <div class="module-card bg-white rounded-xl p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                                <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="font-bold">Personalization</h3>
+                                <p class="text-sm text-gray-500">Module 2</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-sm font-medium text-blue-600">In Progress</div>
+                            <div class="text-xs text-gray-500">6 hours</div>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <div class="flex justify-between text-sm mb-2">
+                            <span>Progress</span>
+                            <span>75%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class="progress-bar" style="width: 75%"></div>
+                        </div>
+                    </div>
+                    <p class="text-gray-600 text-sm mb-4">Adaptive learning systems, user modeling, and personalized content delivery.</p>
+                    <div class="flex gap-2">
+                        <button class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">
+                            Continue
+                        </button>
+                        <button class="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium hover:border-gray-400 transition-colors">
+                            Notes
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Module 3 -->
+                <div class="module-card bg-white rounded-xl p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                                <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="font-bold">Tutoring Systems</h3>
+                                <p class="text-sm text-gray-500">Module 3</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-sm font-medium text-gray-400">Locked</div>
+                            <div class="text-xs text-gray-500">5 hours</div>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <div class="flex justify-between text-sm mb-2">
+                            <span>Progress</span>
+                            <span>0%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class="progress-bar" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <p class="text-gray-600 text-sm mb-4">Intelligent tutoring systems, chatbots, and virtual teaching assistants.</p>
+                    <div class="flex gap-2">
+                        <button class="flex-1 px-4 py-2 bg-gray-300 text-gray-500 rounded-lg text-sm font-medium cursor-not-allowed">
+                            Locked
+                        </button>
+                        <button class="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium hover:border-gray-400 transition-colors">
+                            Preview
+                        </button>
+                    </div>
+                </div>
+
+                <!-- More modules would continue here -->
+                <div class="module-card bg-white rounded-xl p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+                                <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="font-bold">Learning Analytics</h3>
+                                <p class="text-sm text-gray-500">Module 4</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-sm font-medium text-gray-400">Locked</div>
+                            <div class="text-xs text-gray-500">7 hours</div>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <div class="flex justify-between text-sm mb-2">
+                            <span>Progress</span>
+                            <span>0%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class="progress-bar" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <p class="text-gray-600 text-sm mb-4">Data analysis, predictive modeling, and performance assessment in education.</p>
+                    <div class="flex gap-2">
+                        <button class="flex-1 px-4 py-2 bg-gray-300 text-gray-500 rounded-lg text-sm font-medium cursor-not-allowed">
+                            Locked
+                        </button>
+                        <button class="px-4 py-2 border border-
