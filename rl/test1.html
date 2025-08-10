@@ -1,0 +1,708 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Reinforcement Learning Visualization — Q-Learning GridWorld</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    :root{
+      --bg:#0f1724; --panel:#0b1220; --muted:#94a3b8; --accent:#60a5fa;
+      --good:#22c55e; --bad:#ef4444; --card:#071028;
+      --glass: rgba(255,255,255,0.03);
+    }
+    *{box-sizing:border-box;font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial}
+    body{margin:0;background:linear-gradient(180deg,var(--bg),#071028);color:#e6eef8;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+    .app{width:1100px;max-width:100%;display:grid;grid-template-columns:520px 1fr;gap:20px}
+    .card{background:linear-gradient(180deg,var(--card),rgba(255,255,255,0.02));border-radius:12px;padding:14px;box-shadow:0 6px 20px rgba(2,6,23,0.7);border:1px solid rgba(255,255,255,0.03)}
+    .left{display:flex;flex-direction:column;gap:12px}
+    canvas{display:block;background:linear-gradient(180deg,#06263b, #021018);border-radius:8px;border:1px solid rgba(255,255,255,0.04)}
+    .controls{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+    label{font-size:12px;color:var(--muted);display:block;margin-bottom:4px}
+    input[type="range"]{width:100%}
+    .small{font-size:13px;color:var(--muted)}
+    .row{display:flex;gap:8px;align-items:center}
+    .btn{background:var(--accent);color:#04263b;padding:8px 12px;border-radius:8px;border:none;font-weight:600;cursor:pointer}
+    .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.05);color:var(--muted)}
+    .status{display:flex;gap:12px;flex-wrap:wrap}
+    .stat{background:var(--glass);padding:8px 10px;border-radius:8px;font-size:13px;color:var(--muted)}
+    .legend{display:flex;gap:10px;align-items:center}
+    .legend .box{width:18px;height:18px;border-radius:4px}
+    .policy-arrow{font-size:12px;line-height:1;color:#041022}
+    .right{display:flex;flex-direction:column;gap:12px}
+    .q-cell{display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);gap:0;padding:6px}
+    .q-num{font-size:11px;text-align:center;color:#031022}
+    .footer{font-size:12px;color:var(--muted);margin-top:8px}
+    .top-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+    .title{font-size:16px;font-weight:700}
+    .subtitle{font-size:13px;color:var(--muted)}
+    .controls-grid{display:grid;grid-template-columns:1fr;gap:8px}
+    .heat-legend{display:flex;gap:8px;align-items:center}
+    .heat-swatch{width:120px;height:10px;border-radius:6px;background:linear-gradient(90deg,#ef4444,#ffd166,#22c55e)}
+    .number{font-weight:700;color:#dff3ff}
+    .input-row{display:flex;gap:8px;align-items:center}
+    .select{padding:6px;border-radius:8px;background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--muted)}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="card left">
+      <div class="top-row">
+        <div>
+          <div class="title">Q-Learning GridWorld</div>
+          <div class="subtitle">Interactive visualization of an agent learning via Q-Learning</div>
+        </div>
+        <div class="status">
+          <div class="stat">Episode <span id="episode">0</span></div>
+          <div class="stat">Step <span id="step">0</span></div>
+          <div class="stat">Cum reward <span id="cumReward">0.00</span></div>
+        </div>
+      </div>
+
+      <canvas id="grid" width="500" height="500"></canvas>
+
+      <div class="row" style="justify-content:space-between">
+        <div class="legend" title="Legend">
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <div style="display:flex;gap:8px;align-items:center">
+              <div class="box" style="background:#ffd166;border:1px solid rgba(0,0,0,0.25)"></div><div class="small">Terminal +10</div>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <div class="box" style="background:#ef4444"></div><div class="small">Terminal -10</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:8px">
+          <button id="startBtn" class="btn">Start</button>
+          <button id="pauseBtn" class="btn ghost">Pause</button>
+          <button id="resetBtn" class="btn ghost">Reset</button>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;margin-top:8px">
+        <div style="flex:1">
+          <label class="small">Learning rate α <span id="alphaVal" class="number">0.5</span></label>
+          <input id="alpha" type="range" min="0" max="1" step="0.01" value="0.5">
+        </div>
+        <div style="flex:1">
+          <label class="small">Discount γ <span id="gammaVal" class="number">0.95</span></label>
+          <input id="gamma" type="range" min="0" max="1" step="0.01" value="0.95">
+        </div>
+      </div>
+
+      <div class="controls" style="margin-top:8px">
+        <div>
+          <label class="small">Epsilon (exploration) <span id="epsVal" class="number">0.2</span></label>
+          <input id="epsilon" type="range" min="0" max="1" step="0.01" value="0.2">
+        </div>
+        <div>
+          <label class="small">Speed (ms per step) <span id="speedVal" class="number">120</span></label>
+          <input id="speed" type="range" min="20" max="1000" step="10" value="120">
+        </div>
+      </div>
+
+      <div style="display:flex;gap:8px;margin-top:10px;align-items:center">
+        <div class="small">Grid:</div>
+        <select id="mapSelect" class="select">
+          <option value="1">Classic (4x4)</option>
+          <option value="2">Medium (6x6)</option>
+          <option value="3" selected>Custom (8x8)</option>
+        </select>
+        <div style="flex:1"></div>
+        <div class="small">Policy view: </div>
+        <select id="viewSelect" class="select">
+          <option value="both">Both (Q + Policy)</option>
+          <option value="policy">Policy only</option>
+          <option value="q">Q-values only</option>
+        </select>
+      </div>
+
+      <div class="footer">
+        <div><strong>How it works:</strong> The agent explores the grid; Q-values are updated using the Q-Learning rule: <em>Q ← Q + α (r + γ max Q' − Q)</em>. Arrows show greedy policy (argmax Q). Change α, γ, ε to see behavior. Reset to reinitialize.</div>
+      </div>
+    </div>
+
+    <div class="card right">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-weight:700">Q-table (per cell)</div>
+          <div class="small">Numbers show Q(s,a) as heat/stats. Watch them evolve.</div>
+        </div>
+        <div style="text-align:right">
+          <div class="small">Episode length limit: <span id="maxSteps" class="number">200</span></div>
+        </div>
+      </div>
+
+      <div id="qpanel" style="margin-top:10px;display:grid;grid-template-columns:repeat(1,1fr);gap:8px;align-items:start">
+        <!-- dynamic -->
+      </div>
+
+      <div style="margin-top:12px;display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+        <div class="small">Epsilon decay:</div>
+        <div class="input-row">
+          <label class="small" style="margin-right:6px">Decay per episode</label>
+          <input id="decay" type="range" min="0" max="0.02" step="0.0005" value="0.001">
+          <div class="small" id="decayVal">0.001</div>
+        </div>
+        <div style="flex:1"></div>
+        <div class="small">Reset seed:</div>
+        <button id="randomSeed" class="btn ghost">Randomize map</button>
+      </div>
+
+      <div style="margin-top:12px">
+        <div class="small">Notes:</div>
+        <ul style="margin:6px 0 0 18px;color:var(--muted)">
+          <li>This demo runs Q-Learning (off-policy), suitable for discrete small environments.</li>
+          <li>Terminal states end the episode and return the specified reward.</li>
+          <li>Modify hyperparameters to observe exploitation vs exploration trade-offs.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  /*******************
+   * Q-Learning GridWorld Visualization
+   * Self-contained. No external libs.
+   *******************/
+
+  // Utilities
+  const rand = (a=0,b=1) => Math.random()*(b-a)+a;
+  const randint = (a,b) => Math.floor(rand(a,b+1));
+  const clamp = (v,a,b) => Math.max(a, Math.min(b, v));
+  // Directions: 0=up,1=right,2=down,3=left
+  const DIRS = [
+    {dx:0, dy:-1, arrow:'↑'},
+    {dx:1, dy:0, arrow:'→'},
+    {dx:0, dy:1, arrow:'↓'},
+    {dx:-1, dy:0, arrow:'←'}
+  ];
+
+  // DOM elements
+  const canvas = document.getElementById('grid');
+  const ctx = canvas.getContext('2d');
+  const startBtn = document.getElementById('startBtn');
+  const pauseBtn = document.getElementById('pauseBtn');
+  const resetBtn = document.getElementById('resetBtn');
+  const episodeEl = document.getElementById('episode');
+  const stepEl = document.getElementById('step');
+  const cumRewardEl = document.getElementById('cumReward');
+  const alphaEl = document.getElementById('alpha');
+  const gammaEl = document.getElementById('gamma');
+  const epsilonEl = document.getElementById('epsilon');
+  const speedEl = document.getElementById('speed');
+  const mapSelect = document.getElementById('mapSelect');
+  const viewSelect = document.getElementById('viewSelect');
+  const qpanel = document.getElementById('qpanel');
+  const alphaVal = document.getElementById('alphaVal');
+  const gammaVal = document.getElementById('gammaVal');
+  const epsVal = document.getElementById('epsVal');
+  const speedVal = document.getElementById('speedVal');
+  const decayEl = document.getElementById('decay');
+  const decayVal = document.getElementById('decayVal');
+  const randomSeed = document.getElementById('randomSeed');
+  const maxStepsEl = document.getElementById('maxSteps');
+
+  // Params and state
+  let cols=8, rows=8;
+  let cellSize = canvas.width / cols;
+  let walls = new Set();
+  let terminals = {}; // {"x,y": reward}
+  let startState = {x:0,y:rows-1};
+  let rngSeed = null;
+
+  let Q = {}; // Q["x,y"] = [4]
+  let episode = 0;
+  let step = 0;
+  let cumReward = 0;
+  let maxSteps = 200;
+  let running = false;
+  let timer = null;
+
+  function makeKey(x,y){ return x+','+y; }
+  function parseKey(k){ const [x,y]=k.split(',').map(Number); return {x,y}; }
+
+  function initMap(mode=3){
+    // mode 1: 4x4 classic; 2:6x6; 3:8x8 custom
+    if(mode==1){ cols=4; rows=4; }
+    else if(mode==2){ cols=6; rows=6; }
+    else { cols=8; rows=8; }
+    cellSize = canvas.width / cols;
+    walls = new Set();
+    terminals = {};
+    // place start and terminals; create some obstacles
+    startState = {x:0, y:rows-1};
+    // Place a positive terminal (+10) and a negative (-10)
+    terminals[makeKey(cols-1,0)] = +10;
+    terminals[makeKey(Math.max(0,cols-2), Math.max(0, rows-2))] = -10;
+
+    // Add some walls (random-ish but deterministic-ish)
+    const nWalls = Math.floor((cols*rows)*0.12) + (mode==1?0:1);
+    for(let i=0;i<nWalls;i++){
+      let wx = randint(0,cols-1);
+      let wy = randint(0,rows-1);
+      const k = makeKey(wx,wy);
+      if(k === makeKey(startState.x,startState.y)) continue;
+      if(terminals[k] !== undefined) continue;
+      walls.add(k);
+    }
+
+    // ensure connectivity: simple flood fill from start to at least one terminal
+    // If disconnected, remove some walls
+    function neighbors(x,y){ return DIRS.map(d=>({x:x+d.dx,y:y+d.dy})).filter(p=>p.x>=0 && p.x<cols && p.y>=0 && p.y<rows); }
+    let changed=true, tries=0;
+    while(changed && tries<1000){
+      tries++; changed=false;
+      // BFS from start
+      let vis = new Set([makeKey(startState.x,startState.y)]);
+      let q=[startState];
+      while(q.length){
+        const cur=q.shift();
+        for(const n of neighbors(cur.x,cur.y)){
+          const k=makeKey(n.x,n.y);
+          if(vis.has(k) || walls.has(k)) continue;
+          vis.add(k); q.push(n);
+        }
+      }
+      const termKeys = Object.keys(terminals);
+      const reachable = termKeys.some(k=>vis.has(k));
+      if(!reachable){
+        // remove a random wall
+        const arr = Array.from(walls);
+        if(arr.length===0) break;
+        const rem = arr[randint(0,arr.length-1)];
+        walls.delete(rem);
+        changed=true;
+      } else break;
+    }
+  }
+
+  function resetQ(){
+    Q = {};
+    for(let y=0;y<rows;y++){
+      for(let x=0;x<cols;x++){
+        const k=makeKey(x,y);
+        if(walls.has(k) || terminals[k]!==undefined) continue;
+        Q[k] = [0,0,0,0];
+      }
+    }
+  }
+
+  function softmaxIndex(arr){
+    // not used currently but kept for possible policy sampling
+    const max = Math.max(...arr);
+    const exps = arr.map(v=>Math.exp(v-max));
+    const s = exps.reduce((a,b)=>a+b,0);
+    const probs = exps.map(e=>e/s);
+    let r = Math.random(), c=0;
+    for(let i=0;i<probs.length;i++){
+      c+=probs[i];
+      if(r<c) return i;
+    }
+    return 0;
+  }
+
+  function chooseAction(state, eps){
+    const k=makeKey(state.x,state.y);
+    const legal = availableActions(state);
+    if(Math.random() < eps){
+      // explore: pick uniformly among legal
+      return legal[randint(0, legal.length-1)];
+    } else {
+      // exploit greedy: argmax Q among legal
+      const q = Q[k] || [0,0,0,0];
+      let best = -Infinity;
+      let choices = [];
+      for(const a of legal){
+        if(q[a] > best){ best = q[a]; choices=[a]; }
+        else if(q[a] === best){ choices.push(a); }
+      }
+      return choices[randint(0, choices.length-1)];
+    }
+  }
+
+  function availableActions(state){
+    // returns legal action indices (can't move into wall or off-grid)
+    const arr=[];
+    for(let a=0;a<4;a++){
+      const nx = state.x + DIRS[a].dx;
+      const ny = state.y + DIRS[a].dy;
+      if(nx<0||nx>=cols||ny<0||ny>=rows) continue;
+      const k=makeKey(nx,ny);
+      if(walls.has(k)) continue;
+      arr.push(a);
+    }
+    return arr;
+  }
+
+  function stepEnv(state, action){
+    // returns {nextState, reward, done}
+    const nx = state.x + DIRS[action].dx;
+    const ny = state.y + DIRS[action].dy;
+    const k = makeKey(nx,ny);
+    // if move outside or into wall, stay (penalty -1)
+    if(nx<0||nx>=cols||ny<0||ny>=rows || walls.has(k)){
+      return {nextState: {x:state.x,y:state.y}, reward: -1, done:false};
+    }
+    if(terminals[k] !== undefined){
+      return {nextState: {x:nx,y:ny}, reward: terminals[k], done:true};
+    }
+    return {nextState: {x:nx,y:ny}, reward: -0.04, done:false}; // small step cost
+  }
+
+  function initEnvironment(mode){
+    initMap(mode);
+    resetQ();
+    episode = 0;
+    step = 0;
+    cumReward = 0;
+    updateHUD();
+    renderAll();
+    rebuildQPanel();
+  }
+
+  // Q-learning update
+  function qUpdate(state, action, reward, nextState, alpha, gamma){
+    const k = makeKey(state.x,state.y);
+    const nk = makeKey(nextState.x,nextState.y);
+    if(!(k in Q)) Q[k] = [0,0,0,0];
+    if(!(nk in Q)) Q[nk] = [0,0,0,0];
+    const qsa = Q[k][action];
+    const maxNext = Math.max(...Q[nk]);
+    const newQ = qsa + alpha * (reward + gamma * maxNext - qsa);
+    Q[k][action] = newQ;
+  }
+
+  // UI helpers
+  function updateHUD(){
+    episodeEl.textContent = episode;
+    stepEl.textContent = step;
+    cumRewardEl.textContent = cumReward.toFixed(2);
+    alphaVal.textContent = parseFloat(alphaEl.value).toFixed(2);
+    gammaVal.textContent = parseFloat(gammaEl.value).toFixed(2);
+    epsVal.textContent = parseFloat(epsilonEl.value).toFixed(2);
+    speedVal.textContent = speedEl.value;
+    decayVal.textContent = parseFloat(decayEl.value).toFixed(3);
+    maxStepsEl.textContent = maxSteps;
+  }
+
+  function rebuildQPanel(){
+    qpanel.innerHTML = '';
+    // Build a grid representation for Q-values: use a single large map cell per environment cell
+    const grid = document.createElement('div');
+    grid.style.display = 'grid';
+    grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+    grid.style.gap = '6px';
+    for(let y=0;y<rows;y++){
+      for(let x=0;x<cols;x++){
+        const k=makeKey(x,y);
+        const card = document.createElement('div');
+        card.style.background = 'linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01))';
+        card.style.border = '1px solid rgba(255,255,255,0.03)';
+        card.style.padding = '6px';
+        card.style.borderRadius = '6px';
+        card.style.minHeight = '60px';
+        // header
+        const h = document.createElement('div');
+        h.style.display='flex'; h.style.justifyContent='space-between'; h.style.alignItems='center';
+        const title = document.createElement('div');
+        title.textContent = `(${x},${y})`;
+        title.style.fontSize='12px'; title.style.fontWeight='700';
+        const side = document.createElement('div');
+        side.style.fontSize='11px';
+        if(walls.has(k)) side.textContent='WALL';
+        else if(terminals[k]!==undefined) side.textContent = 'R ' + terminals[k];
+        else side.textContent = '';
+        h.appendChild(title); h.appendChild(side);
+        card.appendChild(h);
+        // q-cell
+        const qcell = document.createElement('div');
+        qcell.className='q-cell';
+        qcell.style.marginTop='6px';
+        for(let i=0;i<9;i++){
+          const div = document.createElement('div');
+          div.className='q-num';
+          // map positions: index 1 = up, 3 = left, 5 = right, 7 = down
+          // We'll place numbers accordingly
+          let txt=''; let val=0;
+          if(i===1 && Q[k]) { val = Q[k][0]; txt = short(val); }
+          else if(i===3 && Q[k]) { val = Q[k][3]; txt = short(val); }
+          else if(i===5 && Q[k]) { val = Q[k][1]; txt = short(val); }
+          else if(i===7 && Q[k]) { val = Q[k][2]; txt = short(val); }
+          else if(i===4){
+            if(walls.has(k)) txt='W';
+            else if(terminals[k]!==undefined) txt='T';
+            else txt='S';
+          } else txt='';
+          div.textContent = txt;
+          qcell.appendChild(div);
+        }
+        card.appendChild(qcell);
+        grid.appendChild(card);
+      }
+    }
+    qpanel.appendChild(grid);
+  }
+
+  function short(v){ return (v===undefined)?'0.00':(Math.abs(v)>999?v.toExponential(2):v.toFixed(2)); }
+
+  // Rendering the main canvas environment
+  function renderAll(agentState){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    // draw grid
+    ctx.lineWidth=1;
+    for(let x=0;x<=cols;x++){
+      ctx.strokeStyle='rgba(255,255,255,0.03)';
+      ctx.beginPath();
+      ctx.moveTo(x*cellSize,0);
+      ctx.lineTo(x*cellSize,canvas.height);
+      ctx.stroke();
+    }
+    for(let y=0;y<=rows;y++){
+      ctx.strokeStyle='rgba(255,255,255,0.03)';
+      ctx.beginPath();
+      ctx.moveTo(0,y*cellSize);
+      ctx.lineTo(canvas.width,y*cellSize);
+      ctx.stroke();
+    }
+
+    // draw cells: walls, terminals, heat of V (max Q)
+    for(let y=0;y<rows;y++){
+      for(let x=0;x<cols;x++){
+        const k=makeKey(x,y);
+        const cx = x*cellSize, cy = y*cellSize;
+        if(walls.has(k)){
+          ctx.fillStyle = '#0b1b2a';
+          ctx.fillRect(cx+1,cy+1,cellSize-2,cellSize-2);
+          // wall hatch
+          ctx.strokeStyle='rgba(255,255,255,0.02)';
+          for(let i=0;i<10;i++){
+            ctx.beginPath();
+            ctx.moveTo(cx + (i*cellSize/10), cy);
+            ctx.lineTo(cx, cy + (i*cellSize/10));
+            ctx.stroke();
+          }
+        } else if(terminals[k]!==undefined){
+          // terminal coloring
+          const r = terminals[k] > 0 ? '#ffd166' : '#ef4444';
+          ctx.fillStyle = r;
+          ctx.fillRect(cx+1,cy+1,cellSize-2,cellSize-2);
+          // label
+          ctx.fillStyle = '#041022';
+          ctx.font = (cellSize*0.3|0) + 'px sans-serif';
+          ctx.textAlign='center'; ctx.textBaseline='middle';
+          ctx.fillText((terminals[k]>0?'+':'')+terminals[k], cx + cellSize/2, cy + cellSize/2);
+        } else {
+          // heat based on value
+          const q = Q[k] ? Math.max(...Q[k]) : 0;
+          // map q to pseudo heat -10..10
+          const v = clamp((q + 10) / 20, 0, 1);
+          // interpolate between red (#ef4444) and green (#22c55e)
+          const r1 = [239,68,68], g1=[34,197,94];
+          const r = Math.round(r1[0] + (g1[0]-r1[0])*v);
+          const g = Math.round(r1[1] + (g1[1]-r1[1])*v);
+          const b = Math.round(r1[2] + (g1[2]-r1[2])*v);
+          ctx.fillStyle = `rgba(${r},${g},${b},${0.14 + v*0.5})`;
+          ctx.fillRect(cx+1,cy+1,cellSize-2,cellSize-2);
+        }
+      }
+    }
+
+    // draw policy arrows (greedy)
+    if(viewSelect.value !== 'q'){
+      ctx.fillStyle = '#001823';
+      ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+      ctx.font = (cellSize*0.34|0) + 'px sans-serif';
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      for(let y=0;y<rows;y++){
+        for(let x=0;x<cols;x++){
+          const k=makeKey(x,y);
+          const cx = x*cellSize, cy = y*cellSize;
+          if(walls.has(k) || terminals[k]!==undefined) continue;
+          const q = Q[k] || [0,0,0,0];
+          // pick best legal
+          const legal = availableActions({x,y});
+          let best = -Infinity, bi=0;
+          for(const a of legal){
+            if(q[a] > best){ best = q[a]; bi=a; }
+          }
+          // draw arrow
+          ctx.fillStyle = 'rgba(4,6,10,0.85)';
+          ctx.fillText(DIRS[bi].arrow, cx + cellSize/2, cy + cellSize/2);
+        }
+      }
+    }
+
+    // agent
+    if(agentState){
+      const ax = agentState.x*cellSize + cellSize/2;
+      const ay = agentState.y*cellSize + cellSize/2;
+      // shadow
+      ctx.beginPath(); ctx.fillStyle='rgba(0,0,0,0.25)';
+      ctx.ellipse(ax, ay + cellSize*0.16, cellSize*0.28, cellSize*0.12, 0, 0, Math.PI*2); ctx.fill();
+      // circle
+      ctx.beginPath(); ctx.fillStyle = '#60a5fa'; ctx.arc(ax, ay, cellSize*0.26, 0, Math.PI*2); ctx.fill();
+      // eye
+      ctx.beginPath(); ctx.fillStyle = '#041022'; ctx.arc(ax - cellSize*0.08, ay - cellSize*0.04, cellSize*0.05, 0, Math.PI*2); ctx.fill();
+      // heading indicator (small line)
+      ctx.strokeStyle = '#042a3f'; ctx.lineWidth=2;
+      ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(ax + cellSize*0.14, ay - cellSize*0.06); ctx.stroke();
+    }
+  }
+
+  // main loop (one episode at a time)
+  function runEpisodeOnce(alpha, gamma, epsilon, speed, decay){
+    episode++;
+    episodeEl.textContent = episode;
+    let s = {x: startState.x, y: startState.y};
+    let done=false;
+    let localSteps = 0;
+    let epReward = 0;
+
+    function stepOnce(){
+      if(!running) return;
+      step++; stepEl.textContent = step;
+      localSteps++;
+      const k = makeKey(s.x, s.y);
+      const a = chooseAction(s, epsilon);
+      const res = stepEnv(s,a);
+      qUpdate(s, a, res.reward, res.nextState, alpha, gamma);
+      epReward += res.reward;
+      cumReward += res.reward;
+      updateHUD();
+      renderAll(res.nextState);
+      rebuildQPanel(); // update Q panel (could be throttled)
+      s = res.nextState;
+      if(res.done || localSteps >= maxSteps){
+        // episode end
+        // decay epsilon
+        const newEps = Math.max(0, epsilon - decay);
+        epsilonEl.value = newEps.toFixed(3);
+        epsVal.textContent = parseFloat(newEps).toFixed(2);
+        running=false;
+        pauseBtn.classList.add('ghost');
+        startBtn.textContent = 'Start';
+        // finish
+        return;
+      } else {
+        // schedule next step
+        timer = setTimeout(stepOnce, speed);
+      }
+    }
+
+    // first render
+    renderAll(s);
+    timer = setTimeout(stepOnce, speed);
+  }
+
+  // Controls wiring
+  startBtn.addEventListener('click', ()=>{
+    if(running){
+      // no-op
+      return;
+    }
+    running = true;
+    startBtn.textContent = 'Running...';
+    pauseBtn.classList.remove('ghost');
+    // run episodes repeatedly until paused
+    const loop = async ()=>{
+      if(!running) return;
+      // read params
+      const alpha = parseFloat(alphaEl.value);
+      const gamma = parseFloat(gammaEl.value);
+      let epsilon = parseFloat(epsilonEl.value);
+      const speed = parseInt(speedEl.value);
+      const decay = parseFloat(decayEl.value);
+      runEpisodeOnce(alpha,gamma,epsilon,speed,decay);
+      // wait for the episode to end (poll)
+      const waitLoop = () => new Promise(res=>{
+        const poll = setInterval(()=>{
+          if(!running){ clearInterval(poll); res(); }
+          // if the episode is not running and startBtn text is not Running, we consider episode finished
+          if(!running || startBtn.textContent !== 'Running...'){ clearInterval(poll); res(); }
+        }, 50);
+      });
+      await waitLoop();
+      // chain another episode automatically only if still running (user might have paused)
+      if(running) setTimeout(loop, 10);
+    };
+    loop();
+  });
+
+  pauseBtn.addEventListener('click', ()=>{
+    if(!running){
+      // resume
+      running = true;
+      startBtn.textContent = 'Running...';
+      pauseBtn.classList.remove('ghost');
+      // resume loop by clicking start
+      startBtn.click();
+    } else {
+      // pause
+      running = false;
+      startBtn.textContent = 'Start';
+      pauseBtn.classList.add('ghost');
+      if(timer) clearTimeout(timer);
+    }
+  });
+
+  resetBtn.addEventListener('click', ()=>{
+    running = false;
+    if(timer) clearTimeout(timer);
+    startBtn.textContent = 'Start';
+    pauseBtn.classList.add('ghost');
+    // keep map but reset Q and stats
+    resetQ();
+    episode = 0;
+    step = 0;
+    cumReward = 0;
+    updateHUD();
+    renderAll(startState);
+    rebuildQPanel();
+  });
+
+  // parameter updates
+  alphaEl.addEventListener('input', updateHUD);
+  gammaEl.addEventListener('input', updateHUD);
+  epsilonEl.addEventListener('input', updateHUD);
+  speedEl.addEventListener('input', updateHUD);
+  decayEl.addEventListener('input', ()=>{ decayVal.textContent = parseFloat(decayEl.value).toFixed(3); });
+
+  mapSelect.addEventListener('change', ()=>{
+    const m = parseInt(mapSelect.value);
+    initEnvironment(m);
+  });
+
+  viewSelect.addEventListener('change', ()=>{ renderAll(startState); });
+
+  randomSeed.addEventListener('click', ()=>{
+    // randomize walls/terminals
+    initEnvironment(parseInt(mapSelect.value));
+  });
+
+  // initial setup
+  initEnvironment(parseInt(mapSelect.value));
+  renderAll(startState);
+
+  // helper: initial tutorial hint
+  (function showHint(){
+    // small ephemeral highlight drawn
+    const orig = startState;
+    let flash=0;
+    const id = setInterval(()=>{
+      flash++; if(flash>6) clearInterval(id);
+      renderAll(startState);
+      ctx.save();
+      ctx.globalAlpha = 0.12 + (flash%2===0?0.2:0);
+      ctx.fillStyle = '#60a5fa';
+      ctx.fillRect(startState.x*cellSize+2, startState.y*cellSize+2, cellSize-4, cellSize-4);
+      ctx.restore();
+    }, 350);
+  })();
+
+  // small safety: stop timers on unload
+  window.addEventListener('beforeunload', ()=>{ running=false; if(timer) clearTimeout(timer); });
+
+  </script>
+</body>
+</html>
