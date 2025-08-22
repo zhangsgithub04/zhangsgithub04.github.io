@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HTML Game: AI NPC with A* Pathfinding</title>
+  <style>
+    :root {
+      --bg: #111827;
+      --panel: #0b1220;
+      --ink: #e5e7eb;
+      --muted: #9ca3af;
+      --accent: #60a5fa;
+      --good: #34d399;
+      --warn: #f59e0b;
+      --bad: #f87171;
+      --tile: #1f2937;
+      --wall: #374151;
+      --coin: #fbbf24;
+      --player: #22d3ee;
+      --npc: #a78bfa;
+    }
+    html, body {
+      height: 100%;
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica, Arial;
+      background: linear-gradient(180deg, #0b0f1a, var(--bg));
+      color: var(--ink);
+    }
+    .wrap {
+      max-width: 1024px;
+      margin: 24px auto;
+      padding: 0 16px;
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      gap: 16px;
+    }
+    @media (max-width: 900px){
+      .wrap { grid-template-columns: 1fr; }
+    }
+    .card {
+      background: linear-gradient(180deg, #0c1222, var(--panel));
+      border: 1px solid #1f2937;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+      overflow: hidden;
+    }
+    header {
+      padding: 14px 16px;
+      display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid #1f2937;
+    }
+    header h1 {
+      margin: 0; font-size: 18px; letter-spacing: .4px; color: var(--ink);
+    }
+    .badge { font-size: 12px; color: var(--muted); }
+    .content { padding: 12px; }
+    canvas { display: block; width: 100%; height: auto; background: #0a0f1b; image-rendering: pixelated; }
+    .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .btn {
+      background: #0d1b2a; color: var(--ink); border: 1px solid #1f2937; padding: 8px 10px; border-radius: 12px; cursor: pointer;
+    }
+    .btn:hover { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(96,165,250,.15) inset; }
+    .kbd { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background: #111827; border: 1px solid #1f2937; padding: 2px 6px; border-radius: 6px; }
+    .stat { color: var(--muted); font-size: 14px; }
+    .legend { display: grid; grid-template-columns: repeat(5, minmax(0,1fr)); gap: 8px; margin-top: 8px; }
+    .legend div { display: flex; gap: 6px; align-items: center; font-size: 12px; color: var(--muted); }
+    .swatch { width: 14px; height: 14px; border-radius: 3px; }
+    .pill { padding: 4px 8px; background: #0d1b2a; border: 1px solid #1f2937; border-radius: 999px; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    footer { padding: 10px 12px; border-top: 1px solid #1f2937; color: var(--muted); font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <header>
+        <h1>HTML Canvas Game — NPC played by AI (A*)</h1>
+        <span class="badge">Grid world · Coins · Walls · Pathfinding</span>
+      </header>
+      <div class="content">
+        <canvas id="game" width="640" height="480"></canvas>
+        <div class="row" style="margin-top:10px;">
+          <button class="btn" id="regen">Regenerate Level</button>
+          <button class="btn" id="spawn">Spawn Coins</button>
+          <button class="btn" id="pause">Pause</button>
+          <span class="stat" id="fps">FPS: --</span>
+          <span class="pill">Controls: <span class="kbd">WASD</span> or <span class="kbd">Arrow Keys</span></span>
+        </div>
+        <div class="legend">
+          <div><span class="swatch" style="background:var(--tile)"></span> Floor</div>
+          <div><span class="swatch" style="background:var(--wall)"></span> Wall</div>
+          <div><span class="swatch" style="background:var(--coin)"></span> Coin</div>
+          <div><span class="swatch" style="background:var(--player)"></span> You</div>
+          <div><span class="swatch" style="background:var(--npc)"></span> AI NPC</div>
+        </div>
+      </div>
+      <footer>
+        The NPC chooses a target coin and uses A* to plan a path around walls. If the plan becomes blocked, it replans automatically.
+      </footer>
+    </div>
+
+    <div class="card">
+      <header>
+        <h1>AI Brain</h1>
+        <span class="badge">Live debug</span>
+      </header>
+      <div class="content">
+        <div class="row" style="margin-bottom:8px; gap:12px;">
+          <div>Mode: <span class="pill" id="mode">A* Pathfinding</span></div>
+          <div>Target: <span class="mono" id="target">(—, —)</span></div>
+        </div>
+        <div class="row" style="margin-bottom:8px; gap:12px;">
+          <div>Path length: <span class="mono" id="plen">—</span></div>
+          <div>Steps taken: <span class="mono" id="steps">0</span></div>
+        </div>
+        <div class="row" style="margin-bottom:8px; gap:12px;">
+          <div>Replans: <span class="mono" id="replans">0</span></div>
+          <div>Coins collected (NPC): <span class="mono" id="npcCoins">0</span></div>
+        </div>
+        <div class="row" style="margin-bottom:8px; gap:12px;">
+          <div>Coins collected (You): <span class="mono" id="youCoins">0</span></div>
+        </div>
+        <p class="stat">Tip: Try to race the NPC for coins or block its path with your body.</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // --- Game constants ---
+    const TILE = 32;
+    const COLS = 20; // 640 / 32
+    const ROWS = 15; // 480 / 32
+
+    const TILE_FLOOR = 0;
+    const TILE_WALL = 1;
+
+    const COIN_COUNT = 8;
+    const WALL_DENSITY = 0.18; // 18% random walls + border
+
+    const canvas = document.getElementById('game');
+    const ctx = canvas.getContext('2d');
+
+    const ui = {
+      fps: document.getElementById('fps'),
+      target: document.getElementById('target'),
+      plen: document.getElementById('plen'),
+      steps: document.getElementById('steps'),
+      replans: document.getElementById('replans'),
+      mode: document.getElementById('mode'),
+      npcCoins: document.getElementById('npcCoins'),
+      youCoins: document.getElementById('youCoins'),
+    };
+
+    // --- Helpers ---
+    function randInt(n){ return Math.floor(Math.random()*n); }
+    function inBounds(x,y){ return x>=0 && y>=0 && x<COLS && y<ROWS; }
+    function key(x,y){ return `${x},${y}`; }
+
+    // --- World generation ---
+    let grid = [];
+    let coins = new Set();
+
+    function generateWorld() {
+      grid = Array.from({length: ROWS}, (_,y)=>
+        Array.from({length: COLS}, (_,x)=> {
+          // Borders are walls
+          if (x===0 || y===0 || x===COLS-1 || y===ROWS-1) return TILE_WALL;
+          // Random inner walls
+          return Math.random() < WALL_DENSITY ? TILE_WALL : TILE_FLOOR;
+        })
+      );
+      // Ensure a small clear area at center
+      const cx = (COLS/2)|0, cy = (ROWS/2)|0;
+      for (let dy=-2; dy<=2; dy++) for (let dx=-2; dx<=2; dx++) if (inBounds(cx+dx, cy+dy)) grid[cy+dy][cx+dx] = TILE_FLOOR;
+      coins.clear();
+      spawnCoins(COIN_COUNT);
+
+      // Place player and NPC on floor tiles
+      player = findOpenCellNear(2,2);
+      npc = findOpenCellNear(COLS-3, ROWS-3);
+      npc.brain.replan();
+    }
+
+    function findOpenCellNear(x,y){
+      // BFS search for nearest floor cell
+      const q=[[x,y]]; const seen=new Set([key(x,y)]);
+      while(q.length){
+        const [cx,cy]=q.shift();
+        if(inBounds(cx,cy) && grid[cy][cx]===TILE_FLOOR){ return {x:cx,y:cy}; }
+        for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){
+          const nx=cx+dx, ny=cy+dy, k=key(nx,ny);
+          if(inBounds(nx,ny) && !seen.has(k)) { seen.add(k); q.push([nx,ny]); }
+        }
+      }
+      return {x:1,y:1};
+    }
+
+    function spawnCoins(n){
+      let placed=0; let tries=0;
+      while(placed<n && tries<1000){
+        tries++;
+        const x=randInt(COLS), y=randInt(ROWS);
+        if(grid[y][x]===TILE_FLOOR && !coins.has(key(x,y))){ coins.add(key(x,y)); placed++; }
+      }
+    }
+
+    // --- Entities ---
+    let player = { x: 1, y: 1, coins: 0 };
+    let npc = {
+      x: COLS-2, y: ROWS-2, coins: 0,
+      brain: {
+        target: null, path: [], steps: 0, replans: 0,
+        chooseTarget(){
+          if(coins.size===0){ this.target = null; return; }
+          // Choose the coin with shortest A* path cost
+          let best = null; let bestCost = Infinity; let bestPath = null;
+          for(const k of coins){
+            const [cx,cy] = k.split(',').map(Number);
+            const {path, cost} = aStar([npc.x,npc.y],[cx,cy]);
+            if(path && cost < bestCost){ bestCost = cost; best = {x:cx,y:cy}; bestPath = path; }
+          }
+          this.target = best; this.path = bestPath || [];
+        },
+        replan(){ this.chooseTarget(); this.replans++; },
+        tick(){
+          if(!this.target){ if(coins.size>0) this.replan(); return; }
+          // If target disappeared, replan
+          if(!coins.has(key(this.target.x, this.target.y))){ this.replan(); return; }
+          // If path empty or blocked, replan
+          if(!this.path || this.path.length===0){ this.replan(); return; }
+          const [nx,ny] = this.path.shift();
+          if(!inBounds(nx,ny) || grid[ny][nx]!==TILE_FLOOR){ this.replan(); return; }
+          npc.x = nx; npc.y = ny; this.steps++;
+          // Collect coin if on target
+          if(coins.has(key(npc.x,npc.y))){ coins.delete(key(npc.x,npc.y)); npc.coins++; this.replan(); }
+        }
+      }
+    };
+
+    // --- Input ---
+    const keys = new Set();
+    addEventListener('keydown', e=>{ keys.add(e.key.toLowerCase()); if(["arrowup","arrowdown","arrowleft","arrowright"].includes(e.key.toLowerCase())) e.preventDefault(); });
+    addEventListener('keyup', e=> keys.delete(e.key.toLowerCase()));
+
+    function moveEntity(ent, dx, dy){
+      const nx = ent.x + dx; const ny = ent.y + dy;
+      if(inBounds(nx,ny) && grid[ny][nx]===TILE_FLOOR){ ent.x = nx; ent.y = ny; }
+      // Collect coins
+      if(coins.has(key(ent.x,ent.y))){ coins.delete(key(ent.x,ent.y)); ent.coins++; }
+    }
+
+    // --- A* Pathfinding on grid ---
+    function aStar(start, goal){
+      const [sx,sy]=start, [gx,gy]=goal;
+      if(!inBounds(gx,gy) || grid[gy][gx]!==TILE_FLOOR) return {path:null, cost:Infinity};
+      const open = new MinHeap((a,b)=>a.f-b.f);
+      const gScore = new Map();
+      const came = new Map();
+      const startKey = key(sx,sy);
+      gScore.set(startKey, 0);
+      open.push({x:sx,y:sy,f:heur(sx,sy,gx,gy)});
+
+      while(open.size()>0){
+        const cur = open.pop();
+        const ck = key(cur.x,cur.y);
+        if(cur.x===gx && cur.y===gy){
+          // Reconstruct
+          const path=[]; let k=ck;
+          while(k!==startKey){
+            const {x,y} = parseKey(k);
+            path.push([x,y]);
+            k = came.get(k);
+          }
+          path.reverse();
+          return {path, cost: gScore.get(ck)};
+        }
+        for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){
+          const nx=cur.x+dx, ny=cur.y+dy;
+          if(!inBounds(nx,ny) || grid[ny][nx]!==TILE_FLOOR) continue;
+          const nk = key(nx,ny);
+          const tentative = gScore.get(ck) + 1;
+          if(tentative < (gScore.get(nk) ?? Infinity)){
+            came.set(nk, ck);
+            gScore.set(nk, tentative);
+            const f = tentative + heur(nx,ny,gx,gy);
+            open.push({x:nx,y:ny,f});
+          }
+        }
+      }
+      return {path:null, cost:Infinity};
+    }
+
+    function parseKey(k){ const [x,y]=k.split(',').map(Number); return {x,y}; }
+    function heur(x,y,gx,gy){ return Math.abs(x-gx)+Math.abs(y-gy); } // Manhattan
+
+    // Simple binary heap for A*
+    class MinHeap{
+      constructor(cmp){ this.cmp=cmp; this.a=[]; }
+      size(){ return this.a.length; }
+      push(v){ this.a.push(v); this.up(this.a.length-1); }
+      pop(){ if(this.a.length===0) return null; const top=this.a[0]; const last=this.a.pop(); if(this.a.length){ this.a[0]=last; this.down(0);} return top; }
+      up(i){ const a=this.a, cmp=this.cmp; while(i>0){ const p=(i-1)>>1; if(cmp(a[i],a[p])<0){ [a[i],a[p]]=[a[p],a[i]]; i=p;} else break; } }
+      down(i){ const a=this.a, cmp=this.cmp; const n=a.length; while(true){ const l=i*2+1, r=l+1; let s=i; if(l<n && cmp(a[l],a[s])<0) s=l; if(r<n && cmp(a[r],a[s])<0) s=r; if(s!==i){ [a[i],a[s]]=[a[s],a[i]]; i=s; } else break; } }
+    }
+
+    // --- Game Loop ---
+    let last = performance.now();
+    let acc = 0; // accumulator for fixed-step logic (movement)
+    let paused = false;
+
+    function update(dt){
+      // Player movement (4-way, one tile per 120ms when held)
+      moveCooldown -= dt;
+      if(moveCooldown <= 0){
+        let dx=0,dy=0;
+        if(keys.has('w')||keys.has('arrowup')) dy=-1;
+        else if(keys.has('s')||keys.has('arrowdown')) dy=1;
+        else if(keys.has('a')||keys.has('arrowleft')) dx=-1;
+        else if(keys.has('d')||keys.has('arrowright')) dx=1;
+        if(dx||dy){ moveEntity(player,dx,dy); moveCooldown = MOVE_DELAY; }
+      }
+      // NPC brain ticks at fixed cadence
+      brainCooldown -= dt;
+      if(brainCooldown <= 0){ npc.brain.tick(); brainCooldown = BRAIN_DELAY; }
+    }
+
+    function draw(){
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      // Tiles
+      for(let y=0;y<ROWS;y++){
+        for(let x=0;x<COLS;x++){
+          ctx.fillStyle = grid[y][x]===TILE_WALL? getCss('--wall') : getCss('--tile');
+          ctx.fillRect(x*TILE, y*TILE, TILE, TILE);
+        }
+      }
+      // Coins
+      ctx.fillStyle = getCss('--coin');
+      for(const k of coins){ const [x,y]=k.split(',').map(Number); drawCircle(x,y,8); }
+      // Path preview
+      if(npc.brain.path && npc.brain.path.length){
+        ctx.strokeStyle = 'rgba(167,139,250,0.5)';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        const [sx,sy]=[npc.x*TILE+TILE/2, npc.y*TILE+TILE/2];
+        ctx.moveTo(sx,sy);
+        for(const [px,py] of npc.brain.path){ ctx.lineTo(px*TILE+TILE/2, py*TILE+TILE/2); }
+        ctx.stroke();
+      }
+      // Player & NPC
+      ctx.fillStyle = getCss('--player'); drawCircle(player.x, player.y, 10);
+      ctx.fillStyle = getCss('--npc'); drawRect(npc.x, npc.y, 18, 18, 5);
+
+      // UI updates
+      ui.target.textContent = npc.brain.target? `(${npc.brain.target.x}, ${npc.brain.target.y})` : '(none)';
+      ui.plen.textContent = npc.brain.path? npc.brain.path.length : 0;
+      ui.steps.textContent = npc.brain.steps;
+      ui.replans.textContent = npc.brain.replans;
+      ui.npcCoins.textContent = npc.coins;
+      ui.youCoins.textContent = player.coins;
+    }
+
+    function drawCircle(x,y,r){ ctx.beginPath(); ctx.arc(x*TILE+TILE/2, y*TILE+TILE/2, r, 0, Math.PI*2); ctx.fill(); }
+    function drawRect(x,y,w,h,rad=0){
+      const cx=x*TILE+TILE/2, cy=y*TILE+TILE/2; const left=cx-w/2, top=cy-h/2;
+      if(rad<=0){ ctx.fillRect(left,top,w,h); return; }
+      const r=rad; const right=left+w, bottom=top+h;
+      ctx.beginPath();
+      ctx.moveTo(left+r, top);
+      ctx.lineTo(right-r, top);
+      ctx.quadraticCurveTo(right, top, right, top+r);
+      ctx.lineTo(right, bottom-r);
+      ctx.quadraticCurveTo(right, bottom, right-r, bottom);
+      ctx.lineTo(left+r, bottom);
+      ctx.quadraticCurveTo(left, bottom, left, bottom-r);
+      ctx.lineTo(left, top+r);
+      ctx.quadraticCurveTo(left, top, left+r, top);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    function getCss(varName){ return getComputedStyle(document.documentElement).getPropertyValue(varName).trim(); }
+
+    // Movement and brain cadence
+    const MOVE_DELAY = 120; // ms per tile held
+    const BRAIN_DELAY = 90; // ms per AI step/replan cadence
+    let moveCooldown = 0;
+    let brainCooldown = 0;
+
+    // --- Main ---
+    function mainLoop(ts){
+      const dt = ts - last; last = ts;
+      if(!paused){
+        acc += dt;
+        // Fixed 16ms updates for determinism
+        while(acc >= 16){ update(16); acc -= 16; }
+        draw();
+      }
+      // FPS (simple smoothing)
+      fpsCounter.sample(dt);
+      ui.fps.textContent = `FPS: ${fpsCounter.value.toFixed(0)}`;
+      requestAnimationFrame(mainLoop);
+    }
+
+    const fpsCounter = { value: 60, sample(dt){ const inst = 1000/dt; this.value = this.value*0.9 + inst*0.1; } };
+
+    // Buttons
+    document.getElementById('regen').onclick = ()=> generateWorld();
+    document.getElementById('spawn').onclick = ()=> { spawnCoins(COIN_COUNT); npc.brain.replan(); };
+    document.getElementById('pause').onclick = (e)=> { paused=!paused; e.target.textContent = paused? 'Resume' : 'Pause'; };
+
+    // Initialize
+    generateWorld();
+    requestAnimationFrame(mainLoop);
+  </script>
+</body>
+</html>
