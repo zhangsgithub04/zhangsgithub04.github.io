@@ -1,0 +1,451 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Robot Arm Path Planning (RRT) — Demo</title>
+  <style>
+    body { font-family: Inter, system-ui, Arial; display:flex; gap:16px; padding:16px; }
+    #ui { width: 320px; }
+    canvas { background: #111; border-radius:8px; box-shadow: 0 6px 20px rgba(0,0,0,0.5); }
+    label { display:block; margin-top:8px; color:#222; }
+    button { margin-top:8px; padding:8px 12px; font-size:14px; border-radius:6px; cursor:pointer; }
+    .controls { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
+    .small { font-size:12px; color:#666; margin-top:6px; }
+  </style>
+</head>
+<body>
+  <canvas id="world" width="800" height="600"></canvas>
+  <div id="ui">
+    <h3>3-DOF Planar Arm — RRT Planner</h3>
+    <div>
+      <label>Target X <input type="range" id="targetX" min="100" max="700" value="600"></label>
+      <label>Target Y <input type="range" id="targetY" min="50" max="550" value="200"></label>
+      <div class="controls">
+        <button id="planBtn">Plan (RRT)</button>
+        <button id="animateBtn">Animate Path</button>
+        <button id="resetBtn">Reset Obstacles</button>
+      </div>
+      <div class="small">Click canvas to add/remove circular obstacles. Green = start, orange = goal, pink = path nodes</div>
+    </div>
+
+    <hr>
+    <div>
+      <strong>Parameters</strong>
+      <label>RRT max iterations: <input id="maxIter" type="number" min="100" max="50000" value="4000"></label>
+      <label>Step size (rad): <input id="stepSize" type="number" step="0.01" value="0.2"></label>
+      <label>Goal bias (0-1): <input id="goalBias" type="number" step="0.01" min="0" max="1" value="0.05"></label>
+    </div>
+  </div>
+
+<script>
+/* --------- Setup ---------- */
+const canvas = document.getElementById('world');
+const ctx = canvas.getContext('2d');
+const W = canvas.width, H = canvas.height;
+
+const targetX = document.getElementById('targetX');
+const targetY = document.getElementById('targetY');
+const planBtn = document.getElementById('planBtn');
+const animateBtn = document.getElementById('animateBtn');
+const resetBtn = document.getElementById('resetBtn');
+const maxIterInput = document.getElementById('maxIter');
+const stepSizeInput = document.getElementById('stepSize');
+const goalBiasInput = document.getElementById('goalBias');
+
+/* Robot definition: 3 links */
+const linkLengths = [120, 90, 60];         // pixels
+const base = { x: 150, y: 450 };           // base location on canvas
+const jointLimits = [                       // radians [min, max]
+  [-Math.PI, Math.PI],
+  [-Math.PI/2, Math.PI/2],
+  [-Math.PI/2, Math.PI/2]
+];
+
+/* Start joint config (radians) */
+const qStart = [ -0.6, 0.6, -0.4 ];
+/* Goal: we will compute inverse kinematics roughly by searching, but here we'll let user set goal point */
+let obstacles = [
+  {x: 380, y: 360, r: 50},
+  {x: 520, y: 260, r: 45},
+  {x: 330, y: 230, r: 40}
+];
+
+/* RRT tree node structure */
+class Node {
+  constructor(q, parent=null) {
+    this.q = q;           // joint vector array
+    this.parent = parent; // parent Node or null
+  }
+}
+
+/* Utilities */
+function rand(min, max){ return Math.random()*(max-min)+min; }
+function clamp(v, a, b){ return Math.max(a, Math.min(b, v)); }
+function distJoint(a,b){
+  let s=0; for(let i=0;i<a.length;i++){ const d = a[i]-b[i]; s+=d*d; } return Math.sqrt(s);
+}
+function add(a,b){ return a.map((v,i)=>v+b[i]); }
+function sub(a,b){ return a.map((v,i)=>v-b[i]); }
+function scale(a,s){ return a.map(v=>v*s); }
+function lerp(a,b,t){ return a.map((v,i)=>v*(1-t)+b[i]*t); }
+
+/* Forward kinematics: returns array of joint positions including base and end */
+function forwardKinematics(q){
+  const pts = [{x: base.x, y: base.y}];
+  let ang = 0;
+  let x = base.x, y = base.y;
+  for(let i=0;i<linkLengths.length;i++){
+    ang += q[i];
+    x += linkLengths[i]*Math.cos(ang);
+    y += linkLengths[i]*Math.sin(ang);
+    pts.push({x,y});
+  }
+  return pts; // length 4 for 3 links (base + 3 joints)
+}
+
+/* Collision: segment-circle intersection for each link */
+function segmentCircleIntersects(p1, p2, c){
+  const vx = p2.x - p1.x, vy = p2.y - p1.y;
+  const wx = c.x - p1.x, wy = c.y - p1.y;
+  const proj = (wx*vx + wy*vy) / (vx*vx + vy*vy || 1e-9);
+  const t = clamp(proj, 0, 1);
+  const cx = p1.x + vx*t, cy = p1.y + vy*t;
+  const dx = cx - c.x, dy = cy - c.y;
+  return (dx*dx + dy*dy) <= (c.r*c.r);
+}
+
+/* Check whole robot collision against obstacles */
+function inCollision(q){
+  const pts = forwardKinematics(q);
+  for(let i=0;i<pts.length-1;i++){
+    const a = pts[i], b = pts[i+1];
+    for(const obs of obstacles){
+      if(segmentCircleIntersects(a,b,obs)) return true;
+    }
+  }
+  return false;
+}
+
+/* Sample random joint config uniformly in limits */
+function sampleRandomQ(){
+  const q = [];
+  for(let i=0;i<jointLimits.length;i++){
+    q.push(rand(jointLimits[i][0], jointLimits[i][1]));
+  }
+  return q;
+}
+
+/* Steer from qNear toward qRand using stepSize, returns new q */
+function steer(qNear, qRand, stepSize){
+  const d = distJoint(qNear,qRand);
+  if(d <= stepSize) return qRand.slice();
+  const dir = scale(sub(qRand,qNear), 1/d);
+  return add(qNear, scale(dir, stepSize));
+}
+
+/* Find nearest node index in tree to q */
+function nearestIndex(tree, q){
+  let best = 0, bestd = Infinity;
+  for(let i=0;i<tree.length;i++){
+    const d = distJoint(tree[i].q, q);
+    if(d < bestd){ bestd = d; best = i; }
+  }
+  return best;
+}
+
+/* Connect by subdividing between q1 and q2 for collision check */
+function collisionFreeBetween(q1, q2, step){
+  const d = distJoint(q1,q2);
+  const n = Math.ceil(d / step);
+  for(let i=1;i<=n;i++){
+    const t = i/(n);
+    const qi = lerp(q1,q2,t);
+    if(inCollision(qi)) return false;
+  }
+  return true;
+}
+
+/* Convert a cartesian target point to a "goal joint" by simple search over joint space.
+   We attempt to find a collision-free q whose end effector is near target. */
+function approximateIKForTarget(tx, ty){
+  // naive random search + local interpolation
+  const attempts = 8000;
+  let best = null, bestDist = Infinity;
+  for(let i=0;i<attempts;i++){
+    const q = sampleRandomQ();
+    if(inCollision(q)) continue;
+    const pts = forwardKinematics(q);
+    const end = pts[pts.length-1];
+    const d = Math.hypot(end.x - tx, end.y - ty);
+    if(d < bestDist){ bestDist = d; best = q.slice(); }
+    if(d < 8) break;
+  }
+  return best;
+}
+
+/* RRT planner */
+function rrtPlan(qStart, qGoal, options){
+  const {maxIter=4000, stepSize=0.2, goalBias=0.05} = options;
+  const tree = [ new Node(qStart.slice(), null) ];
+  if(inCollision(qStart)) { console.warn("start is in collision"); return null; }
+  if(inCollision(qGoal)) { console.warn("goal is in collision"); return null; }
+
+  for(let iter=0; iter<maxIter; iter++){
+    // sample with goal bias
+    let qRand;
+    if(Math.random() < goalBias) qRand = qGoal.slice();
+    else qRand = sampleRandomQ();
+
+    const idxNear = nearestIndex(tree, qRand);
+    const qNear = tree[idxNear].q;
+    const qNew = steer(qNear, qRand, stepSize);
+
+    // check connection from qNear -> qNew
+    if(!collisionFreeBetween(qNear, qNew, stepSize/2)) continue;
+
+    const nodeNew = new Node(qNew, tree[idxNear]);
+    tree.push(nodeNew);
+
+    // if close to goal and path to goal is collision-free
+    if(distJoint(qNew, qGoal) < stepSize*1.5){
+      if(collisionFreeBetween(qNew, qGoal, stepSize/2)){
+        const nodeGoal = new Node(qGoal.slice(), nodeNew);
+        tree.push(nodeGoal);
+        // build path
+        const path = [];
+        let cur = nodeGoal;
+        while(cur){
+          path.push(cur.q.slice());
+          cur = cur.parent;
+        }
+        path.reverse();
+        return { path, tree };
+      }
+    }
+  }
+  return { path: null, tree };
+}
+
+/* Smoothing: simple shortcut smoothing */
+function smoothPath(path, attempts=200){
+  if(!path || path.length < 3) return path;
+  let p = path.slice();
+  for(let k=0;k<attempts;k++){
+    const i = Math.floor(rand(0, p.length-2));
+    const j = Math.floor(rand(i+1, p.length));
+    if(j <= i+1) continue;
+    const a = p[i], b = p[j];
+    if(collisionFreeBetween(a,b, 0.05)) {
+      // splice
+      const newP = p.slice(0, i+1).concat([b]).concat(p.slice(j+1));
+      p = newP;
+    }
+  }
+  return p;
+}
+
+/* ---------- Drawing & Interaction ---------- */
+
+let currentPlan = null;
+let animatedIndex = 0;
+let animationPlaying = false;
+
+function draw(){
+  ctx.clearRect(0,0,W,H);
+
+  // draw obstacles
+  for(const obs of obstacles){
+    ctx.beginPath(); ctx.fillStyle = "#553"; ctx.globalAlpha = 0.9;
+    ctx.arc(obs.x, obs.y, obs.r, 0, Math.PI*2); ctx.fill();
+    ctx.globalAlpha = 1;
+    ctx.strokeStyle = "rgba(255,255,255,0.06)"; ctx.stroke();
+  }
+
+  // draw RRT tree nodes (if present)
+  if(currentPlan && currentPlan.tree){
+    ctx.lineWidth = 1;
+    for(const n of currentPlan.tree){
+      const pts = forwardKinematics(n.q);
+      const last = pts[pts.length-1];
+      ctx.fillStyle = "#FF77CC33";
+      ctx.beginPath(); ctx.arc(last.x, last.y, 2.4,0,Math.PI*2); ctx.fill();
+      if(n.parent){
+        const ppts = forwardKinematics(n.parent.q);
+        const pLast = ppts[ppts.length-1];
+        ctx.strokeStyle = "rgba(255,128,180,0.12)"; ctx.beginPath();
+        ctx.moveTo(pLast.x, pLast.y); ctx.lineTo(last.x, last.y); ctx.stroke();
+      }
+    }
+  }
+
+  // draw start arm
+  drawArm(qStart, "#49f", 0.9, true);
+
+  // draw planned path if any
+  if(currentPlan && currentPlan.path){
+    const path = currentPlan.path;
+    // draw path as orange solid line through end-effector positions
+    ctx.lineWidth = 2.5;
+    ctx.strokeStyle = "#ff8c42";
+    ctx.beginPath();
+    for(let i=0;i<path.length;i++){
+      const pts = forwardKinematics(path[i]);
+      const end = pts[pts.length-1];
+      if(i===0) ctx.moveTo(end.x, end.y); else ctx.lineTo(end.x, end.y);
+    }
+    ctx.stroke();
+
+    // small nodes
+    for(let i=0;i<path.length;i++){
+      const pts = forwardKinematics(path[i]);
+      const end = pts[pts.length-1];
+      ctx.fillStyle = "#ff8c42";
+      ctx.beginPath(); ctx.arc(end.x, end.y, 3.5, 0, Math.PI*2); ctx.fill();
+    }
+  }
+
+  // draw the animated arm (if playing) or goal arm
+  if(animationPlaying && currentPlan && currentPlan.path){
+    const q = currentPlan.path[animatedIndex] || currentPlan.path[currentPlan.path.length-1];
+    drawArm(q, "#7CFF7C", 1, false);
+  } else {
+    // draw approximate IK goal if available
+    if(currentPlan && currentPlan.goalQ){
+      drawArm(currentPlan.goalQ, "#FFB86B", 0.9, false);
+    } else {
+      // show a ghost arm trying to point to goal target via simple heuristic IK (not guaranteed)
+      const approx = approximateIKForTarget(+targetX.value, +targetY.value);
+      if(approx) drawArm(approx, "#FFB86B", 0.6, false);
+    }
+  }
+
+  // draw base
+  ctx.fillStyle = "#ddd"; ctx.beginPath(); ctx.arc(base.x, base.y, 6,0,Math.PI*2); ctx.fill();
+
+  // draw target point
+  ctx.fillStyle = "#ffcc33"; ctx.beginPath(); ctx.arc(+targetX.value, +targetY.value, 6,0,Math.PI*2); ctx.fill();
+
+  requestAnimationFrame(draw);
+}
+
+function drawArm(q, color="#fff", alpha=1, showAngles=false){
+  const pts = forwardKinematics(q);
+  ctx.lineWidth = 8;
+  ctx.lineCap = 'round';
+  ctx.strokeStyle = color; ctx.globalAlpha = alpha;
+  for(let i=0;i<pts.length-1;i++){
+    ctx.beginPath(); ctx.moveTo(pts[i].x, pts[i].y); ctx.lineTo(pts[i+1].x, pts[i+1].y); ctx.stroke();
+  }
+  // joints
+  for(const p of pts){
+    ctx.beginPath(); ctx.fillStyle = color; ctx.globalAlpha = alpha; ctx.arc(p.x,p.y,6,0,Math.PI*2); ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+  if(showAngles){
+    ctx.fillStyle = "#aaa"; ctx.font = "12px monospace";
+    for(let i=0;i<q.length;i++){
+      const p = pts[i+1];
+      ctx.fillText(q[i].toFixed(2), p.x+8, p.y-8);
+    }
+  }
+}
+
+/* ---------- Events ---------- */
+canvas.addEventListener('click', (e)=>{
+  const rect = canvas.getBoundingClientRect();
+  const x = e.clientX - rect.left, y = e.clientY - rect.top;
+  // if clicking near an obstacle, remove it
+  let removed = false;
+  for(let i=0;i<obstacles.length;i++){
+    const o = obstacles[i];
+    if(Math.hypot(o.x-x, o.y-y) < o.r + 8){ obstacles.splice(i,1); removed = true; break; }
+  }
+  if(!removed){
+    obstacles.push({x,y,r: Math.floor(rand(28,62))});
+  }
+  currentPlan = null;
+});
+
+planBtn.onclick = async ()=>{
+  planBtn.disabled = true;
+  currentPlan = null;
+  animationPlaying = false;
+  animatedIndex = 0;
+
+  const maxIter = +maxIterInput.value;
+  const stepSize = +stepSizeInput.value;
+  const goalBias = +goalBiasInput.value;
+
+  // compute approximate IK goal joint config
+  const tx = +targetX.value, ty = +targetY.value;
+  const goalQ = approximateIKForTarget(tx, ty);
+  if(!goalQ){
+    alert("Couldn't find an initial IK candidate for that target (try moving target or remove obstacles).");
+    planBtn.disabled = false;
+    return;
+  }
+
+  if(inCollision(goalQ)){
+    alert("Found IK but it's in collision; try moving target or clearing obstacles.");
+    planBtn.disabled = false;
+    return;
+  }
+
+  // run RRT
+  const result = rrtPlan(qStart, goalQ, {maxIter, stepSize, goalBias});
+  if(result.path){
+    const sm = smoothPath(result.path, 250);
+    currentPlan = { path: sm, tree: result.tree, goalQ };
+    alert(`Plan found! Path length: ${sm.length}`);
+  } else {
+    currentPlan = { path: null, tree: result.tree, goalQ };
+    alert("No path found within max iterations. Try increasing iterations or step size, or reduce obstacles.");
+  }
+
+  planBtn.disabled = false;
+};
+
+animateBtn.onclick = ()=>{
+  if(!currentPlan || !currentPlan.path) { alert("No path to animate (plan first)."); return; }
+  animationPlaying = true;
+  animatedIndex = 0;
+  // animate through path every frame at controlled speed
+  const speed = 0.015; // interpolation per frame
+  let t = 0, i = 0, next = 1;
+  let qcur = currentPlan.path[0].slice();
+  function step(){
+    if(!animationPlaying) return;
+    const path = currentPlan.path;
+    if(i >= path.length-1){ animationPlaying = false; return; }
+    // move qcur toward path[next]
+    qcur = lerp(qcur, path[next], speed);
+    // check if close to path[next]
+    if(distJoint(qcur, path[next]) < 0.01){
+      i++; next = Math.min(next+1, path.length-1);
+    }
+    // set displayed frame index by finding closest index along path for drawing
+    let best=0,bd=1e9;
+    for(let k=0;k<path.length;k++){
+      const d = distJoint(qcur, path[k]);
+      if(d<bd){ bd=d; best=k; }
+    }
+    animatedIndex = best;
+    if(animationPlaying) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+};
+
+resetBtn.onclick = ()=> {
+  obstacles = [
+    {x: 380, y: 360, r: 50},
+    {x: 520, y: 260, r: 45},
+    {x: 330, y: 230, r: 40}
+  ];
+  currentPlan = null;
+};
+
+/* start drawing loop */
+requestAnimationFrame(draw);
+</script>
+</body>
+</html>
