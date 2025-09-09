@@ -1,0 +1,542 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Robot Arm Path Planning (RRT) — Babylon.js 3D</title>
+  <style>
+    html,body { width:100%; height:100%; margin:0; padding:0; overflow:hidden; font-family:Inter,system-ui,Arial; }
+    #renderCanvas { width:100%; height:100%; display:block; }
+    #ui {
+      position: absolute;
+      right: 14px;
+      top: 14px;
+      width: 320px;
+      background: rgba(255,255,255,0.95);
+      padding: 12px;
+      border-radius: 10px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+      font-size: 13px;
+    }
+    #ui h3 { margin:0 0 8px 0; font-size:16px; }
+    label { display:block; margin-top:8px; color:#222; }
+    .controls { display:flex; gap:8px; margin-top:8px; flex-wrap:wrap; }
+    button { padding:8px 10px; border-radius:6px; border: none; background:#3b82f6; color:white; cursor:pointer; }
+    button.secondary { background:#6b7280; }
+    .small { font-size:12px; color:#444; margin-top:8px; }
+  </style>
+</head>
+<body>
+  <canvas id="renderCanvas"></canvas>
+
+  <div id="ui">
+    <h3>3-DOF Planar Arm — RRT (Babylon 3D)</h3>
+
+    <label>Target X <input id="targetX" type="range" min="-400" max="400" value="200"></label>
+    <label>Target Z <input id="targetZ" type="range" min="-300" max="300" value="-50"></label>
+
+    <div class="controls">
+      <button id="planBtn">Plan (RRT)</button>
+      <button id="animateBtn" class="secondary">Animate Path</button>
+      <button id="resetBtn" class="secondary">Reset Obstacles</button>
+    </div>
+
+    <hr>
+
+    <label>RRT max iterations: <input id="maxIter" type="number" min="100" max="50000" value="6000"></label>
+    <label>Step size (rad): <input id="stepSize" type="number" step="0.01" value="0.18"></label>
+    <label>Goal bias (0-1): <input id="goalBias" type="number" step="0.01" min="0" max="1" value="0.06"></label>
+
+    <div class="small">Click on ground to add/remove spherical obstacles. Yellow = target, blue = start.</div>
+  </div>
+
+  <!-- Babylon.js CDN -->
+  <script src="https://cdn.babylonjs.com/babylon.js"></script>
+  <script>
+  // ---- Scene & camera ----
+  const canvas = document.getElementById('renderCanvas');
+  const engine = new BABYLON.Engine(canvas, true, {preserveDrawingBuffer:true, stencil:true});
+  const scene = new BABYLON.Scene(engine);
+  scene.clearColor = new BABYLON.Color4(0.07,0.07,0.09,1);
+
+  const camera = new BABYLON.ArcRotateCamera("cam", -Math.PI/4, Math.PI/3.6, 900, new BABYLON.Vector3(150,0,0), scene);
+  camera.attachControl(canvas, true);
+  camera.lowerRadiusLimit = 200;
+  camera.upperRadiusLimit = 2500;
+
+  const light = new BABYLON.HemisphericLight("hemi", new BABYLON.Vector3(0.3,1,0.3), scene);
+  light.intensity = 0.95;
+
+  // ground
+  const ground = BABYLON.MeshBuilder.CreateGround("g", {width:1200, height:900}, scene);
+  const groundMat = new BABYLON.StandardMaterial("gm", scene);
+  groundMat.diffuseColor = new BABYLON.Color3(0.08,0.08,0.1);
+  ground.material = groundMat;
+
+  // grid material
+  const grid = new BABYLON.GridMaterial("grid", scene);
+  grid.majorUnitFrequency = 10;
+  grid.minorUnitVisibility = 0.2;
+  grid.gridRatio = 20;
+  grid.backFaceCulling = false;
+  ground.material = grid;
+
+  // ---- Robot parameters (planar, rotates about Y, lives in XZ plane) ----
+  const linkLengths = [160, 110, 75];   // in world units
+  const basePos = new BABYLON.Vector3( -250, 0, 200 ); // world position
+  const baseY = 20; // some lift for base mesh
+
+  const jointLimits = [
+    [-Math.PI, Math.PI],
+    [-Math.PI/2, Math.PI/2],
+    [-Math.PI/2, Math.PI/2]
+  ];
+
+  // Start joint angles
+  const qStart = [ -0.6, 0.6, -0.4 ];
+
+  // Visual robot: hierarchical TransformNodes for joints
+  const robotRoot = new BABYLON.TransformNode("robotRoot", scene);
+  robotRoot.position = basePos;
+
+  // base mesh
+  const baseMesh = BABYLON.MeshBuilder.CreateBox("base", {size:40}, scene);
+  baseMesh.parent = robotRoot;
+  baseMesh.position.y = baseY;
+
+  // create joint nodes and link meshes
+  const joints = [];
+  const links = [];
+  let cumulativeX = 0; // not used for transform nodes but helpful
+  let lastNode = robotRoot;
+
+  for(let i=0;i<linkLengths.length;i++){
+    const jointNode = new BABYLON.TransformNode("joint"+i, scene);
+    jointNode.parent = lastNode;
+    // place joint at origin of its parent (so rotation happens around parent's end)
+    jointNode.position = new BABYLON.Vector3(0, 0, 0);
+    joints.push(jointNode);
+
+    // link: cylinder pointing along +X (we'll rotate to XZ plane)
+    const h = linkLengths[i];
+    const cyl = BABYLON.MeshBuilder.CreateCylinder("link"+i, {height:h, diameterTop:18, diameterBottom:18, tessellation:16}, scene);
+    cyl.parent = jointNode;
+    // position cylinder so that its start is at joint origin; default Babylon cylinder is centered, axis Y -> rotate to X and shift
+    cyl.rotation.z = Math.PI/2; // cylinder axis -> X
+    // move cylinder so one end is at joint origin (center at h/2)
+    cyl.position = new BABYLON.Vector3(h/2, baseY, 0);
+    // slightly lift in y so it sits over ground
+    cyl.receiveShadows = true;
+    links.push(cyl);
+
+    // create a joint visual sphere at joint origin
+    const sph = BABYLON.MeshBuilder.CreateSphere("jvis"+i, {diameter:24}, scene);
+    sph.parent = jointNode;
+    sph.position = new BABYLON.Vector3(0, baseY, 0);
+
+    lastNode = cyl; // next joint attaches to this link mesh (so transforms accumulate)
+  }
+
+  // We will control joints by setting rotation.y at each joint transform node.
+  // However because of our parenting (joint -> cylinder -> next joint attaches to cylinder),
+  // we need an extra empty TransformNode at each link end for correct pivoting. We'll create linkEnd nodes.
+  const linkEnds = [];
+  lastNode = robotRoot;
+  for(let i=0;i<linkLengths.length;i++){
+    const jointNode = new BABYLON.TransformNode("jnode"+i, scene);
+    jointNode.parent = lastNode;
+    jointNode.position = new BABYLON.Vector3(0, baseY, 0);
+    // a visual link mesh separate
+    const link = BABYLON.MeshBuilder.CreateBox("vislink"+i, {height:8, width:linkLengths[i], depth:18}, scene);
+    link.parent = jointNode;
+    link.position = new BABYLON.Vector3(linkLengths[i]/2, 0, 0);
+
+    // for collision shading
+    const mat = new BABYLON.StandardMaterial("m"+i, scene);
+    mat.diffuseColor = new BABYLON.Color3(0.3, 0.5 + i*0.1, 0.9 - i*0.2);
+    link.material = mat;
+
+    // create end node positioned at link end for next joint to attach
+    const endNode = new BABYLON.TransformNode("end"+i, scene);
+    endNode.parent = jointNode;
+    endNode.position = new BABYLON.Vector3(linkLengths[i], 0, 0); // local coords
+    linkEnds.push({jointNode, endNode, link});
+    lastNode = endNode;
+  }
+
+  // We'll control linkEnds[n].jointNode.rotation.y = angle_n to represent joint rotations about Y (planar arm).
+  // Set initial poses:
+  function applyJointAngles(q) {
+    for(let i=0;i<q.length;i++){
+      linkEnds[i].jointNode.rotation = new BABYLON.Vector3(0, q[i], 0);
+    }
+  }
+  applyJointAngles(qStart);
+
+  // ---- Obstacles: spheres ----
+  let obstacles = [
+    {x:-30, z:220, r:55},
+    {x:120, z:40, r:50},
+    {x:-20, z:-40, r:38}
+  ];
+
+  const obstacleMeshes = [];
+  function createObstacleMesh(o, idx){
+    const sph = BABYLON.MeshBuilder.CreateSphere("obs"+idx, {diameter: o.r*2, segments: 24}, scene);
+    sph.position = new BABYLON.Vector3(o.x, baseY + o.r*0.4, o.z);
+    const mat = new BABYLON.StandardMaterial("oMat"+idx, scene);
+    mat.diffuseColor = new BABYLON.Color3(0.8,0.4,0.5);
+    mat.alpha = 0.95;
+    sph.material = mat;
+    obstacleMeshes.push(sph);
+  }
+  function rebuildObstacles(){
+    for(const m of obstacleMeshes) m.dispose();
+    obstacleMeshes.length = 0;
+    for(let i=0;i<obstacles.length;i++) createObstacleMesh(obstacles[i], i);
+  }
+  rebuildObstacles();
+
+  // target marker
+  const targetMat = new BABYLON.StandardMaterial("tmat", scene);
+  targetMat.emissiveColor = new BABYLON.Color3(1,0.8,0.2);
+  const targetMesh = BABYLON.MeshBuilder.CreateSphere("target", {diameter:14}, scene);
+  targetMesh.material = targetMat;
+  let target = {x:200, z:-50};
+  targetMesh.position = new BABYLON.Vector3(target.x, baseY+7, target.z);
+
+  // UI elements
+  const targetX = document.getElementById('targetX');
+  const targetZ = document.getElementById('targetZ');
+  const planBtn = document.getElementById('planBtn');
+  const animateBtn = document.getElementById('animateBtn');
+  const resetBtn = document.getElementById('resetBtn');
+  const maxIterInput = document.getElementById('maxIter');
+  const stepSizeInput = document.getElementById('stepSize');
+  const goalBiasInput = document.getElementById('goalBias');
+
+  targetX.value = target.x;
+  targetZ.value = target.z;
+
+  targetX.oninput = ()=> { target.x = +targetX.value; targetMesh.position.x = target.x; }
+  targetZ.oninput = ()=> { target.z = +targetZ.value; targetMesh.position.z = target.z; }
+
+  // clicking on ground to add/remove obstacles
+  scene.onPointerObservable.add((evt)=>{
+    if(evt.type === BABYLON.PointerEventTypes.POINTERPICK){
+      const pick = evt.pickInfo;
+      if(pick.hit && pick.pickedMesh === ground){
+        const p = pick.pickedPoint;
+        // if clicking near an obstacle: remove it
+        let removed = false;
+        for(let i=0;i<obstacles.length;i++){
+          const o = obstacles[i];
+          const dx = o.x - p.x, dz = o.z - p.z;
+          if(Math.hypot(dx,dz) < o.r + 12){
+            obstacles.splice(i,1); removed = true; break;
+          }
+        }
+        if(!removed){
+          obstacles.push({x:p.x, z:p.z, r: Math.floor(Math.random()*36)+28});
+        }
+        rebuildObstacles();
+      }
+    }
+  });
+
+  // ---- Kinematics & collision (planner uses pure math, not scene graph) ----
+  function fk3D(q){
+    // returns array of Vector3 positions: base -> joint1 end -> joint2 end -> end effector
+    const pts = [];
+    let ang = 0;
+    let x = basePos.x, z = basePos.z;
+    pts.push(new BABYLON.Vector3(x, baseY, z));
+    for(let i=0;i<q.length;i++){
+      ang += q[i];
+      x += linkLengths[i] * Math.cos(ang);
+      z += linkLengths[i] * Math.sin(ang);
+      pts.push(new BABYLON.Vector3(x, baseY, z));
+    }
+    return pts;
+  }
+
+  function segmentSphereIntersect3D(a, b, sphere){
+    // a,b are Vector3, sphere {x,z,r}
+    const sx = sphere.x, sz = sphere.z, sr = sphere.r;
+    // project into XZ plane (y is same)
+    const ax = a.x, az = a.z;
+    const bx = b.x, bz = b.z;
+    const vx = bx - ax, vz = bz - az;
+    const wx = sx - ax, wz = sz - az;
+    const denom = vx*vx + vz*vz || 1e-9;
+    const proj = (wx*vx + wz*vz)/denom;
+    const t = Math.max(0, Math.min(1, proj));
+    const cx = ax + vx*t, cz = az + vz*t;
+    const dx = cx - sx, dz = cz - sz;
+    return (dx*dx + dz*dz) <= (sr*sr);
+  }
+
+  function inCollision(q){
+    const pts = fk3D(q);
+    for(let i=0;i<pts.length-1;i++){
+      const a = pts[i], b = pts[i+1];
+      for(const obs of obstacles){
+        if(segmentSphereIntersect3D(a,b,obs)) return true;
+      }
+    }
+    return false;
+  }
+
+  // ---- RRT Planner (same structure as previous) ----
+  function rand(min, max){ return Math.random()*(max-min)+min; }
+  function sampleRandomQ(){
+    const q=[];
+    for(let i=0;i<jointLimits.length;i++) q.push(rand(jointLimits[i][0], jointLimits[i][1]));
+    return q;
+  }
+  function distJoint(a,b){
+    let s=0; for(let i=0;i<a.length;i++){ const d = a[i]-b[i]; s += d*d; } return Math.sqrt(s);
+  }
+  function add(a,b){ return a.map((v,i)=>v+b[i]); }
+  function sub(a,b){ return a.map((v,i)=>v-b[i]); }
+  function scale(a,s){ return a.map(v=>v*s); }
+  function lerp(a,b,t){ return a.map((v,i)=>v*(1-t)+b[i]*t); }
+
+  function steer(qNear, qRand, stepSize){
+    const d = distJoint(qNear,qRand);
+    if(d <= stepSize) return qRand.slice();
+    const dir = scale(sub(qRand,qNear), 1/d);
+    return add(qNear, scale(dir, stepSize));
+  }
+
+  function nearestIndex(tree, q){
+    let best=0, bd=1e9;
+    for(let i=0;i<tree.length;i++){
+      const d = distJoint(tree[i].q, q);
+      if(d<bd){ bd=d; best=i; }
+    }
+    return best;
+  }
+
+  function collisionFreeBetween(q1, q2, step){
+    const d = distJoint(q1,q2);
+    const n = Math.ceil(d / step);
+    for(let i=1;i<=n;i++){
+      const t = i/(n);
+      const qi = lerp(q1,q2,t);
+      if(inCollision(qi)) return false;
+    }
+    return true;
+  }
+
+  function approximateIKForTarget(tx, tz){
+    // random search for a collision-free q whose end effector near target
+    const attempts = 6000;
+    let best=null, bestD=1e9;
+    for(let i=0;i<attempts;i++){
+      const q = sampleRandomQ();
+      if(inCollision(q)) continue;
+      const pts = fk3D(q);
+      const end = pts[pts.length-1];
+      const d = Math.hypot(end.x - tx, end.z - tz);
+      if(d < bestD){ bestD = d; best = q.slice(); }
+      if(d < 8) break;
+    }
+    return best;
+  }
+
+  function rrtPlan(qStart, qGoal, options){
+    const {maxIter=4000, stepSize=0.2, goalBias=0.05} = options;
+    if(inCollision(qStart)) { console.warn("start in collision"); return null; }
+    if(inCollision(qGoal)) { console.warn("goal in collision"); return null; }
+    const tree = [{ q: qStart.slice(), parent: null }];
+    for(let iter=0; iter<maxIter; iter++){
+      const qRand = (Math.random() < goalBias) ? qGoal.slice() : sampleRandomQ();
+      const idx = nearestIndex(tree, qRand);
+      const qNear = tree[idx].q;
+      const qNew = steer(qNear, qRand, stepSize);
+      if(!collisionFreeBetween(qNear, qNew, stepSize/2)) continue;
+      tree.push({ q: qNew, parent: idx });
+      if(distJoint(qNew, qGoal) < stepSize*1.6){
+        if(collisionFreeBetween(qNew, qGoal, stepSize/2)){
+          tree.push({ q: qGoal.slice(), parent: tree.length-1 });
+          // construct path
+          const path = [];
+          let curIdx = tree.length-1;
+          while(curIdx !== null){
+            path.push(tree[curIdx].q.slice());
+            curIdx = tree[curIdx].parent;
+          }
+          path.reverse();
+          return { path, tree };
+        }
+      }
+    }
+    return { path:null, tree };
+  }
+
+  function smoothPath(path, attempts=200){
+    if(!path || path.length < 3) return path;
+    let p = path.slice();
+    for(let k=0;k<attempts;k++){
+      const i = Math.floor(rand(0, p.length-2));
+      const j = Math.floor(rand(i+1, p.length));
+      if(j <= i+1) continue;
+      const a = p[i], b = p[j];
+      if(collisionFreeBetween(a,b, 0.05)) {
+        p = p.slice(0, i+1).concat([b]).concat(p.slice(j+1));
+      }
+    }
+    return p;
+  }
+
+  // ---- Visualization: display tree nodes & path ----
+  const debugSpheres = [];
+  const debugLines = [];
+  const pathMeshes = [];
+
+  function clearDebug(){
+    for(const m of debugSpheres) m.dispose(); debugSpheres.length=0;
+    for(const l of debugLines) l.dispose(); debugLines.length=0;
+    for(const p of pathMeshes) p.dispose(); pathMeshes.length=0;
+  }
+
+  function renderTree(tree){
+    // tree entries have q and parent index
+    const pts = [];
+    for(const node of tree){
+      const end = fk3D(node.q).pop();
+      pts.push(end);
+      const s = BABYLON.MeshBuilder.CreateSphere("tn", {diameter:6}, scene);
+      s.position = end;
+      s.material = new BABYLON.StandardMaterial("tnm", scene);
+      s.material.diffuseColor = new BABYLON.Color3(0.9,0.4,0.8);
+      debugSpheres.push(s);
+
+      if(node.parent !== null){
+        const parentEnd = fk3D(tree[node.parent].q).pop();
+        const lines = BABYLON.MeshBuilder.CreateLines("l", {points:[parentEnd, end], updatable:false}, scene);
+        debugLines.push(lines);
+      }
+    }
+  }
+
+  function renderPath(path){
+    if(!path) return;
+    for(let i=0;i<path.length;i++){
+      const p = fk3D(path[i]).pop();
+      const m = BABYLON.MeshBuilder.CreateSphere("pp"+i, {diameter:9}, scene);
+      m.position = p;
+      const mat = new BABYLON.StandardMaterial("pm"+i, scene); mat.emissiveColor = new BABYLON.Color3(1,0.6,0.1);
+      m.material = mat;
+      pathMeshes.push(m);
+      if(i>0){
+        const prev = fk3D(path[i-1]).pop();
+        const line = BABYLON.MeshBuilder.CreateLines("pl", {points:[prev, p]}, scene);
+        pathMeshes.push(line);
+      }
+    }
+  }
+
+  // ---- Plan & animate handlers ----
+  let currentPlan = null;
+  let animationPlaying = false;
+  let animatedIndex = 0;
+
+  planBtn.onclick = ()=>{
+    planBtn.disabled = true;
+    clearDebug();
+    animationPlaying = false;
+    animatedIndex = 0;
+
+    const maxIter = +maxIterInput.value;
+    const stepSize = +stepSizeInput.value;
+    const goalBias = +goalBiasInput.value;
+
+    // compute approximate IK goal
+    const goalQ = approximateIKForTarget(target.x, target.z);
+    if(!goalQ){
+      alert("Couldn't find IK candidate for that target. Move the target or remove obstacles.");
+      planBtn.disabled = false;
+      return;
+    }
+    if(inCollision(goalQ)){
+      alert("IK solution is in collision. Try moving target or clear obstacles.");
+      planBtn.disabled = false;
+      return;
+    }
+
+    const res = rrtPlan(qStart, goalQ, {maxIter, stepSize, goalBias});
+    if(res.path){
+      const smooth = smoothPath(res.path, 300);
+      currentPlan = { path: smooth, tree: res.tree, goalQ };
+      renderTree(res.tree);
+      renderPath(smooth);
+      alert(`Plan found! Path length: ${smooth.length}`);
+    } else {
+      currentPlan = { path: null, tree: res.tree, goalQ };
+      renderTree(res.tree);
+      alert("No path found. Try increasing iterations, step size, or reduce obstacles.");
+    }
+
+    planBtn.disabled = false;
+  };
+
+  animateBtn.onclick = ()=>{
+    if(!currentPlan || !currentPlan.path){ alert("No path to animate (plan first)."); return; }
+    animationPlaying = true;
+    animatedIndex = 0;
+    // animate by interpolating joint angles
+    let qcur = currentPlan.path[0].slice();
+    const speed = 0.02; // interpolation factor per frame
+    function step(){
+      if(!animationPlaying) return;
+      const path = currentPlan.path;
+      // find next target index
+      let next = Math.min(animatedIndex+1, path.length-1);
+      qcur = lerp(qcur, path[next], speed);
+      // update robot visuals
+      applyJointAngles(qcur);
+      // if close to path[next], advance index
+      if(distJoint(qcur, path[next]) < 0.01){
+        animatedIndex = Math.min(animatedIndex+1, path.length-1);
+        if(animatedIndex >= path.length-1){ animationPlaying = false; return; }
+      } else {
+        // update animatedIndex to the nearest path node (for debug)
+        let best=0,bd=1e9;
+        for(let k=0;k<path.length;k++){
+          const d = distJoint(qcur, path[k]);
+          if(d<bd){ bd=d; best=k; }
+        }
+        animatedIndex = best;
+      }
+      // loop
+      requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  };
+
+  resetBtn.onclick = ()=>{
+    obstacles = [
+      {x:-30, z:220, r:55},
+      {x:120, z:40, r:50},
+      {x:-20, z:-40, r:38}
+    ];
+    rebuildObstacles();
+    clearDebug();
+    currentPlan = null;
+    animationPlaying = false;
+  };
+
+  // helper distance for animation
+  function distJoint(a,b){
+    let s=0; for(let i=0;i<a.length;i++){ const d = a[i]-b[i]; s+=d*d; } return Math.sqrt(s);
+  }
+
+  // start render loop
+  engine.runRenderLoop(()=>{ scene.render(); });
+
+  // resize handler
+  window.addEventListener('resize', ()=>{ engine.resize(); });
+  </script>
+</body>
+</html>
