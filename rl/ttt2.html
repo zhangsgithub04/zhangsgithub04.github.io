@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RL Tic-Tac-Toe Learning Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            padding: 30px;
+        }
+
+        .game-section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin: 20px 0;
+            max-width: 300px;
+            aspect-ratio: 1;
+        }
+
+        .cell {
+            background: white;
+            border: 3px solid #ddd;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            aspect-ratio: 1;
+        }
+
+        .cell:hover {
+            background: #f0f8ff;
+            border-color: #667eea;
+            transform: scale(1.05);
+        }
+
+        .cell.x {
+            color: #e74c3c;
+            background: #ffeaa7;
+        }
+
+        .cell.o {
+            color: #0984e3;
+            background: #74b9ff;
+        }
+
+        .cell.winner {
+            background: #00b894;
+            color: white;
+            animation: pulse 0.6s ease-in-out;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .controls {
+            margin: 20px 0;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            margin: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .stats {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .stat-item:last-child {
+            border-bottom: none;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #ecf0f1;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            transition: width 0.3s ease;
+            border-radius: 10px;
+        }
+
+        .q-table {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+
+        .state-info {
+            font-family: monospace;
+            background: #2d3436;
+            color: #00d2d3;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-size: 0.9em;
+        }
+
+        .learning-params {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+
+        .param-group {
+            margin: 15px 0;
+        }
+
+        .param-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #2d3436;
+        }
+
+        .param-group input, .param-group select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 1em;
+        }
+
+        .param-group input:focus, .param-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .visualization {
+            grid-column: 1 / -1;
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .chart-container {
+            height: 300px;
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .chart-line {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #e74c3c;
+            transition: all 0.3s ease;
+        }
+
+        .chart-point {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: #e74c3c;
+            border-radius: 50%;
+            transform: translate(-50%, 50%);
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 15px 0;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 3px;
+            border-radius: 2px;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-training { background: #00b894; }
+        .status-playing { background: #e17055; }
+        .status-ready { background: #0984e3; }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .board {
+                max-width: 250px;
+            }
+            
+            .cell {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧠 Reinforcement Learning Tic-Tac-Toe</h1>
+            <p>Watch AI learn to play through self-play and Q-learning</p>
+        </div>
+
+        <div class="main-content">
+            <div class="game-section">
+                <h2>🎮 Game Board</h2>
+                <div class="board" id="board">
+                    <div class="cell" data-index="0"></div>
+                    <div class="cell" data-index="1"></div>
+                    <div class="cell" data-index="2"></div>
+                    <div class="cell" data-index="3"></div>
+                    <div class="cell" data-index="4"></div>
+                    <div class="cell" data-index="5"></div>
+                    <div class="cell" data-index="6"></div>
+                    <div class="cell" data-index="7"></div>
+                    <div class="cell" data-index="8"></div>
+                </div>
+
+                <div class="controls">
+                    <button class="btn" id="startTraining">🚀 Start Training</button>
+                    <button class="btn" id="playGame">🎯 Play vs AI</button>
+                    <button class="btn" id="resetGame">🔄 Reset Game</button>
+                    <button class="btn" id="stepTraining">⏭️ Step Train</button>
+                </div>
+
+                <div class="stats">
+                    <h3>📊 Training Statistics</h3>
+                    <div class="stat-item">
+                        <span>Training Episodes:</span>
+                        <span id="episodes">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>AI Win Rate:</span>
+                        <span id="winRate">0%</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>Current Status:</span>
+                        <span><span class="status-indicator status-ready"></span><span id="status">Ready</span></span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="trainingProgress" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="game-section">
+                <h2>⚙️ Learning Configuration</h2>
+                <div class="learning-params">
+                    <div class="param-group">
+                        <label for="learningRate">Learning Rate (α):</label>
+                        <input type="range" id="learningRate" min="0.1" max="1.0" step="0.1" value="0.3">
+                        <span id="learningRateValue">0.3</span>
+                    </div>
+                    <div class="param-group">
+                        <label for="discountFactor">Discount Factor (γ):</label>
+                        <input type="range" id="discountFactor" min="0.1" max="0.99" step="0.1" value="0.9">
+                        <span id="discountFactorValue">0.9</span>
+                    </div>
+                    <div class="param-group">
+                        <label for="explorationRate">Exploration Rate (ε):</label>
+                        <input type="range" id="explorationRate" min="0.1" max="1.0" step="0.1" value="0.2">
+                        <span id="explorationRateValue">0.2</span>
+                    </div>
+                    <div class="param-group">
+                        <label for="trainingSpeed">Training Speed:</label>
+                        <select id="trainingSpeed">
+                            <option value="slow">Slow (Educational)</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="fast">Fast</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="q-table">
+                    <h3>🧮 Q-Table Preview</h3>
+                    <div class="state-info" id="qTableInfo">
+                        Current State: [ , , , , , , , , ]<br>
+                        Best Action: None<br>
+                        Q-Value: 0.00
+                    </div>
+                </div>
+            </div>
+
+            <div class="visualization">
+                <h2>📈 Learning Progress</h2>
+                <div class="chart-container" id="winRateChart">
+                    <canvas id="chartCanvas" width="800" height="250"></canvas>
+                </div>
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #e74c3c;"></div>
+                        <span>AI Win Rate</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #0984e3;"></div>
+                        <span>Draw Rate</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #00b894;"></div>
+                        <span>Loss Rate</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class TicTacToeRL {
+            constructor() {
+                this.board = Array(9).fill('');
+                this.qTable = {};
+                this.learningRate = 0.3;
+                this.discountFactor = 0.9;
+                this.explorationRate = 0.2;
+                this.trainingEpisodes = 0;
+                this.gameHistory = [];
+                this.isTraining = false;
+                this.isPlaying = false;
+                this.currentPlayer = 'X';
+                this.winRates = { wins: 0, losses: 0, draws: 0 };
+                this.chartData = [];
+                
+                this.initializeElements();
+                this.setupEventListeners();
+                this.updateChart();
+            }
+
+            initializeElements() {
+                this.boardElement = document.getElementById('board');
+                this.cells = document.querySelectorAll('.cell');
+                this.episodesElement = document.getElementById('episodes');
+                this.winRateElement = document.getElementById('winRate');
+                this.statusElement = document.getElementById('status');
+                this.trainingProgressElement = document.getElementById('trainingProgress');
+                this.qTableInfoElement = document.getElementById('qTableInfo');
+                this.chartCanvas = document.getElementById('chartCanvas');
+                this.ctx = this.chartCanvas.getContext('2d');
+            }
+
+            setupEventListeners() {
+                // Board clicks
+                this.cells.forEach((cell, index) => {
+                    cell.addEventListener('click', () => this.handleCellClick(index));
+                });
+
+                // Control buttons
+                document.getElementById('startTraining').addEventListener('click', () => this.startTraining());
+                document.getElementById('playGame').addEventListener('click', () => this.startPlaying());
+                document.getElementById('resetGame').addEventListener('click', () => this.resetGame());
+                document.getElementById('stepTraining').addEventListener('click', () => this.stepTraining());
+
+                // Parameter sliders
+                document.getElementById('learningRate').addEventListener('input', (e) => {
+                    this.learningRate = parseFloat(e.target.value);
+                    document.getElementById('learningRateValue').textContent = this.learningRate;
+                });
+
+                document.getElementById('discountFactor').addEventListener('input', (e) => {
+                    this.discountFactor = parseFloat(e.target.value);
+                    document.getElementById('discountFactorValue').textContent = this.discountFactor;
+                });
+
+                document.getElementById('explorationRate').addEventListener('input', (e) => {
+                    this.explorationRate = parseFloat(e.target.value);
+                    document.getElementById('explorationRateValue').textContent = this.explorationRate;
+                });
+            }
+
+            getStateKey() {
+                return this.board.join(',');
+            }
+
+            getAvailableActions() {
+                return this.board.map((cell, index) => cell === '' ? index : null).filter(val => val !== null);
+            }
+
+            getQValue(state, action) {
+                const key = `${state},${action}`;
+                return this.qTable[key] || 0;
+            }
+
+            setQValue(state, action, value) {
+                const key = `${state},${action}`;
+                this.qTable[key] = value;
+            }
+
+            chooseAction(state, availableActions, isTraining = true) {
+                if (isTraining && Math.random() < this.explorationRate) {
+                    return availableActions[Math.floor(Math.random() * availableActions.length)];
+                }
+
+                let bestAction = availableActions[0];
+                let bestValue = this.getQValue(state, bestAction);
+
+                for (const action of availableActions) {
+                    const value = this.getQValue(state, action);
+                    if (value > bestValue) {
+                        bestValue = value;
+                        bestAction = action;
+                    }
+                }
+
+                return bestAction;
+            }
+
+            makeMove(index, player) {
+                if (this.board[index] === '') {
+                    this.board[index] = player;
+                    this.cells[index].textContent = player;
+                    this.cells[index].classList.add(player.toLowerCase());
+                    return true;
+                }
+                return false;
+            }
+
+            checkWinner() {
+                const winPatterns = [
+                    [0, 1, 2], [3, 4, 5], [6, 7, 8], // rows
+                    [0, 3, 6], [1, 4, 7], [2, 5, 8], // columns
+                    [0, 4, 8], [2, 4, 6] // diagonals
+                ];
+
+                for (const pattern of winPatterns) {
+                    const [a, b, c] = pattern;
+                    if (this.board[a] && this.board[a] === this.board[b] && this.board[a] === this.board[c]) {
+                        return { winner: this.board[a], pattern };
+                    }
+                }
+
+                if (this.board.every(cell => cell !== '')) {
+                    return { winner: 'draw' };
+                }
+
+                return null;
+            }
+
+            highlightWinningCells(pattern) {
+                pattern.forEach(index => {
+                    this.cells[index].classList.add('winner');
+                });
+            }
+
+            getReward(winner, player) {
+                if (winner === 'draw') return 0.5;
+                if (winner === player) return 1;
+                if (winner && winner !== player) return -1;
+                return 0;
+            }
+
+            updateQValues(history, finalReward) {
+                for (let i = history.length - 1; i >= 0; i--) {
+                    const { state, action, nextState } = history[i];
+                    const currentQ = this.getQValue(state, action);
+                    const maxNextQ = this.getMaxQValue(nextState);
+                    const newQ = currentQ + this.learningRate * (finalReward + this.discountFactor * maxNextQ - currentQ);
+                    this.setQValue(state, action, newQ);
+                    finalReward = newQ;
+                }
+            }
+
+            getMaxQValue(state) {
+                const availableActions = this.getAvailableActions();
+                if (availableActions.length === 0) return 0;
+                
+                let maxValue = this.getQValue(state, availableActions[0]);
+                for (const action of availableActions) {
+                    const value = this.getQValue(state, action);
+                    if (value > maxValue) {
+                        maxValue = value;
+                    }
+                }
+                return maxValue;
+            }
+
+            async trainingEpisode() {
+                this.resetBoard();
+                const history = [];
+                let currentPlayer = 'X';
+
+                while (true) {
+                    const state = this.getStateKey();
+                    const availableActions = this.getAvailableActions();
+                    
+                    if (availableActions.length === 0) break;
+
+                    const action = this.chooseAction(state, availableActions, true);
+                    this.makeMove(action, currentPlayer);
+
+                    const nextState = this.getStateKey();
+                    history.push({ state, action, nextState, player: currentPlayer });
+
+                    const result = this.checkWinner();
+                    if (result) {
+                        const reward = this.getReward(result.winner, 'X');
+                        this.updateQValues(history, reward);
+                        
+                        if (result.winner === 'X') this.winRates.wins++;
+                        else if (result.winner === 'O') this.winRates.losses++;
+                        else this.winRates.draws++;
+                        
+                        break;
+                    }
+
+                    currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+                }
+
+                this.trainingEpisodes++;
+                this.updateTrainingStats();
+                this.updateQTableDisplay();
+            }
+
+            async startTraining() {
+                if (this.isTraining) return;
+                
+                this.isTraining = true;
+                this.updateStatus('Training...', 'training');
+                document.getElementById('startTraining').disabled = true;
+                document.getElementById('playGame').disabled = true;
+
+                const speed = document.getElementById('trainingSpeed').value;
+                const delays = { slow: 100, medium: 10, fast: 1 };
+                const delay = delays[speed];
+
+                for (let i = 0; i < 1000; i++) {
+                    await this.trainingEpisode();
+                    if (delay > 1) await new Promise(resolve => setTimeout(resolve, delay));
+                    
+                    if (i % 100 === 0) {
+                        this.updateChart();
+                    }
+                }
+
+                this.isTraining = false;
+                this.updateStatus('Training Complete!', 'ready');
+                document.getElementById('startTraining').disabled = false;
+                document.getElementById('playGame').disabled = false;
+                this.updateChart();
+            }
+
+            stepTraining() {
+                if (this.isTraining) return;
+                this.trainingEpisode();
+                this.updateChart();
+            }
+
+            startPlaying() {
+                if (this.isPlaying) return;
+                
+                this.isPlaying = true;
+                this.resetGame();
+                this.updateStatus('Playing vs AI', 'playing');
+                document.getElementById('startTraining').disabled = true;
+                document.getElementById('playGame').disabled = true;
+            }
+
+            handleCellClick(index) {
+                if (!this.isPlaying || this.board[index] !== '' || this.checkWinner()) return;
+
+                this.makeMove(index, 'X');
+                this.updateQTableDisplay();
+
+                const result = this.checkWinner();
+                if (result) {
+                    this.handleGameEnd(result);
+                    return;
+                }
+
+                // AI move
+                setTimeout(() => {
+                    const state = this.getStateKey();
+                    const availableActions = this.getAvailableActions();
+                    if (availableActions.length > 0) {
+                        const action = this.chooseAction(state, availableActions, false);
+                        this.makeMove(action, 'O');
+                        this.updateQTableDisplay();
+
+                        const aiResult = this.checkWinner();
+                        if (aiResult) {
+                            this.handleGameEnd(aiResult);
+                        }
+                    }
+                }, 500);
+            }
+
+            handleGameEnd(result) {
+                if (result.winner !== 'draw' && result.pattern) {
+                    this.highlightWinningCells(result.pattern);
+                }
+
+                setTimeout(() => {
+                    this.resetGame();
+                }, 2000);
+            }
+
+            resetGame() {
+                this.resetBoard();
+                if (this.isPlaying) {
+                    this.updateStatus('Playing vs AI', 'playing');
+                } else {
+                    this.updateStatus('Ready', 'ready');
+                }
+            }
+
+            resetBoard() {
+                this.board = Array(9).fill('');
+                this.cells.forEach(cell => {
+                    cell.textContent = '';
+                    cell.className = 'cell';
+                });
+            }
+
+            updateTrainingStats() {
+                this.episodesElement.textContent = this.trainingEpisodes;
+                const total = this.winRates.wins + this.winRates.losses + this.winRates.draws;
+                const winRate = total > 0 ? (this.winRates.wins / total * 100).toFixed(1) : 0;
+                this.winRateElement.textContent = `${winRate}%`;
+                
+                const progress = Math.min((this.trainingEpisodes / 1000) * 100, 100);
+                this.trainingProgressElement.style.width = `${progress}%`;
+            }
+
+            updateQTableDisplay() {
+                const state = this.getStateKey();
+                const availableActions = this.getAvailableActions();
+                let bestAction = 'None';
+                let bestValue = -Infinity;
+
+                if (availableActions.length > 0) {
+                    bestAction = this.chooseAction(state, availableActions, false);
+                    bestValue = this.getQValue(state, bestAction);
+                }
+
+                this.qTableInfoElement.innerHTML = `
+                    Current State: [${this.board.map(cell => cell || ' ').join(', ')}]<br>
+                    Best Action: ${bestAction}<br>
+                    Q-Value: ${bestValue.toFixed(3)}
+                `;
+            }
+
+            updateChart() {
+                const canvas = this.chartCanvas;
+                const ctx = this.ctx;
+                const width = canvas.width;
+                const height = canvas.height;
+
+                ctx.clearRect(0, 0, width, height);
+
+                // Draw axes
+                ctx.strokeStyle = '#ddd';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(40, height - 30);
+                ctx.lineTo(width - 20, height - 30);
+                ctx.moveTo(40, 20);
+                ctx.lineTo(40, height - 30);
+                ctx.stroke();
+
+                // Draw grid lines
+                ctx.strokeStyle = '#f0f0f0';
+                for (let i = 0; i <= 10; i++) {
+                    const y = 20 + (height - 50) * (1 - i / 10);
+                    ctx.beginPath();
+                    ctx.moveTo(40, y);
+                    ctx.lineTo(width - 20, y);
+                    ctx.stroke();
+                }
+
+                if (this.chartData.length === 0) {
+                    // Initialize with some data points
+                    for (let i = 0; i <= 100; i += 10) {
+                        this.chartData.push({
+                            episode: i,
+                            winRate: Math.random() * 30,
+                            drawRate: Math.random() * 20 + 10,
+                            lossRate: Math.random() * 30 + 40
+                        });
+                    }
+                }
+
+                // Add new data point
+                const total = this.winRates.wins + this.winRates.losses + this.winRates.draws;
+                if (total > 0 && this.trainingEpisodes % 10 === 0) {
+                    this.chartData.push({
+                        episode: this.trainingEpisodes,
+                        winRate: (this.winRates.wins / total * 100),
+                        drawRate: (this.winRates.draws / total * 100),
+                        lossRate: (this.winRates.losses / total * 100)
+                    });
+                    
+                    if (this.chartData.length > 50) {
+                        this.chartData.shift();
+                    }
+                }
+
+                // Draw lines
+                const drawLine = (data, color, key) => {
+                    ctx.strokeStyle = color;
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    
+                    data.forEach((point, index) => {
+                        const x = 40 + (width - 60) * (index / (data.length - 1));
+                        const y = 20 + (height - 50) * (1 - point[key] / 100);
+                        
+                        if (index === 0) {
+                            ctx.moveTo(x, y);
+                        } else {
+                            ctx.lineTo(x, y);
+                        }
+                    });
+                    
+                    ctx.stroke();
+                };
+
+                drawLine(this.chartData, '#e74c3c', 'winRate');
+                drawLine(this.chartData, '#0984e3', 'drawRate');
+                drawLine(this.chartData, '#00b894', 'lossRate');
+
+                // Draw labels
+                ctx.fillStyle = '#666';
+                ctx.font = '12px Arial';
+                ctx.fillText('0%', 10, height - 25);
+                ctx.fillText('50%', 10, height/2);
+                ctx.fillText('100%', 5, 25);
+            }
+
+            updateStatus(text, type) {
+                this.statusElement.textContent = text;
+                const indicator = this.statusElement.previousElementSibling;
+                indicator.className = `status-indicator status-${type}`;
+            }
+        }
+
+        // Initialize the application
+        const rlGame = new TicTacToeRL();
+    </script>
+</body>
+</html>
