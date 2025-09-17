@@ -1,6 +1,6 @@
-<!--https://zhangsgithub04.github.io/test1.html?user=<img src=x onerror=alert('hello!')> 
-https://zhangsgithub04.github.io/test1.html?user=<img src="x" onerror="window.location.href='https://www.google.com'"> 
-https://zhangsgithub04.github.io/xss/test1.html?user=Alice
+<!--https://zhangsgithub04.github.io/xssa/test1.html?user=<img src=x onerror=alert('hello!')> 
+https://zhangsgithub04.github.io/xssa/test1.html?user=<img src="x" onerror="window.location.href='https://www.google.com'"> 
+https://zhangsgithub04.github.io/xssa/test1.html?user=Alice
 
 
 Change the current page’s URL (window.location).
@@ -21,7 +21,8 @@ Change the current page’s URL (window.location).
   <div id="welcome"></div>
 <img src=x onerror=alert("hello!")>
   
-<img src=x onerror="window.location.href='https://www.google.com'">
+<!--<img src=x onerror="window.location.href='https://www.google.com'">-->
+  
   <script>
     // 1. Read the 'user' query parameter
     const params = new URLSearchParams(window.location.search);
