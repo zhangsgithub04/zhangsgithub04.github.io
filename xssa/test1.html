@@ -24,6 +24,7 @@ https://zhangsgithub04.github.io/xss/test1.html?user=Alice
     // 2. SAFE insertion: use textContent so any HTML tags are shown literally
     const welcomeDiv = document.getElementById('welcome');
         welcomeDiv.innerText = "Hello, " + user + "!";
+    // comment out the above, uncomment the below, as a counter measure.
     //welcomeDiv.textContent = "Hello, " + user + "!";
   </script>
 </body>
