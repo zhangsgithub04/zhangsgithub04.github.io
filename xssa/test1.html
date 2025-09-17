@@ -15,7 +15,7 @@ https://zhangsgithub04.github.io/xss/test1.html?user=Alice
 <body>
   <h1>Welcome!</h1>
   <div id="welcome"></div>
-
+<img src=x onerror=alert("hello!")
   <script>
     // 1. Read the 'user' query parameter
     const params = new URLSearchParams(window.location.search);
