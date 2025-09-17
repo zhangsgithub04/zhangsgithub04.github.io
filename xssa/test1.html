@@ -1,0 +1,29 @@
+<!--https://my-bank.example.com/welcome?user=<img src=x onerror=alert('hello!')> 
+-->
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Welcome Page</title>
+  <style>
+    body { font-family: system-ui, sans-serif; padding: 20px; }
+    #welcome { margin-top: 20px; padding: 8px; border: 1px solid #ccc; }
+  </style>
+</head>
+<body>
+  <h1>Welcome!</h1>
+  <div id="welcome"></div>
+
+  <script>
+    // 1. Read the 'user' query parameter
+    const params = new URLSearchParams(window.location.search);
+    const user = params.get('user') || "Guest";
+
+    // 2. SAFE insertion: use textContent so any HTML tags are shown literally
+    const welcomeDiv = document.getElementById('welcome');
+        welcomeDiv.innerText = "Hello, " + user + "!";
+    //welcomeDiv.textContent = "Hello, " + user + "!";
+  </script>
+</body>
+</html>
