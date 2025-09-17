@@ -1,5 +1,9 @@
-<!--https://my-bank.example.com/test1.html?user=<img src=x onerror=alert('hello!')> 
+<!--https://zhangsgithub04.github.io/test1.html?user=<img src=x onerror=alert('hello!')> 
+https://zhangsgithub04.github.io/test1.html?user=<img src="x" onerror="window.location.href='https://www.google.com'"> 
 https://zhangsgithub04.github.io/xss/test1.html?user=Alice
+
+
+Change the current page’s URL (window.location).
 -->
 
 <!DOCTYPE html>
@@ -15,7 +19,9 @@ https://zhangsgithub04.github.io/xss/test1.html?user=Alice
 <body>
   <h1>Welcome!</h1>
   <div id="welcome"></div>
-<img src=x onerror=alert("hello!")
+<img src=x onerror=alert("hello!")>
+  
+<img src=x onerror=window.location("https://www.google.com">
   <script>
     // 1. Read the 'user' query parameter
     const params = new URLSearchParams(window.location.search);
